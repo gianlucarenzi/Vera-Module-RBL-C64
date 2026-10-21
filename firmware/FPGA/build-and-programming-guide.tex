@@ -1,0 +1,867 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{parskip}
+
+\geometry{
+    top=25mm, bottom=25mm,
+    left=25mm, right=25mm
+}
+
+% ---------------------------------------------------------------------------
+% Colours
+% ---------------------------------------------------------------------------
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{kwcolor}{RGB}{0,0,180}
+\definecolor{commentcolor}{RGB}{80,120,80}
+\definecolor{stringcolor}{RGB}{160,32,32}
+\definecolor{shellprompt}{RGB}{100,100,100}
+
+% ---------------------------------------------------------------------------
+% Listings style
+% ---------------------------------------------------------------------------
+\lstdefinestyle{shell}{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    framerule=0.4pt,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b,
+    xleftmargin=6pt,
+    xrightmargin=6pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+}
+
+\lstdefinestyle{vhdl}{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    framerule=0.4pt,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{kwcolor}\bfseries,
+    commentstyle=\color{commentcolor}\itshape,
+    stringstyle=\color{stringcolor},
+    morekeywords={library,use,entity,port,architecture,signal,process,
+                  begin,end,if,then,else,elsif,rising_edge,std_logic,
+                  std_logic_vector,unsigned,integer,constant,when,
+                  inout,in,out,downto,others,not,and,or},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b,
+    xleftmargin=6pt,
+    xrightmargin=6pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+}
+
+\lstset{style=shell}
+
+% ---------------------------------------------------------------------------
+% Page style
+% ---------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small VERA RBL-XE -- FPGA Build \& Programming Guide}
+\fancyhead[R]{\small Rev~4}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------------------------------------------------------------------------
+% Section formatting
+% ---------------------------------------------------------------------------
+\titleformat{\section}{\large\bfseries}{}{0em}{\thesection\quad}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{\thesubsection\quad}
+
+% ---------------------------------------------------------------------------
+% Convenience macros
+% ---------------------------------------------------------------------------
+\newcommand{\cmd}[1]{\texttt{#1}}
+\newcommand{\sig}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\hex}[1]{\texttt{\$#1}}
+
+% ---------------------------------------------------------------------------
+\begin{document}
+% ---------------------------------------------------------------------------
+
+\begin{titlepage}
+    \centering
+    \vspace*{30mm}
+    {\Huge\bfseries VERA RBL-XE\\[4mm]
+     FPGA Build \& Programming Guide\par}
+    \vspace{10mm}
+    {\large iCE40UP5K -- Rev~4\par}
+    \vspace{8mm}
+    {\normalsize
+        6502 bus controller with RAMbo 256\,KB, PBI RAM/ROM,\\
+        and external SRAM support\par}
+    \vfill
+    {\small Last updated: \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ===========================================================================
+\section{Overview}
+% ===========================================================================
+
+This document describes the complete workflow for building and programming
+the FPGA firmware for the VERA RBL-XE module.  The firmware implements a
+6502 bus controller on a Lattice iCE40UP5K, replacing the ESP32-S3 MCU
+used in the previous design.
+
+\subsection{Architecture summary}
+
+\begin{itemize}[noitemsep]
+    \item \textbf{PBI RAM} (\hex{D600}--\hex{D7FF}, 512\,B): stored in
+          iCE40 BRAM (1 EBR block).
+    \item \textbf{PBI ROM} (\hex{D800}--\hex{DFFF}, 2\,KB): stored in
+          iCE40 BRAM (4 EBR blocks), pre-loaded at synthesis time from
+          the assembled 6502 driver binary.
+    \item \textbf{RAMbo} (\hex{4000}--\hex{7FFF}, 16\,KB window,
+          256\,KB total): served by an external 512K$\times$8 SRAM
+          (e.g.\ AS6C4008-55SIN).  The FPGA controls chip-enable,
+          output-enable, write-enable, and the upper four address bits
+          (bank), using only 7 new I/O pins.
+    \item \textbf{PHI2 synchronisation}: PHI2 is treated as a data input
+          and synchronised to the 25\,MHz FPGA clock via a two-stage
+          flip-flop chain, producing a single-cycle \cmd{phi2\_rise}
+          pulse used to trigger all registered logic.
+    \item \textbf{Two bitstreams -- \cmd{VERA\_IS\_PBI} generic}: the
+          top-level entity exposes a VHDL-2008 boolean generic that
+          selects the bus interface at synthesis time.
+          \emph{PBI mode} (\cmd{VERA\_IS\_PBI=true}): latch at
+          \hex{D1FF}, PBI RAM and ROM in BRAM (5 EBR blocks), EXTSEL
+          for PBI RAM and RAMbo, MPD for PBI ROM reads.
+          \emph{CCTL mode} (\cmd{VERA\_IS\_PBI=false}): latch at
+          \hex{D5FF} (write \texttt{\$80} to select, \texttt{\$00}
+          to deselect), no BRAM (Yosys eliminates dead code: 0 EBR),
+          EXTSEL for RAMbo only, MPD always inactive.
+    \item \textbf{Hardware configuration pins}: \sig{PBI\_ID\_SEL}
+          (pin~27) is wired via PCB jumper to one of D[0..7]; the
+          sampled bit value latches VERA\_CS in PBI mode
+          (\cmd{vera\_cs\_latch <= not PBI\_ID\_SEL}).
+          \sig{RAMBO\_EN} (pin~28) with pullup (VCC) enables RAMbo;
+          with pulldown (GND) disables it regardless of PBCTL[2].
+\end{itemize}
+
+\subsection{Memory map}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+\textbf{Range} & \textbf{Size} & \textbf{Function} & \textbf{Implementation} \\
+\midrule
+\hex{4000}--\hex{7FFF} & 16\,KB window & RAMbo (256\,KB banked) & External SRAM \\
+\hex{D1FF}            & 1\,B          & VERA\_CS latch (write) & Register \\
+\hex{D301}            & 1\,B          & PIA PORTB snoop        & Register \\
+\hex{D303}            & 1\,B          & PIA PBCTL snoop        & Register \\
+\hex{D600}--\hex{D7FF} & 512\,B        & PBI RAM                & BRAM (1 EBR) \\
+\hex{D800}--\hex{DFFF} & 2\,KB         & PBI ROM                & BRAM (4 EBR) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent\textbf{Note (CCTL mode):} when built with \cmd{VERA\_IS\_PBI=false}
+the VERA\_CS latch address changes to \hex{D5FF} (write \texttt{\$80} to
+select, \texttt{\$00} to deselect), and PBI RAM/ROM are absent (0~EBR\@).
+
+% ===========================================================================
+\section{Prerequisites}
+% ===========================================================================
+
+\subsection{FPGA toolchain}
+
+While some tools are available via \cmd{apt} on Debian/Ubuntu, they are often outdated (especially on Debian 11). The recommended way to set up the toolchain is using the \textbf{OSS CAD Suite}, which provides pre-compiled, up-to-date versions of Yosys, nextpnr, GHDL, and all required plugins.
+
+\subsubsection{Installing OSS CAD Suite (Recommended for Debian 11)}
+
+\begin{enumerate}
+    \item Download the latest Linux x64 archive from: \\
+          \url{https://github.com/YosysHQ/oss-cad-suite-build/releases/latest}
+    \item Extract the archive (e.g., to \file{\$HOME/oss-cad-suite}).
+    \item Add the \file{bin} directory to your \cmd{PATH}:
+\end{enumerate}
+
+\begin{lstlisting}[style=shell]
+export PATH="$HOME/oss-cad-suite/bin:$PATH"
+\end{lstlisting}
+
+This suite includes \cmd{yosys}, \cmd{nextpnr-ice40}, \cmd{icepack}, \cmd{iceprog}, and \cmd{ghdl} with the \cmd{ghdl-yosys-plugin} already integrated.
+
+\subsubsection{Alternative: Manual installation via apt (Debian 12+)}
+
+On newer distributions, you can try:
+
+\begin{lstlisting}[style=shell]
+sudo apt install fpga-icestorm nextpnr-ice40 yosys ghdl
+\end{lstlisting}
+
+\textbf{Note:} if installing via \cmd{apt}, you will likely need to build the \cmd{ghdl-yosys-plugin} from source as described below, because it is rarely packaged.
+
+\begin{lstlisting}[style=shell]
+git clone https://github.com/ghdl/ghdl-yosys-plugin
+cd ghdl-yosys-plugin
+make
+sudo make install
+\end{lstlisting}
+
+\subsection{Flash programming tools}
+
+On modern distributions (e.g. Debian 12+), \cmd{openFPGALoader} can be installed via package manager:
+
+\begin{lstlisting}[style=shell]
+sudo apt install openFPGALoader
+\end{lstlisting}
+
+On older distributions like \textbf{Debian 11 (Bullseye)}, the package is not available and must be built from source.
+
+\subsubsection{Building openFPGALoader from source}
+
+First, install the required dependencies and build tools:
+
+\begin{lstlisting}[style=shell]
+sudo apt install git cmake make g++ pkg-config libusb-1.0-0-dev \
+                 libhidapi-dev libgpiod-dev libusbmuxd-dev
+\end{lstlisting}
+
+Then, clone the repository and build the project:
+
+\begin{lstlisting}[style=shell]
+git clone https://github.com/trabucayre/openfpgaloader
+cd openfpgaloader
+mkdir build
+cd build
+# Use -DCMAKE_INSTALL_PREFIX=$HOME to install in your home directory
+# or omit it to install system-wide (requires sudo make install)
+cmake .. -DCMAKE_INSTALL_PREFIX=$HOME
+make -j$(nproc)
+make install
+\end{lstlisting}
+
+Ensure \file{\$HOME/bin} is in your \cmd{PATH} if you used the home directory prefix.
+
+\subsubsection{Iceprog}
+The \cmd{iceprog} tool is already included in the \cmd{fpga-icestorm} package and supports FTDI-based programmers (e.g. FT2232H).
+
+\subsection{6502 assembler (cc65)}
+
+The PBI ROM driver is written in 6502 assembly and built with the
+cc65 toolchain.
+
+\begin{lstlisting}[style=shell]
+sudo apt install cc65
+\end{lstlisting}
+
+\subsection{Python 3}
+
+Required to run \file{gen\_pbi\_rom\_pkg.py}, which converts the
+assembled 6502 binary into a VHDL constant package.
+
+\begin{lstlisting}[style=shell]
+sudo apt install python3
+\end{lstlisting}
+
+\subsection{Tool roles at a glance}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+\textbf{Tool} & \textbf{Input} & \textbf{Output} & \textbf{Purpose} \\
+\midrule
+\cmd{ca65} / \cmd{ld65}    & \file{.s} sources    & \file{.bin}      & 6502 assembly \\
+\cmd{gen\_pbi\_rom\_pkg.py} & \file{.bin}          & \file{.vhd}      & ROM initialisation \\
+\cmd{ghdl} (plugin)         & VHDL sources         & RTLIL            & VHDL elaboration \\
+\cmd{yosys}                 & RTLIL                & \file{.json}     & Synthesis \\
+\cmd{nextpnr-ice40}         & \file{.json + .pcf}  & \file{.asc}      & Place \& route \\
+\cmd{icepack}               & \file{.asc}          & \file{.bin}      & Bitstream packing \\
+\cmd{openFPGALoader}        & \file{.bin}          & SPI flash        & Programming \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ===========================================================================
+\section{Build Flow}
+% ===========================================================================
+
+\subsection{Step 1 -- Assemble the 6502 ROM driver}
+
+The PBI ROM at \hex{D800}--\hex{DFFF} contains a 2\,KB 6502 driver
+assembled from \file{firmware/MCU/6502/src/vera\_pbi\_handler.s}.
+
+\begin{lstlisting}[style=shell,caption={Assemble the 6502 driver}]
+cd firmware/MCU/6502
+make
+\end{lstlisting}
+
+This single command runs three sub-steps:
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Assemble}: \cmd{ca65} compiles
+          \file{vera\_pbi\_handler.s} into \file{vera\_pbi\_handler.o}.
+    \item \textbf{Link}: \cmd{ld65} links with \file{pbi-driver.ld}
+          to produce \file{vera\_pbi\_handler.bin}.
+    \item \textbf{Generate VHDL ROM package}: \file{gen\_pbi\_rom\_pkg.py}
+          reads the binary and writes
+          \file{../../FPGA/pbi\_rom\_pkg.vhd} with the
+          \cmd{PBI\_ROM\_INIT} constant.
+\end{enumerate}
+
+To regenerate only the VHDL package when the binary already exists:
+
+\begin{lstlisting}[style=shell]
+make fpga-rom
+\end{lstlisting}
+
+\subsection{Step 2 -- Synthesis}
+
+The top-level entity exposes a VHDL-2008 boolean generic,
+\cmd{VERA\_IS\_PBI} (default \cmd{true}), that selects the bus interface
+at synthesis time.  The Makefile invokes Yosys twice, producing two
+independent bitstreams from the same source:
+
+\begin{lstlisting}[style=shell,caption={PBI synthesis (VERA\_IS\_PBI=true)}]
+cd firmware/FPGA
+yosys -m ghdl -p \
+    "ghdl --std=08 -gVERA_IS_PBI=true \
+          custom_types.vhd pbi_rom_pkg.vhd C6502_Interface.vhd \
+          -e C6502_Interface; \
+     synth_ice40 -top C6502_Interface -json C6502_Interface_PBI.json"
+\end{lstlisting}
+
+\begin{lstlisting}[style=shell,caption={CCTL synthesis (VERA\_IS\_PBI=false)}]
+yosys -m ghdl -p \
+    "ghdl --std=08 -gVERA_IS_PBI=false \
+          custom_types.vhd pbi_rom_pkg.vhd C6502_Interface.vhd \
+          -e C6502_Interface; \
+     synth_ice40 -top C6502_Interface -json C6502_Interface_CCTL.json"
+\end{lstlisting}
+
+The \cmd{-m ghdl} flag loads the GHDL plugin into Yosys, which handles
+VHDL analysis and elaboration.  When \cmd{VERA\_IS\_PBI=false}, Yosys
+eliminates all PBI RAM/ROM dead code, reducing resource usage
+dramatically.  Measured values after place-and-route with nextpnr-ice40:
+
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Resource} & \textbf{PBI} & \textbf{CCTL} & \textbf{Available} & \textbf{\% (PBI)} \\
+\midrule
+ICESTORM\_LC (total)     &  87 &  1 & 5280 &  1\% \\
+\quad of which LUT4 only &  52 &  1 &      &     \\
+\quad of which LUT4+DFF  &   5 &  0 &      &     \\
+\quad of which DFF only  &   5 &  0 &      &     \\
+\quad of which CARRY only&  21 &  0 &      &     \\
+\midrule
+ICESTORM\_RAM (EBR)      &   5 &  0 &   30 & 16\% \\
+SB\_IO (I/O buffers)     &  39 & 39 &   39 & 100\% \\
+ICESTORM\_SPRAM          &   0 &  0 &    4 &  0\% \\
+\midrule
+\textbf{Fmax (CLK)}      & \multicolumn{4}{l}{\textbf{62.72\,MHz} (PBI, PASS at 25\,MHz)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{I/O budget note:} the iCE40UP5K-SG48 exposes exactly 39 user I/O
+pins, and this design uses all 39.  The mode selection (PBI vs.\ CCTL)
+is compiled into the bitstream via \cmd{VERA\_IS\_PBI} rather than being
+a runtime input, freeing the two former \sig{DIP\_SEL} pins for
+dedicated hardware functions: \sig{PBI\_ID\_SEL} (pin~27) and
+\sig{RAMBO\_EN} (pin~28).
+
+\subsection{Step 3 -- Place \& Route}
+
+Place \& route assigns logic cells and routes signals to physical
+iCE40 resources, guided by the pin constraints file.
+
+\begin{lstlisting}[style=shell,caption={Place \& route with nextpnr-ice40 (PBI example)}]
+nextpnr-ice40 --up5k --package sg48 \
+    --json C6502_Interface_PBI.json \
+    --pcf board-pin-mapping.pcf \
+    --asc C6502_Interface_PBI.asc
+\end{lstlisting}
+
+The CCTL build uses the same command with \file{\_CCTL} filename suffixes.
+
+\textbf{Important:} all pin numbers in \file{board-pin-mapping.pcf} are
+placeholders.  Edit the file to match your actual schematic before this
+step (see Section~\ref{sec:pins}).
+
+nextpnr reports timing after routing.  Measured results:
+
+\begin{center}
+\begin{tabular}{llr}
+\toprule
+\textbf{Path type} & \textbf{Description} & \textbf{Worst delay} \\
+\midrule
+CLK $\to$ CLK   & Registered path (Fmax) & 15.94\,ns (62.72\,MHz) \\
+async $\to$ async & Combinational (PHI2 gate) & 28.12\,ns \\
+async $\to$ CLK  & Input setup time        & 26.89\,ns \\
+CLK $\to$ async  & Clock-to-output         & 17.17\,ns \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The 25\,MHz system clock (period 40\,ns) has \textbf{24.06\,ns of slack}
+on the registered path.  The combinational PHI2-gated outputs settle in
+at most 28.12\,ns after address/control inputs change --- well within the
+6502 PHI2-high window of $\approx$279\,ns at 1.79\,MHz.
+
+\subsection{Step 4 -- Pack the bitstream}
+
+\cmd{icepack} converts the ASCII intermediate format produced by
+nextpnr into the binary bitstream that is written to the SPI flash.
+
+\begin{lstlisting}[style=shell,caption={Pack binary bitstreams}]
+icepack C6502_Interface_PBI.asc  C6502_Interface_PBI.bin
+icepack C6502_Interface_CCTL.asc C6502_Interface_CCTL.bin
+\end{lstlisting}
+
+The \file{.bin} file is what gets programmed into the SPI flash.
+Bitstream size is device-dependent (not design-dependent) on the iCE40:
+both bitstreams measure \textbf{$\approx$104\,KB} (iCE40UP5K SG48).
+
+\subsection{Step 5 -- Program the SPI flash}
+
+The iCE40UP5K loads its configuration from an external SPI NOR flash
+at power-up.  The programmer writes the bitstream into that flash.
+
+\subsubsection{Using openFPGALoader (recommended)}
+
+\begin{lstlisting}[style=shell,caption={Program with openFPGALoader}]
+# PBI bitstream (PBI connector, $D1xx)
+openFPGALoader -b ice40_generic C6502_Interface_PBI.bin
+# CCTL bitstream (cartridge port, $D5xx)
+openFPGALoader -b ice40_generic C6502_Interface_CCTL.bin
+\end{lstlisting}
+
+Select the programmer cable explicitly if needed:
+
+\begin{lstlisting}[style=shell]
+openFPGALoader --cable ft2232      C6502_Interface_PBI.bin   # FTDI FT2232H
+openFPGALoader --cable ft232       C6502_Interface_PBI.bin   # FTDI FT232H
+openFPGALoader --cable tigard      C6502_Interface_PBI.bin   # Tigard
+openFPGALoader --cable raspberrypi C6502_Interface_PBI.bin   # Raspberry Pi GPIO
+\end{lstlisting}
+
+\subsubsection{Using iceprog (FTDI FT2232H)}
+
+\begin{lstlisting}[style=shell,caption={Program with iceprog}]
+iceprog C6502_Interface_PBI.bin    # PBI bitstream
+iceprog C6502_Interface_CCTL.bin   # CCTL bitstream
+
+# Erase + write (useful if previous write was partial)
+iceprog -e 1048576 C6502_Interface_PBI.bin
+\end{lstlisting}
+
+\subsection{One-command build and flash}
+
+The \file{firmware/FPGA/Makefile} wraps all steps:
+
+\begin{lstlisting}[style=shell]
+cd firmware/FPGA
+make pbi               # synthesise + P&R + pack -> C6502_Interface_PBI.bin
+make cctl              # synthesise + P&R + pack -> C6502_Interface_CCTL.bin
+make                   # build both (default)
+make flash-pbi         # write PBI  bitstream via openFPGALoader
+make flash-cctl        # write CCTL bitstream via openFPGALoader
+make flash-pbi-iceprog   # write PBI  via iceprog (FTDI FT2232H)
+make flash-cctl-iceprog  # write CCTL via iceprog
+make doc               # regenerate PDF documentation
+make clean             # remove all generated files
+\end{lstlisting}
+
+% ===========================================================================
+\section{Programmer Wiring}
+% ===========================================================================
+
+The SPI flash is shared between the FPGA (configuration bus at boot)
+and the programmer (writes the bitstream).  During programming, the
+FPGA is held in reset by asserting \sig{CRESET\_B} low.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Programmer signal} & \textbf{iCE40UP5K pin} & \textbf{SPI flash pin} \\
+\midrule
+MOSI  & SPI\_SI   & DI  \\
+MISO  & SPI\_SO   & DO  \\
+SCK   & SPI\_SCK  & CLK \\
+CS\#  & --        & CS\# \\
+CRST\# & CRESET\_B & -- \\
+CDONE & CDONE     & -- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Recommended SPI flash: Winbond W25Q16 (2\,MB) or W25Q32 (4\,MB).
+
+% ===========================================================================
+\section{Reset Sequencing}
+\label{sec:reset}
+% ===========================================================================
+
+The VERA RBL-XE module requires a defined power-on boot sequence: the
+Atari computer and the VERA graphics chip must remain in reset until all
+FPGA configurations have completed.  This is implemented with a single
+74LVC1G08 logic gate --- no MCU or firmware is needed.
+
+\subsection{Boot sequence}
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Power-on:} both \sig{VERA\_RESET\#} and
+          \sig{ATARI\_RESET\#} are held low.
+    \item \textbf{FPGA ready} (\sig{FPGA\_CDONE} goes high,
+          $\approx$50--100\,ms after power-on): \sig{VERA\_RESET\#} is
+          released, allowing VERA to start loading its own bitstream
+          from its SPI flash.
+    \item \textbf{VERA ready} (\sig{VERA\_CDONE} goes high,
+          $\approx$200--500\,ms later): \sig{ATARI\_RESET\#} is released
+          and the Atari boots normally.
+\end{enumerate}
+
+The natural SPI flash loading times provide all necessary delays; no RC
+timer or additional delay circuit is required.
+
+\subsection{Logic}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Signal} & \textbf{Boolean expression} \\
+\midrule
+\sig{VERA\_RESET\#}  & \sig{FPGA\_CDONE} \\
+\sig{ATARI\_RESET\#} & \sig{FPGA\_CDONE}~AND~\sig{VERA\_CDONE} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ccccp{3.5cm}}
+\toprule
+\textbf{FPGA\_CDONE} & \textbf{VERA\_CDONE} &
+\textbf{VERA\_RST\#} & \textbf{ATARI\_RST\#} & \textbf{Phase} \\
+\midrule
+0 & 0 & 0 & 0 & Power-on / FPGA loading \\
+1 & 0 & 1 & 0 & FPGA ready, VERA loading \\
+1 & 1 & 1 & 1 & System ready \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Circuit -- 74LVC1G08 (SOT-23-5)}
+
+A single \textbf{74LVC1G08} (2-input AND gate, SOT-23-5) implements
+\sig{ATARI\_RESET\#}.  \sig{VERA\_RESET\#} connects directly from
+\sig{FPGA\_CDONE} through a 33\,$\Omega$ series resistor.
+
+\begin{lstlisting}[style=shell]
+VCC --[4k7]--+-------- FPGA_CDONE (open-drain)
+             |
+             +--[33R]- VERA_RESET#
+             |
+             +-- A -\
+                     +--- 74LVC1G08 ---[33R]--- ATARI_RESET#
+             +-- B -/
+             |
+VCC --[4k7]--+-------- VERA_CDONE (open-drain)
+\end{lstlisting}
+
+Both CDONE outputs are open-drain; they require an external pullup to
+VCC\@.  The 33\,$\Omega$ series resistors limit current if an external
+driver (e.g.\ the Atari RESET button, which pulls the line to GND via
+an open-collector circuit) conflicts with the 74LVC output.
+
+\textbf{Why 74LVC and not 74HC?}  The 74LVC family has \emph{5\,V
+tolerant inputs} while operating at 3.3\,V VCC\@.  The CDONE signals
+are at 3.3\,V; the Atari RESET line belongs to a 5\,V TTL system.  The
+74LVC output at 3.3\,V is correctly recognised as HIGH by 5\,V TTL
+logic (V$_{\text{IH}} = 2.0$\,V).  The 74HC family is not suitable for
+this mixed-voltage interface.
+
+\subsection{Bill of materials}
+
+\begin{center}
+\begin{tabular}{lllp{4.5cm}}
+\toprule
+\textbf{Ref} & \textbf{Value} & \textbf{Package} & \textbf{Function} \\
+\midrule
+U1  & 74LVC1G08      & SOT-23-5 & 2-input AND gate \\
+R1  & 4.7\,k$\Omega$ & 0402     & Pullup for FPGA\_CDONE \\
+R2  & 4.7\,k$\Omega$ & 0402     & Pullup for VERA\_CDONE \\
+R3  & 33\,$\Omega$   & 0402     & Series resistor on VERA\_RESET\# \\
+R4  & 33\,$\Omega$   & 0402     & Series resistor on ATARI\_RESET\# \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Total cost under 0.30\,EUR; no firmware required.
+
+% ===========================================================================
+\section{Pin Assignment}
+\label{sec:pins}
+% ===========================================================================
+
+Edit \file{board-pin-mapping.pcf} and replace every pin number with the
+actual pad number from your schematic before running nextpnr-ice40.
+
+The \sig{CLK} signal must be assigned to a \textbf{Global Buffer (GB)
+input} pin.  Valid GB pins on the iCE40UP5K SG48 package are:
+\textbf{20, 28, 31, 38, 41, 43, 48}.
+
+\textbf{Valid user I/O pin numbers for SG48} (39 total):
+\begin{quote}\ttfamily
+2, 3, 4, 6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,\\
+23, 25, 26, 27, 28, 31, 32, 34, 35, 36, 37, 38, 39,\\
+40, 41, 42, 43, 44, 45, 46, 47, 48
+\end{quote}
+Pins 1, 5, 7, 8, 22, 24, 29, 30, 33 are power/ground or reserved and
+\textbf{must not} appear in the PCF file --- nextpnr rejects them with an
+error.
+
+\subsection{Complete pin table}
+
+\begin{center}
+\small
+\begin{longtable}{llllp{5.5cm}}
+\toprule
+\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{Std} &
+\textbf{Description} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{Std} &
+\textbf{Description} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\small continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+
+% --- Clock ---
+\sig{CLK}           & In    & 35* & LVCMOS33 &
+    25\,MHz system clock. Must land on a GB pin. \\[2pt]
+
+% --- 6502 address bus ---
+\sig{A[0]}          & In    & 40* & LVCMOS33 & 6502 address bit 0 \\
+\sig{A[1]}          & In    & 41* & LVCMOS33 & 6502 address bit 1 \\
+\sig{A[2]}          & In    & 42* & LVCMOS33 & 6502 address bit 2 \\
+\sig{A[3]}          & In    & 43* & LVCMOS33 & 6502 address bit 3 \\
+\sig{A[4]}          & In    & 44* & LVCMOS33 & 6502 address bit 4 \\
+\sig{A[5]}          & In    & 45* & LVCMOS33 & 6502 address bit 5 \\
+\sig{A[6]}          & In    & 46* & LVCMOS33 & 6502 address bit 6 \\
+\sig{A[7]}          & In    & 47* & LVCMOS33 & 6502 address bit 7 \\
+\sig{A[8]}          & In    & 48* & LVCMOS33 & 6502 address bit 8 \\
+\sig{A[9]}          & In    &  6* & LVCMOS33 & 6502 address bit 9 \\
+\sig{A[10]}         & In    &  2* & LVCMOS33 & 6502 address bit 10 \\
+\sig{A[11]}         & In    &  3* & LVCMOS33 & 6502 address bit 11 \\
+\sig{A[12]}         & In    &  4* & LVCMOS33 & 6502 address bit 12 \\
+\sig{A[13]}         & In    & 26* & LVCMOS33 &
+    6502 address bit 13. Also wired to SRAM A[13] on PCB. \\
+\sig{A[14]}         & In    &  9* & LVCMOS33 & 6502 address bit 14 \\
+\sig{A[15]}         & In    & 10* & LVCMOS33 & 6502 address bit 15 \\[2pt]
+
+% --- 6502 data bus ---
+\sig{D[0]}          & InOut & 11* & LVCMOS33 &
+    6502 data bit 0. Shared net with SRAM DQ[0]. \\
+\sig{D[1]}          & InOut & 12* & LVCMOS33 &
+    6502 data bit 1. Shared net with SRAM DQ[1]. \\
+\sig{D[2]}          & InOut & 13* & LVCMOS33 &
+    6502 data bit 2. Shared net with SRAM DQ[2]. \\
+\sig{D[3]}          & InOut & 14* & LVCMOS33 &
+    6502 data bit 3. Shared net with SRAM DQ[3]. \\
+\sig{D[4]}          & InOut & 15* & LVCMOS33 &
+    6502 data bit 4. Shared net with SRAM DQ[4]. \\
+\sig{D[5]}          & InOut & 16* & LVCMOS33 &
+    6502 data bit 5. Shared net with SRAM DQ[5]. \\
+\sig{D[6]}          & InOut & 17* & LVCMOS33 &
+    6502 data bit 6. Shared net with SRAM DQ[6]. \\
+\sig{D[7]}          & InOut & 18* & LVCMOS33 &
+    6502 data bit 7. Shared net with SRAM DQ[7]. \\[2pt]
+
+% --- 6502 control ---
+\sig{PHI2}          & In    & 34* & LVCMOS33 &
+    6502 phase-2 clock. Synchronised internally; not used as FPGA clock. \\
+\sig{RNW}           & In    & 36* & LVCMOS33 &
+    Read/Not-Write. High = read, Low = write. \\[2pt]
+
+% --- PBI control ---
+\sig{VERA\_CS}      & Out   & 32* & LVCMOS33 &
+    VERA chip-select latch output (active low). \\
+\sig{MPD}           & Out   & 31* & LVCMOS33 &
+    Machine Program Data (active low, \textbf{PBI mode only}).
+    Asserted during PBI ROM (\hex{D800}--\hex{DFFF}) reads; blocks
+    Atari from driving D[7:0].  Always inactive (high) in CCTL mode. \\
+\sig{EXTSEL}        & Out   & 37* & LVCMOS33 &
+    External Select (active low).  \textbf{PBI mode:} asserted for
+    PBI RAM (\hex{D600}--\hex{D7FF}) and RAMbo (\hex{4000}--\hex{7FFF}).
+    \textbf{CCTL mode:} asserted for RAMbo only.  Blocks Atari
+    internal RAM from responding. \\[2pt]
+
+% --- Hardware configuration inputs ---
+\sig{PBI\_ID\_SEL}  & In    & 27* & LVCMOS33 &
+    Hardware jumper to one of D[0..7] on PCB.  Sampled when \hex{D1FF}
+    is written (PBI mode only); \texttt{vera\_cs\_latch <= not PBI\_ID\_SEL}.
+    Logic~1 on the chosen bit selects VERA, logic~0 deselects.
+    Ignored in CCTL build. \\
+\sig{RAMBO\_EN}     & In    & 28* & LVCMOS33 &
+    Tie to VCC (pullup) to enable RAMbo hardware; tie to GND (pulldown)
+    to disable RAMbo completely, overriding PBCTL[2].  Both
+    \sig{RAMBO\_EN} and PBCTL[2] must be high for RAMbo to respond. \\[2pt]
+
+% --- External SRAM ---
+\sig{SRAM\_A\_BANK[0]} & Out & 19* & LVCMOS33 &
+    SRAM address bit 14 (bank LSB). \\
+\sig{SRAM\_A\_BANK[1]} & Out & 20* & LVCMOS33 &
+    SRAM address bit 15. \\
+\sig{SRAM\_A\_BANK[2]} & Out & 21* & LVCMOS33 &
+    SRAM address bit 16. \\
+\sig{SRAM\_A\_BANK[3]} & Out & 38* & LVCMOS33 &
+    SRAM address bit 17 (bank MSB). \\
+\sig{SRAM\_CE\_N}   & Out   & 23* & LVCMOS33 &
+    SRAM chip enable (active low). Asserted during PHI2-high when
+    address is in \hex{4000}--\hex{7FFF} and RAMbo is enabled. \\
+\sig{SRAM\_OE\_N}   & Out   & 39* & LVCMOS33 &
+    SRAM output enable (active low). Asserted on read cycles only. \\
+\sig{SRAM\_WE\_N}   & Out   & 25* & LVCMOS33 &
+    SRAM write enable (active low). Asserted on write cycles only.
+    Pulse width equals PHI2-high time ($\approx$279\,ns at 1.79\,MHz). \\
+
+\end{longtable}
+\end{center}
+
+\textit{* Pin numbers are placeholders.  Replace with actual pad numbers
+from your board schematic.}
+
+\subsection{External SRAM address wiring}
+
+The SRAM address bus is split between PCB traces (lower 14 bits) and
+FPGA outputs (upper 4 bank bits):
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{SRAM address bit} & \textbf{Source} & \textbf{Note} \\
+\midrule
+A[13:0]  & 6502 A[13:0] (PCB net) & Direct trace, no FPGA I/O pin \\
+A[14]    & FPGA \sig{SRAM\_A\_BANK[0]} & Bank bit 0 = PORTB[2] \\
+A[15]    & FPGA \sig{SRAM\_A\_BANK[1]} & Bank bit 1 = PORTB[3] \\
+A[16]    & FPGA \sig{SRAM\_A\_BANK[2]} & Bank bit 2 = PORTB[5] \\
+A[17]    & FPGA \sig{SRAM\_A\_BANK[3]} & Bank bit 3 = PORTB[6] \\
+A[18]    & GND (PCB)               & Selects lower 256\,KB of 512\,KB chip \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{RAMbo bank formula}
+
+The FPGA snoops writes to the Atari PIA to derive the active bank:
+
+\begin{lstlisting}[style=shell]
+PORTB at $D301  -- bank bits
+PBCTL at $D303  -- bit 2 enables RAMbo
+
+bank[1:0] = PORTB[3:2]
+bank[3:2] = PORTB[6:5]
+=> SRAM A[17:14] = { PORTB[6], PORTB[5], PORTB[3], PORTB[2] }
+\end{lstlisting}
+
+RAMbo is active only when both \sig{RAMBO\_EN} (pin~28 tied to VCC)
+and \sig{PBCTL[2] = 1} (software enable written by the Atari OS).
+
+% ===========================================================================
+\section{Timing}
+% ===========================================================================
+
+\subsection{Read cycle (SRAM)}
+
+\begin{center}
+\begin{tabular}{lrl}
+\toprule
+\textbf{Event} & \textbf{Time from PHI2 rise} & \textbf{Note} \\
+\midrule
+Address valid (6502 tADS) & $-$40\,ns & Before PHI2 rise \\
+SRAM\_CE\# asserted       & $\approx$0\,ns   & Combinational gate on PHI2 \\
+SRAM data valid (tAA=55\,ns) & $+$55\,ns & AS6C4008-55 \\
+6502 data setup deadline  & $+$249\,ns & 279\,ns $-$ 30\,ns tDSR \\
+\textbf{Read margin}      & \textbf{$+$194\,ns} & Adequate \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Write cycle (SRAM)}
+
+WE\# is asserted combinationally when PHI2 is high and the address is
+in the RAMbo window.  The pulse width equals the PHI2-high time:
+
+\[
+t_{WC} = t_{\text{PHI2-high}} \approx 279\,\text{ns}
+\quad \gg \quad
+t_{WC(\text{SRAM})} = 55\,\text{ns}
+\]
+
+\subsection{PBI RAM / ROM (BRAM)}
+
+BRAM reads are triggered on \cmd{phi2\_rise} (one clock cycle after the
+real PHI2 edge, $\approx$40\,ns delay).  The BRAM output is registered
+and valid within one additional clock cycle ($\approx$40\,ns), leaving
+$\approx$199\,ns of margin before the 6502 samples the bus.
+
+% ===========================================================================
+\section{Source File Reference}
+% ===========================================================================
+
+\begin{center}
+\begin{tabular}{lp{9cm}}
+\toprule
+\textbf{File} & \textbf{Description} \\
+\midrule
+\file{C6502\_Interface.vhd} &
+    Top-level VHDL entity (Rev~4).  Generic \cmd{VERA\_IS\_PBI}
+    selects PBI or CCTL mode at synthesis time.  Contains all bus
+    logic, BRAM instances, and SRAM control. \\
+\file{custom\_types.vhd} &
+    Package defining \cmd{rom\_array} (2048$\times$8) and
+    \cmd{ram\_512\_array} (512$\times$8) array types. \\
+\file{pbi\_rom\_pkg.vhd} &
+    Auto-generated package containing the \cmd{PBI\_ROM\_INIT}
+    constant (2048 bytes).  Do not edit manually. \\
+\file{gen\_pbi\_rom\_pkg.py} &
+    Python~3 script that converts a 6502 \file{.bin} file into
+    \file{pbi\_rom\_pkg.vhd}.  Invoked by the MCU Makefile. \\
+\file{board-pin-mapping.pcf} &
+    Pin constraints for iCE40UP5K SG48.
+    All pin numbers are placeholders -- edit before use. \\
+\file{Makefile} &
+    Targets: \cmd{pbi}, \cmd{cctl}, \cmd{all}, \cmd{flash-pbi},
+    \cmd{flash-cctl}, \cmd{flash-pbi-iceprog}, \cmd{flash-cctl-iceprog},
+    \cmd{doc}, \cmd{clean}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

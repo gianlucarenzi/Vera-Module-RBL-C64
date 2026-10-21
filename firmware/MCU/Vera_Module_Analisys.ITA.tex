@@ -1,0 +1,497 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- PACHETTI ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern} % Font più moderno rispetto al default
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{tikz-timing}
+\usepackage{verbatim} % Aggiunto per commentare blocchi
+\usepackage{fancyvrb} % BVerbatim per ASCII art centrata
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+
+% --- CONFIGURAZIONE GEOMETRIA PAGINA ---
+\geometry{a4paper, top=3cm, bottom=3cm, left=2.5cm, right=2.5cm}
+
+% --- CONFIGURAZIONE HYPERREF ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!80!black,
+    citecolor=green!50!black,
+    pdftitle={Analisi Progetto Vera-Module-RBL-C64},
+    pdfauthor={RetroBit Lab},
+}
+
+% --- CONFIGURAZIONE TIKZ ---
+\usetikzlibrary{shapes.geometric, arrows, positioning, chains, shapes.misc}
+
+% --- CONFIGURAZIONE LISTINGS (per il codice) ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98}
+
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\ttfamily,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    language=C++
+}
+
+% --- TITOLO ---
+\title{
+    \vspace{2cm}
+    \hrule
+    \vspace{0.5cm}
+    {\Huge \bfseries Analisi Tecnica del Firmware}\\
+    \vspace{0.2cm}
+    {\Large Progetto \textit{Vera-Module-RBL-C64}}\\
+    \vspace{0.5cm}
+    \hrule
+}
+\author{Analisi del progetto a cura di RetroBit Lab}
+\date{\today}
+
+% --- INIZIO DOCUMENTO ---
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\thispagestyle{empty}
+
+\newpage
+\setcounter{page}{1}
+
+% --- SEZIONE 1: INTRODUZIONE ---
+\section{Introduzione}
+Questo documento presenta un'analisi tecnica del firmware ESP32 per il progetto \textit{Vera-Module-RBL-C64}. Il firmware, eseguito su un ESP32-S3, si interfaccia con il bus del processore 6510 attraverso la \textbf{porta di espansione del Commodore 64}. Espone i registri della scheda video VERA (FPGA) e una \textbf{GeoRAM da 256\,KB} emulata nella RAM interna dell'ESP32.
+
+Il progetto deriva dalla versione Atari (\textit{Vera-Module-RBL-XE}): schema e PCB sono ancora quelli Atari, con le modifiche hardware elencate in \texttt{PIN-MAPPING.md}~\S9. L'analisi si concentra sulla fattibilità temporale dell'interazione fra la MCU e la CPU, sulla struttura del loop del bus e sulla ripartizione del lavoro fra i due core.
+
+% --- SEZIONE 2: ARCHITETTURA DEL SISTEMA ---
+\section{Architettura del Sistema}
+
+\subsection{Componenti Chiave}
+\begin{itemize}
+    \item {\bfseries CPU 6510 (MOS):} il processore del C64, a \textbf{0.985\,MHz} (PAL) o \textbf{1.023\,MHz} (NTSC). PHI2 alto dura $\approx$490\,ns.
+    \item {\bfseries MCU:} \textbf{ESP32-S3FN8} (QFN56, 7$\times$7\,mm) --- dual-core Xtensa LX7 @ 240\,MHz, 512\,KB SRAM, 8\,MB flash in-package Quad SPI, 45 GPIO.
+    \item {\bfseries FPGA VERA:} iCE40UP5K con il firmware VERA; risponde ai registri \$DF00--\$DF1F quando l'ESP32 asserisce \texttt{DEV\_SEL\_N}.
+\end{itemize}
+
+\subsection{Mappa I/O}
+La scheda occupa le due aree I/O della porta di espansione, \texttt{IO1} (\$DE00--\$DEFF) e \texttt{IO2} (\$DF00--\$DFFF). Sul C64 queste aree non hanno memoria interna: non serve disabilitare nulla sulla scheda madre, basta pilotare il bus dati.
+
+\begin{center}
+\begin{tabular}{lllp{4.5cm}}
+\toprule
+\textbf{Indirizzo} & \textbf{Accesso} & \textbf{Funzione} & \textbf{Chi risponde} \\
+\midrule
+\$DE00--\$DEFF & R/W & Finestra GeoRAM (pagina da 256\,B) & ESP32, \texttt{georam\_256k[]} \\
+\$DF00--\$DF1F & R/W & Registri VERA & FPGA, \texttt{DEV\_SEL\_N} asserito \\
+\$DFFD & W & Latch selezione scheda & ESP32 (snoop) \\
+\$DFFE & W & GeoRAM, registro pagina (0--63) & ESP32 (snoop) \\
+\$DFFF & W & GeoRAM, registro blocco (0--15) & ESP32 (snoop) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+VERA e GeoRAM rispondono \textbf{solo a scheda selezionata}: un valore $\neq 0$ scritto in \$DFFD seleziona, \texttt{0} deseleziona. Il latch risponde sempre; con la scheda deselezionata le scritture a \$DFFE/\$DFFF sono ignorate.
+
+La GeoRAM è organizzata in 16 blocchi da 16\,KB, ognuno di 64 pagine da 256\,byte:
+\[
+\text{offset} = \text{blocco} \times 16384 + \text{pagina} \times 256 + (\text{addr} \;\&\; \text{\$FF})
+\]
+I registri sono a sola scrittura, si azzerano all'accensione e sopravvivono al reset del C64, come nell'hardware originale. Sono decodificati esattamente a \$DFFE/\$DFFF, senza i mirror \$DF80--\$DFFD di alcune GeoRAM: per questo il latch a \$DFFD non va in conflitto.
+
+\subsection{Ambiente di build PlatformIO}
+Il file \texttt{platformio.ini} definisce un solo ambiente, \texttt{esp32s3fn8}. Opzioni di compilazione (\texttt{-D}):
+
+\begin{center}
+\begin{tabular}{lcp{8cm}}
+\toprule
+\textbf{Macro} & \textbf{Default} & \textbf{Effetto} \\
+\midrule
+\texttt{CARD\_SEL\_LATCH}           & \texttt{0xFD} & offset in \texttt{IO2} del latch di selezione (\$DFFD) \\
+\texttt{IO\_QUALIFY\_NS}            & 200  & attesa massima di \texttt{/IO1}/\texttt{/IO2} dopo il fronte di salita di PHI2 \\
+\texttt{VERA\_TRACE\_REGS}          & 0    & log di ogni accesso ai registri VERA (solo debug) \\
+\texttt{VERA\_POST\_CDONE\_DELAY\_US} & 1000 & attesa fra \texttt{CDONE} e il rilascio del reset del C64 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Interfacciamento Bus}
+Ogni ciclo è qualificato dalle linee \texttt{/IO1} e \texttt{/IO2} della porta di espansione. Nel C64 le genera il 74LS139 a valle del PLA, che le abilita solo con \texttt{AEC} alto, cioè solo per gli accessi della CPU: i fetch del VIC-II, i cui indirizzi compaiono anch'essi sulla porta, non le asseriscono e vengono ignorati. \texttt{/IO1} e \texttt{/IO2} decodificano già A8--A15, quindi al firmware servono solo A0--A7 come offset nella pagina.
+
+\begin{sloppypar}
+L'adattamento di livello 5\,V\,$\leftrightarrow$\,3.3\,V è affidato a cinque \textbf{74LVC4245} (direzione cablata, tranne \texttt{U19}) e a due porte \textbf{SN74HCT04} (\texttt{U23}). I riferimenti \texttt{U*} seguono la netlist Atari del 2026-09-01; dettaglio in \texttt{PIN-MAPPING.md}~\S6:
+\end{sloppypar}
+
+\begin{itemize}
+    \item {\bfseries U19 --- Bus dati D0--D7 (GPIO\,4--11):} bidirezionale, \texttt{DIR} pilotato da \texttt{U23} con R/W\_ e PHI2. L'ESP32 abilita le proprie uscite con \texttt{GPIO.enable\_w1ts} solo nelle letture della finestra GeoRAM. Il gating di \texttt{\textasciitilde OE\_} va modificato in \texttt{NAND(PHI2, NAND(R/W, AND(DEV\_SEL\_N, /IO1)))}: attivo in scrittura, nelle letture VERA e nelle letture GeoRAM.
+    \item {\bfseries U4 --- A0--A7 (GPIO\,12--19)} e {\bfseries U3 --- A8--A15:} ingressi C64$\rightarrow$ESP32. A8--A15 sono cablati ma non usati dalla decodifica. GPIO\,19/20 condividono i pad USB; USB CDC è disabilitato.
+    \item {\bfseries U6 --- PHI2, R/W\_, /IO1, /IO2 (GPIO\,1, 2, 41, 42):} ingressi C64$\rightarrow$scheda. GPIO\,41 e 42 erano \texttt{EXTSEL\_N} e \texttt{MPD} sulla versione Atari e vanno ricablati (\texttt{PIN-MAPPING.md}~\S9).
+    \item {\bfseries U16 --- ARESET (GPIO\,37) e IRQ della VERA:} uscite scheda$\rightarrow$C64; entrambe devono essere open-drain verso le linee wired-OR \texttt{/RESET} e \texttt{/IRQ}.
+    \item {\bfseries Connessioni dirette (3.3\,V):} \texttt{DEV\_SEL\_N} (GPIO\,40) $\rightarrow$ /CS della VERA; \texttt{CRESET} (GPIO\,38) $\rightarrow$ reset VERA; \texttt{CDONE} (GPIO\,39) $\leftarrow$ VERA.
+\end{itemize}
+
+PHI2, \texttt{/IO1} e \texttt{/IO2} sono letti con il \textbf{Dedicated GPIO input bundle} (\texttt{ee.get\_gpio\_in}, 1\,ciclo CPU); \texttt{DEV\_SEL\_N} è l'unico canale del bundle di uscita (\texttt{ee.wr\_mask\_gpio\_out}). I bundle sono creati dal task del bus sul Core\,0, che è il core che li usa.
+
+\subsection{Ripartizione dei core}
+\label{sec:core}
+
+\begin{center}
+\begin{tabular}{clp{5.5cm}}
+\toprule
+\textbf{Core} & \textbf{Cosa gira} & \textbf{Note} \\
+\midrule
+0 & solo \texttt{MonitorTask} (loop del bus) & priorità \texttt{configMAX\_PRIORITIES - 1}, non cede mai la CPU; l'idle task del Core\,0 è tolto dal task watchdog (\texttt{disableCore0WDT()}) \\
+1 & \texttt{setup()}, \texttt{loop()}, \texttt{Serial} & \texttt{loop()} svuota \texttt{log\_ring} e stampa; qui gira anche l'interrupt della UART \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Il loop del bus passa gli eventi (cambio del latch; accessi ai registri VERA con \texttt{VERA\_TRACE\_REGS=1}) a \texttt{loop()} tramite \texttt{log\_ring}, un ring buffer \emph{single-producer/single-consumer} senza lock. L'inserimento costa poche istruzioni; il timestamp è il tick FreeRTOS in millisecondi. Se il ring è pieno l'evento viene scartato e \texttt{loop()} stampa quanti eventi sono andati persi.
+
+La versione precedente usava \texttt{xQueueSend()} + \texttt{esp\_timer\_get\_time()} (spinlock e sezione critica, $\approx$1\,\textmu s) dentro il loop del bus, e faceva girare il loop sul Core\,1, lo stesso core di \texttt{loop()}: il task del bus, a priorità massima e senza mai cedere la CPU, impediva a \texttt{loop()} di stampare il log.
+
+% --- SEZIONE 3: MAPPING DEI PIN ---
+\section{Mapping dei Pin (ESP32-S3FN8, QFN56)}
+
+I pin fisici del package QFN56 sono numerati 1--56 (più il pad GND centrale). La tabella riporta i segnali con il numero GPIO logico \textbf{e} il numero di pad fisico (Table~2-1 del datasheet ESP32-S3 v2.2).
+
+\textbf{Nota importante:} il MCU \emph{richiede} un \textbf{quarzo esterno a 40\,MHz} sui pin dedicati \textbf{XTAL\_P} (pin\,54) e \textbf{XTAL\_N} (pin\,53); senza quarzo il chip non si avvia (sezione~\ref{sec:xtal}).
+
+\begin{center}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcclll}
+\toprule
+\textbf{Segnale} & \textbf{GPIO} & \textbf{Pin QFN56} & \textbf{IO MUX} & \textbf{Dir.} & \textbf{Note} \\
+\midrule
+\multicolumn{6}{l}{\textit{Bus dati D0--D7 --- bidirezionale via 74LVC4245 U19 (Bank-0 bit 4--11)}} \\
+D0--D7 & 4--11 & 9--16 & GPIO4--11 & I/O & D0 ha un glitch LOW di 60\,µs al power-up \\
+\midrule
+\multicolumn{6}{l}{\textit{Bus indirizzi A0--A7 --- input via 74LVC4245 U4 (Bank-0 bit 12--19)}} \\
+A0--A2 & 12--14 & 17--19 & GPIO12--14 & IN & \\
+A3 & 15 & 21 & XTAL\_32K\_P & IN & pad RTC usato come GPIO; pin\,20 = VDD3P3\_RTC \\
+A4 & 16 & 22 & XTAL\_32K\_N & IN & pad RTC usato come GPIO \\
+A5, A6 & 17, 18 & 23, 24 & GPIO17, 18 & IN & \\
+A7 & 19 & 25 & USB\_D$-$ & IN & USB CDC disabilitato \\
+\midrule
+\multicolumn{6}{l}{\textit{Bus indirizzi A8--A15 --- input via U3, cablati ma non usati dalla decodifica}} \\
+A8, A9 & 20, 21 & 26, 27 & USB\_D$+$, GPIO21 & IN & \\
+A10, A11 & 35, 36 & 40, 41 & GPIO35, 36 & IN & \\
+A12, A13 & 33, 34 & 38, 39 & GPIO33, 34 & IN & \\
+A14, A15 & 45, 46 & 51, 52 & GPIO45, 46 & IN & pin di strapping (sezione~\ref{sec:strapping}) \\
+\midrule
+\multicolumn{6}{l}{\textit{Controllo --- U6 (ingressi) e U16 (uscite)}} \\
+PHI2  &  1 &  6 & GPIO1  & IN  & Dedicated GPIO input ch\,0; 0.985/1.023\,MHz \\
+R/W\_ &  2 &  7 & GPIO2  & IN  & HIGH = lettura \\
+/IO1  & 41 & 47 & MTDI   & IN  & Dedicated GPIO input ch\,1; ex \texttt{EXTSEL\_N}, ex-JTAG \\
+/IO2  & 42 & 48 & MTMS   & IN  & Dedicated GPIO input ch\,2; ex \texttt{MPD}, ex-JTAG \\
+ARESET & 37 & 42 & GPIO37 & OUT & \texttt{/RESET} del C64 (LOW asserito) \\
+\midrule
+\multicolumn{6}{l}{\textit{Segnali diretti (senza level shifter, 3.3\,V)}} \\
+DEV\_SEL\_N & 40 & 45 & MTDO   & OUT & /CS VERA; Dedicated GPIO output ch\,0; ex-JTAG \\
+CRESET      & 38 & 43 & GPIO38 & OUT & /RESET VERA \\
+CDONE       & 39 & 44 & MTCK   & IN  & VERA configurata (HIGH = OK); ex-JTAG \\
+--- & 3 & 8 & GPIO3 & --- & non usato; resistenza 10\,k$\Omega$ obbligatoria (strapping) \\
+BOOT0 & 0 & 5 & GPIO0 & IN & pulsante BOOT / auto-reset; non usato dal firmware \\
+\midrule
+\multicolumn{6}{l}{\textit{Debug}} \\
+UART TX & 43 & 49 & U0TXD & OUT & Serial debug @ 115200 baud \\
+UART RX & 44 & 50 & U0RXD & IN  & non utilizzato dal firmware \\
+\bottomrule
+\end{tabular}%
+}
+\end{center}
+
+\noindent\textbf{Attenzione:} i pin QFN56 30--35 (GPIO\,27--32) sono collegati alla flash Quad SPI in-package (variante FN8) e non devono mai essere connessi esternamente; il pin\,28 (GPIO\,26, \texttt{SPICS1}) è il chip select della PSRAM in-package, assente sulla FN8, e resta sconsigliato (datasheet Table~2-14). GPIO\,47 (pin\,37) e GPIO\,48 (pin\,36) sono liberi. I pin\,53 e\,54 sono pad analogici dedicati al quarzo da 40\,MHz.
+
+\subsection{Pin di strapping --- comportamento al boot con il C64 collegato}
+\label{sec:strapping}
+
+L'ESP32-S3 campiona quattro pin di strapping durante la finestra di reset al power-on, \emph{prima che qualsiasi codice venga eseguito}. \texttt{PIN\_ARESET} (GPIO\,37) diventa un'uscita solo dentro \texttt{setup()}: al momento del campionamento l'ESP32 non ha ancora asserito il reset del C64. È il circuito di power-on reset del C64 (timer 556) a tenere basso il \texttt{RESET\#} del 6510, mettendo il bus indirizzi in alta impedenza. I 74LVC4245, con gli ingressi lato C64 flottanti, \emph{non} garantiscono uscite in alta impedenza: per A14 e A15 il livello campionato dipende dal pull-down interno dell'ESP32 contro un nodo non pilotato. \textbf{Da verificare sulla scheda}; se necessario aggiungere un pull-down da 10\,k$\Omega$ lato ESP32 su GPIO\,45 e GPIO\,46.
+
+\begin{itemize}
+  \item \textbf{GPIO\,0 (pin\,5) --- boot mode, pull-up interno $\approx$45\,k$\Omega$.} Rete \texttt{BOOT0} (\texttt{R33} 4.7\,k$\Omega$ verso 3V3, pulsante \texttt{SW3}, \texttt{C61}, \texttt{R54} verso \texttt{Q4}); non collegato al C64. Campionato HIGH $\rightarrow$ boot SPI dalla flash integrata.
+  \item \textbf{GPIO\,3 (pin\,8) --- sorgente JTAG, nessun pull interno.} Non usato dal firmware; resta la resistenza esterna da 10\,k$\Omega$ (ex \texttt{RAMBO\_EN}), obbligatoria perché il datasheet vieta l'alta impedenza durante lo strapping. Con gli eFuse di default il livello è comunque ignorato.
+  \item \textbf{GPIO\,45 (pin\,51) --- tensione VDD\_SPI, pull-down interno $\approx$5\,k$\Omega$.} Collegato ad A14 tramite \texttt{U3}. Campionato LOW $\rightarrow$ VDD\_SPI = 3.3\,V da VDD3P3\_RTC (Table~3-4, eFuse di default), il valore richiesto dalla flash in-package della FN8 (Table~1-1). Con A14 HIGH al campionamento VDD\_SPI sarebbe 1.8\,V e il chip non si avvierebbe: A14 deve essere LOW al power-on (da verificare), oppure si programmano gli eFuse \texttt{EFUSE\_VDD\_SPI\_FORCE}\,=\,1 e \texttt{EFUSE\_VDD\_SPI\_TIEH}\,=\,1 (irreversibile) per fissare 3.3\,V.
+  \item \textbf{GPIO\,46 (pin\,52) --- messaggi ROM su UART0, pull-down interno $\approx$5\,k$\Omega$.} Collegato ad A15 tramite \texttt{U3}. Campionato LOW $\rightarrow$ messaggi ROM del primo stage disabilitati, corretto per la produzione.
+\end{itemize}
+
+\subsection{Quarzo oscillatore 40\,MHz (pin\,53--54)}
+\label{sec:xtal}
+
+L'ESP32-S3FN8 richiede un quarzo esterno da \textbf{40\,MHz} per il riferimento del PLL che alimenta la CPU a 240\,MHz, l'interfaccia flash e i divisori UART. I pin sono analogici dedicati, non condivisi con GPIO.
+
+\begin{center}
+\begin{BVerbatim}
+XTAL_P (54) --[C1 10pF]-- GND
+     |
+  [X1 40MHz]    <- Rs 0-33 Ohm in serie (opzionale)
+     |
+XTAL_N (53) --[C2 10pF]-- GND
+\end{BVerbatim}
+\end{center}
+
+\begin{center}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll}
+\toprule
+\textbf{Componente} & \textbf{Valore} & \textbf{Note} \\
+\midrule
+X1 -- quarzo & 40\,MHz, SMD 3225 o 2016 & $\pm$10\,ppm; verificare $C_L$ dal datasheet \\
+C1, C2 -- condensatori di carico & 10\,pF, 0402, $\pm$5\,\% & $C_{ext}=2C_L - C_{stray}$;\; $C_{stray}\approx 3$--5\,pF \\
+Rs -- resistenza serie & 0--33\,$\Omega$ (opzionale) & Limita il drive dell'oscillatore \\
+\bottomrule
+\end{tabular}%
+}
+\end{center}
+
+\noindent\textbf{Regole di layout PCB:} tracce XTAL\_P/N più corte possibile ($<$5\,mm); condensatori di carico ai pad del chip; piano di massa solido sotto il quarzo; isolamento dalle tracce PHI2 e D0--D7.
+
+% --- SEZIONE 4: ANALISI DELLE TEMPISTICHE ---
+\section{Analisi delle Tempistiche}
+
+\begin{itemize}
+    \item {\bfseries Ciclo 6510:} $T_{6510} \approx 1015\,\text{ns}$ (PAL, 0.985\,MHz) o $\approx 978\,\text{ns}$ (NTSC, 1.023\,MHz).
+    \item {\bfseries Finestra PHI2 alto:} $T_{PHI2\uparrow} \approx 490\,\text{ns}$. Nella fase PHI1 il bus appartiene al VIC-II.
+    \item {\bfseries Ciclo ESP32 (240\,MHz):} $T_{ESP32} \approx 4.17\,\text{ns}$, quindi
+    \[
+    \frac{T_{PHI2\uparrow}}{T_{ESP32}} = \frac{490\,\text{ns}}{4.17\,\text{ns}} \approx 117\,\text{cicli ESP32}.
+    \]
+\end{itemize}
+
+\subsection{Sequenza di un ciclo}
+\begin{enumerate}
+    \item \textbf{Fronte di salita di PHI2}, letto con \texttt{ee.get\_gpio\_in}.
+    \item \textbf{Qualificazione}: attesa limitata (\texttt{IO\_QUALIFY\_NS}, default 200\,ns) di \texttt{/IO1} o \texttt{/IO2} basso. Se nessuna delle due si attiva, il ciclo non è della scheda (altro indirizzo o fetch VIC-II) e viene saltato. Un ciclo \texttt{/IO1} a scheda deselezionata viene scartato subito, senza leggere il bus.
+    \item \textbf{Lettura di \texttt{GPIO.in}} (A0--A7, R/W\_): a questo punto \texttt{AEC} è alto e l'indirizzo è quello del 6510.
+    \item \textbf{\texttt{/IO1}, finestra GeoRAM}: in lettura l'ESP32 pilota D0--D7 con \texttt{win[off8]}, dove \texttt{win} è il puntatore alla pagina corrente, tenuto in un registro e ricalcolato solo quando si scrive \$DFFE/\$DFFF.
+    \item \textbf{\texttt{/IO2}}: per \$DF00--\$DF1F a scheda selezionata asserisce \texttt{DEV\_SEL\_N} (risponde la FPGA).
+    \item \textbf{Scritture}: il dato del 6510 a 1\,MHz è valido fino a $\approx$200\,ns dopo la salita di PHI2. Il firmware rilegge \texttt{GPIO.in} finché PHI2 è alto (PHI2 è nello stesso registro) e usa l'ultimo campione; poi, durante PHI1, aggiorna GeoRAM, latch e registri.
+    \item \textbf{Fronte di discesa di PHI2}: bus rilasciato e \texttt{DEV\_SEL\_N} de-asserito.
+\end{enumerate}
+
+\subsection{Percorso critico}
+Conteggio dal disassemblato della ELF (\texttt{xtensa-esp32s3-elf-objdump}), a partire dalla lettura di \texttt{GPIO.in}:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Fino a} & \textbf{Versione precedente} & \textbf{Versione corrente} \\
+\midrule
+\texttt{DEV\_SEL\_N} asserito (registri VERA) & $\approx$23 istruzioni & $\approx$9 istruzioni \\
+dato GeoRAM pilotato su D0--D7 & $\approx$40 istruzioni & $\approx$18 istruzioni \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La versione precedente ricalcolava a ogni ciclo l'offset GeoRAM da pagina e blocco letti dalla IRAM e trattava \texttt{/IO1} e \texttt{/IO2} nello stesso ramo. Ora i dati del loop (\texttt{lut\_drive}, registri GeoRAM, \texttt{log\_ring}) sono in DRAM e il codice in IRAM; la GeoRAM da 256\,KB resta in \texttt{.iram0.bss}. Con $\approx$117 cicli disponibili il margine c'è anche considerando l'attesa di \texttt{/IOx}; i tempi reali (letture APB, sincronizzatori GPIO, ritardo di \texttt{/IOx}) vanno confermati con un analizzatore logico.
+
+\subsection{Accesso diretto ai registri GPIO}
+\begin{itemize}
+    \item \texttt{GPIO.in} --- i 32 GPIO del bank-0 in una lettura: PHI2, R/W\_, D0--D7, A0--A7.
+    \item \texttt{GPIO.out} + \texttt{GPIO.enable\_w1ts} --- pilotaggio del bus dati con la LUT \texttt{lut\_drive[]}; \texttt{GPIO.enable\_w1tc} lo rilascia.
+    \item \texttt{GPIO.out1\_w1ts} --- rilascio di \texttt{CRESET} e \texttt{ARESET} all'avvio.
+\end{itemize}
+
+\subsection{Diagramma temporale di una lettura GeoRAM}
+
+\begin{figure}[h!]
+\centering
+\begin{tikztimingtable}[timing/slope=0.1, timing/coldist=2pt, xscale=1.2, yscale=1.5]
+    PHI2      & L H L H L H L H L H L H \\
+    /IO1      & H H H 8L H \\
+    Address   & U 2D{Addr} 8D{Addr} 2U \\
+    R/W Line  & U H H H H H H H H H 2U \\
+    Data Bus  & Z Z Z Z Z Z 4D{Data} 2Z \\
+    \extracode
+    \begin{pgfonlayer}{background}
+        \vertlines[help lines, step=1]{0,1,...,12}
+        \node[below, font=\tiny, text=blue] at (3,-0.5) {/IO1 basso (AEC alto)};
+        \node[below, font=\tiny, text=blue] at (8,-0.5) {ESP32 fornisce \texttt{win[off8]}};
+        \node[below, font=\tiny, text=blue] at (11,-0.5) {CPU legge dati};
+    \end{pgfonlayer}
+\end{tikztimingtable}
+\caption{Ciclo di lettura della finestra GeoRAM gestito dall'ESP32.}
+\label{fig:timing_diagram}
+\end{figure}
+
+% --- SEZIONE 5: CODICE SORGENTE ---
+\section{Frammento di Codice Sorgente}
+Estratto di \texttt{main.cpp}: le definizioni del Dedicated GPIO e il nucleo del \texttt{MonitorTask} (setup dei bundle e sequenza di reset omessi).
+
+\begin{lstlisting}[style=cppstyle, caption={Canali Dedicated GPIO e helper}, label=code:mcu_select]
+#define DEDIC_IN_PHI2        (1u << 0)   /* GPIO 1          */
+#define DEDIC_IN_IO1N        (1u << 1)   /* GPIO 41, active LOW */
+#define DEDIC_IN_IO2N        (1u << 2)   /* GPIO 42, active LOW */
+#define DEDIC_IN_IO_MASK     (DEDIC_IN_IO1N | DEDIC_IN_IO2N)
+#define DEDIC_OUT_DEVSELN    (1u << 0)   /* GPIO 40, active LOW */
+
+/* Base of the 256-byte GeoRAM page currently visible at $DE00. */
+static inline uint8_t * IRAM_ATTR georam_window(uint8_t block, uint8_t page)
+{
+    return &georam_256k[((uint32_t)block << 14) | ((uint32_t)page << 8)];
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle, caption={Nucleo del MonitorTask (Core\,0)}, label=code:monitor_task]
+bool     selected = false;
+uint8_t  page = 0, block = 0;
+uint8_t *win  = georam_window(block, page);
+
+for (;;) {
+    /* 1. Fronte di salita di PHI2 (1 istruzione TIE) */
+    while (!(cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2));
+
+    /* 2. Qualificazione: attesa limitata di /IO1 o /IO2 */
+    uint32_t io_n, t0 = cpu_ll_get_cycle_count();
+    do {
+        io_n = ~cpu_ll_read_dedic_gpio_in() & DEDIC_IN_IO_MASK;
+    } while (!io_n && cpu_ll_get_cycle_count() - t0 < IO_QUALIFY_CYCLES);
+    if (!io_n || ((io_n & DEDIC_IN_IO1N) && !selected)) {
+        while (cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2);
+        continue;
+    }
+
+    uint32_t g_lo = GPIO.in;
+    uint8_t  off8 = decode_addr_lo(g_lo);
+
+    if (io_n & DEDIC_IN_IO1N) {             /* 3a. GeoRAM $DE00-$DEFF */
+        if (g_lo & (1UL << PIN_RW)) {
+            bus_drive(win[off8]);
+            while (cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2);
+            bus_release();
+        } else {                            /* ultimo campione a PHI2 alto */
+            uint32_t last = g_lo, now;
+            while ((now = GPIO.in) & (1UL << PIN_PHI2)) last = now;
+            win[off8] = decode_data(last);
+        }
+        continue;
+    }
+
+    /* 3b. IO2 $DF00-$DFFF */
+    bool is_vera = selected && off8 < VERA_REG_COUNT;
+    if (is_vera)
+        cpu_ll_write_dedic_gpio_mask(DEDIC_OUT_CTRL_MASK, ~DEDIC_OUT_DEVSELN);
+    if (g_lo & (1UL << PIN_RW)) {
+        while (cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2);
+        cpu_ll_write_dedic_gpio_mask(DEDIC_OUT_CTRL_MASK, DEDIC_OUT_CTRL_IDLE);
+        continue;
+    }
+    uint32_t last = g_lo, now;
+    while ((now = GPIO.in) & (1UL << PIN_PHI2)) last = now;
+    cpu_ll_write_dedic_gpio_mask(DEDIC_OUT_CTRL_MASK, DEDIC_OUT_CTRL_IDLE);
+    uint8_t data = decode_data(last);
+
+    /* 4. Effetti durante PHI1 */
+    if (off8 == CARD_SEL_LATCH) {
+        selected = (data != 0);              /* + log_send() al Core 1 */
+    } else if (selected && off8 == GEORAM_PAGE_REG) {
+        page = data & GEORAM_PAGE_MASK;   win = georam_window(block, page);
+    } else if (selected && off8 == GEORAM_BLOCK_REG) {
+        block = data & GEORAM_BLOCK_MASK; win = georam_window(block, page);
+    }
+}
+\end{lstlisting}
+
+% --- SEZIONE 6: DIAGRAMMA DI FLUSSO ---
+\section{Diagramma di Flusso del Firmware}
+Il \texttt{MonitorTask} gira da solo sul Core\,0 con priorità massima; il Core\,1 stampa gli eventi del \texttt{log\_ring} (sezione~\ref{sec:core}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.50, transform shape,
+    node distance=1.2cm and 1.0cm,
+    base/.style={draw, text width=5cm, align=center, minimum height=0.9cm},
+    proc/.style={base, rectangle, fill=blue!10},
+    test/.style={base, diamond, aspect=2, text width=4cm, fill=orange!15},
+    term/.style={base, rounded rectangle, fill=green!20},
+    arrow/.style={-latex, thick}
+]
+    \node[term] (start) {Inizio \texttt{MonitorTask} (Core 0)};
+    \node[proc, below=of start]      (wait_phi2) {Spin-wait salita PHI2};
+    \node[proc, below=of wait_phi2]  (qualify)   {Attesa limitata di /IO1 o /IO2\\(\texttt{IO\_QUALIFY\_NS})};
+    \node[test, below=of qualify]    (ours)      {/IOx basso e\\(/IO2 o selezionata)?};
+    \node[proc, right=1.5cm of ours] (skip)      {Spin-wait discesa PHI2\\(ciclo non della scheda)};
+    \node[proc, below=of ours]       (read_in)   {Lettura \texttt{GPIO.in}: A0--A7, R/W\_};
+    \node[test, below=of read_in]    (is_io1)    {/IO1?};
+
+    \node[proc, below=of is_io1, xshift=-4cm] (geo)  {GeoRAM: lettura \texttt{bus\_drive(win[off8])} fino alla discesa di PHI2;\\scrittura: ultimo campione a PHI2 alto $\rightarrow$ \texttt{win[off8]}};
+    \node[proc, below=of is_io1, xshift=+4cm] (io2)  {IO2: \texttt{DEV\_SEL\_N} basso se \$DF00--\$DF1F e selezionata;\\scrittura: ultimo campione a PHI2 alto};
+
+    \node[proc, below=1.2cm of io2] (effects) {Discesa PHI2: \texttt{DEV\_SEL\_N} alto;\\scrittura: latch \$DFFD (+ \texttt{log\_send()}), pagina/blocco $\rightarrow$ ricalcolo \texttt{win}};
+
+    \draw[arrow] (start)     -- (wait_phi2);
+    \draw[arrow] (wait_phi2) -- (qualify);
+    \draw[arrow] (qualify)   -- (ours);
+    \draw[arrow] (ours)      -- node[above]{No} (skip);
+    \draw[arrow] (ours)      -- node[right, pos=0.4]{Sì} (read_in);
+    \draw[arrow] (read_in)   -- (is_io1);
+    \draw[arrow] (is_io1)    -| node[above, pos=0.25]{Sì} (geo);
+    \draw[arrow] (is_io1)    -| node[above, pos=0.25]{No} (io2);
+    \draw[arrow] (io2)       -- (effects);
+
+    % Ritorno al fronte di salita
+    \coordinate (back) at ([xshift=-3cm]geo.west);
+    \draw[arrow] (geo.west) -- (back) |- (wait_phi2.west);
+    \draw[arrow] (effects.south) -- ++(0,-0.8) -| (back);
+    \coordinate (back2) at ([xshift=1.5cm]skip.east);
+    \draw[arrow] (skip.east) -- (back2) |- (wait_phi2.east);
+\end{tikzpicture}
+\caption{Diagramma di flusso semplificato del \texttt{MonitorTask} (ESP32-S3FN8, C64).}
+\label{fig:flowchart}
+\end{figure}
+
+% --- SEZIONE 7: VERIFICHE HARDWARE ---
+\section{Verifiche hardware}
+\label{sec:hwverif}
+I punti seguenti derivano dalla netlist della versione Atari e dalle modifiche previste per il C64 (\texttt{PIN-MAPPING.md}~\S9); vanno confermati sullo schema aggiornato e con l'oscilloscopio. I requisiti della VERA sul bus (RD\_n e WR\_n distinti, hold del dato dopo la salita di WR\_n, effetti collaterali alla fine di RD\_n, riconfigurazione con CTRL bit\,7) sono descritti in \texttt{VERA-ATARI-HW-REQUIREMENTS.md} e valgono anche per il C64.
+
+\begin{itemize}
+  \item \textbf{Ritardo di \texttt{/IO1}/\texttt{/IO2}.} \texttt{IO\_QUALIFY\_NS} va tarato misurando il ritardo di \texttt{/IOx} rispetto a PHI2 (PLA + 74LS139, qualche decina di ns): troppo corto e la scheda perde cicli, troppo lungo e resta meno tempo per il dato in lettura.
+  \item \textbf{Gating di \texttt{U19}.} \texttt{\textasciitilde OE\_} deve essere attivo solo in scrittura, nelle letture VERA e nelle letture GeoRAM: \texttt{NAND(PHI2, NAND(R/W, AND(DEV\_SEL\_N, /IO1)))}. Con la scheda deselezionata una lettura a \$DExx abilita comunque \texttt{U19} senza che l'ESP32 piloti il bus: su un C64 senza cartuccia quegli indirizzi sono già \emph{open bus}, quindi il comportamento è equivalente.
+  \item \textbf{Hold del dato in scrittura verso la VERA.} Lo stesso fronte di discesa di PHI2 chiude WR\_n e \texttt{U19}: verificare che il dato resti stabile dopo la salita di WR\_n.
+  \item \textbf{\texttt{/RESET} e \texttt{/IRQ} open-drain.} Sul C64 sono linee wired-OR: \texttt{ARESET} e l'IRQ della VERA (oggi push-pull) richiedono uno stadio open-drain (per esempio \texttt{74LVC1G07}).
+  \item \textbf{Linee non usate.} \texttt{/GAME}, \texttt{/EXROM}, \texttt{/ROML}, \texttt{/ROMH}, \texttt{BA}, \texttt{/DMA}, \texttt{/NMI} e Dot Clock restano scollegate: la scheda non mappa ROM e non fa DMA.
+\end{itemize}
+
+\subsection*{Sequenza di reset e configurazione}
+\texttt{setup()} (Core\,1) tiene \texttt{ARESET} e \texttt{CRESET} bassi prima ancora di \texttt{Serial.begin()}, crea il \texttt{MonitorTask} sul Core\,0 e rilascia il controllo. Il task rilascia \texttt{CRESET}, attende \texttt{CDONE} (timeout 5\,s), aspetta \texttt{VERA\_POST\_CDONE\_DELAY\_US} (default 1000\,\textmu s) per il POR interno della VERA e solo allora rilascia \texttt{ARESET}. La sequenza vale solo al power-on; il tasto di reset del C64 deve continuare a funzionare, quindi \texttt{ARESET} va realizzato open-drain.
+
+% --- SEZIONE 8: CONCLUSIONE ---
+\section{Conclusione}
+Con PHI2 alto per $\approx$490\,ns l'ESP32-S3 a 240\,MHz dispone di circa 117 cicli per ciclo di bus, contro i 67 della versione Atari. La qualificazione tramite \texttt{/IO1} e \texttt{/IO2} riduce la decodifica alla sola lettura di A0--A7, e il percorso critico dopo la lettura di \texttt{GPIO.in} è di circa 9 istruzioni fino a \texttt{DEV\_SEL\_N} e circa 18 fino al dato GeoRAM sul bus.
+
+La ripartizione dei core tiene il Core\,0 dedicato al bus, con il log passato al Core\,1 tramite un ring buffer senza lock, e il campionamento delle scritture all'ultimo istante con PHI2 alto rende la cattura del dato indipendente dal ritardo con cui il 6510 lo presenta. Restano da misurare sulla scheda il ritardo di \texttt{/IOx}, il tempo dal fronte di PHI2 al dato GeoRAM e il comportamento di \texttt{U19} dopo la modifica del gating.
+
+\end{document}
