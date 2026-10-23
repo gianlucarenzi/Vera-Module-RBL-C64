@@ -442,22 +442,24 @@ I/O map (single build, `esp32s3fn8`):
 |---------|--------|----------|----------|
 | `$DE00–$DEFF` | R/W | GeoRAM window (256-byte page) | ESP32 |
 | `$DF00–$DF1F` | R/W | VERA registers | FPGA, `DEV_SEL_N` asserted |
-| `$DFFD` | W | Select latch: non-zero selects, `0` deselects | ESP32 (snoop) |
+| `$DFFD` | W | VERA select latch: non-zero selects, `0` deselects | ESP32 (snoop) |
 | `$DFFE` | W | GeoRAM page register (0–63) | ESP32 (snoop) |
 | `$DFFF` | W | GeoRAM block register (0–15) | ESP32 (snoop) |
 
-VERA and GeoRAM respond **only while the card is selected**; the latch always responds.
+The VERA responds **only while selected** through `$DFFD`; the GeoRAM (window and
+registers) is **always active**, like the original cartridge, so existing GeoRAM software
+works without touching `$DFFD`.
 GeoRAM offset = block × 16384 + page × 256 + (addr & $FF). The registers are write-only,
 cleared at power-on and kept across a C64 reset, like the original cartridge. They are
 decoded exactly at `$DFFE`/`$DFFF` (no `$DF80–$DFFD` mirrors), so the latch at `$DFFD`
 does not collide with them.
 
 ```
-LDA #$01 : STA $DFFD   ; select the card: VERA at $DF00, GeoRAM active
-LDA #$04 : STA $DFFF   ; GeoRAM block 4
+LDA #$04 : STA $DFFF   ; GeoRAM block 4 (always active)
 LDA #$23 : STA $DFFE   ; GeoRAM page 35
 LDA $DE45              ; GeoRAM byte $12345
-LDA #$00 : STA $DFFD   ; deselect
+LDA #$01 : STA $DFFD   ; select the VERA at $DF00-$DF1F
+LDA #$00 : STA $DFFD   ; deselect the VERA
 ```
 
 Details, timing analysis and critical-path figures: [`firmware/MCU/README.md`](firmware/MCU/README.md)
@@ -1070,22 +1072,24 @@ Mappa I/O (build unica, `esp32s3fn8`):
 |-----------|---------|----------|--------------|
 | `$DE00–$DEFF` | R/W | Finestra GeoRAM (pagina da 256 byte) | ESP32 |
 | `$DF00–$DF1F` | R/W | Registri VERA | FPGA, `DEV_SEL_N` asserito |
-| `$DFFD` | W | Latch selezione: valore ≠ 0 seleziona, `0` deseleziona | ESP32 (snoop) |
+| `$DFFD` | W | Latch selezione VERA: valore ≠ 0 seleziona, `0` deseleziona | ESP32 (snoop) |
 | `$DFFE` | W | GeoRAM registro pagina (0–63) | ESP32 (snoop) |
 | `$DFFF` | W | GeoRAM registro blocco (0–15) | ESP32 (snoop) |
 
-VERA e GeoRAM rispondono **solo a scheda selezionata**; il latch è sempre attivo.
+La VERA risponde **solo se selezionata** tramite `$DFFD`; la GeoRAM (finestra e registri)
+è **sempre attiva**, come nella cartuccia originale, quindi il software GeoRAM esistente
+funziona senza toccare `$DFFD`.
 Offset GeoRAM = blocco × 16384 + pagina × 256 + (addr & $FF). I registri sono a sola
 scrittura, si azzerano all'accensione e sopravvivono al reset del C64, come nella cartuccia
 originale. Sono decodificati esattamente a `$DFFE`/`$DFFF` (senza i mirror `$DF80–$DFFD`),
 quindi il latch a `$DFFD` non va in conflitto.
 
 ```
-LDA #$01 : STA $DFFD   ; seleziona la scheda: VERA a $DF00, GeoRAM attiva
-LDA #$04 : STA $DFFF   ; GeoRAM blocco 4
+LDA #$04 : STA $DFFF   ; GeoRAM blocco 4 (sempre attiva)
 LDA #$23 : STA $DFFE   ; GeoRAM pagina 35
 LDA $DE45              ; byte GeoRAM $12345
-LDA #$00 : STA $DFFD   ; deseleziona
+LDA #$01 : STA $DFFD   ; seleziona la VERA a $DF00-$DF1F
+LDA #$00 : STA $DFFD   ; deseleziona la VERA
 ```
 
 Dettagli, analisi dei tempi e percorso critico: [`firmware/MCU/README.md`](firmware/MCU/README.md)

@@ -10,7 +10,7 @@ VERA e una GeoRAM 256 KB emulata nelle aree I/O `IO1`/`IO2`:
 |---|---|---|
 | `$DE00–$DEFF` | `/IO1` | finestra GeoRAM (pagina da 256 byte) — ESP32 |
 | `$DF00–$DF1F` | `/IO2` | registri VERA — FPGA (`DEV_SEL_N`) |
-| `$DFFD` | `/IO2` | latch selezione scheda: ≠ 0 seleziona VERA + GeoRAM, `0` deseleziona |
+| `$DFFD` | `/IO2` | latch selezione VERA: ≠ 0 seleziona, `0` deseleziona (la GeoRAM è sempre attiva) |
 | `$DFFE` / `$DFFF` | `/IO2` | GeoRAM registro pagina (0–63) / blocco (0–15), sola scrittura |
 
 > **Origine:** il progetto deriva dalla versione Atari (VERA Module RBL-XE). Schema e PCB
@@ -108,10 +108,10 @@ A14/A15 restano comunque necessari come rete di strapping definita su GPIO 45/46
 /* La pagina arriva da /IO1 ($DE) o /IO2 ($DF): servono solo A0-A7 */
 uint8_t off8 = (GPIO.in >> 12) & 0xFF;            /* A0-A7 — Bank 0 bits 12-19 */
 
-/* /IO1 ($DE00-$DEFF): GeoRAM georam_256k[block<<14 | page<<8 | off8]  (se selezionata) */
-/* /IO2 off8 $00-$1F : VERA, DEV_SEL_N                                (se selezionata) */
-/* /IO2 off8 $FD     : latch selezione, write != 0 seleziona, 0 deseleziona (sempre)   */
-/* /IO2 off8 $FE/$FF : GeoRAM pagina / blocco, solo scrittura          (se selezionata) */
+/* /IO1 ($DE00-$DEFF): GeoRAM georam_256k[block<<14 | page<<8 | off8]  (sempre)        */
+/* /IO2 off8 $00-$1F : VERA, DEV_SEL_N                        (se VERA selezionata) */
+/* /IO2 off8 $FD     : latch selezione VERA, write != 0 seleziona, 0 deseleziona (sempre) */
+/* /IO2 off8 $FE/$FF : GeoRAM pagina / blocco, solo scrittura          (sempre)        */
 ```
 
 ---
@@ -147,7 +147,7 @@ attesa restano ~290 ns per pilotare il bus, più della finestra totale disponibi
 | R/W\_ | 5 | 2 | 7 | GPIO2 | Input | HIGH=read | via U6 | Read / Not-Write |
 | /IO1 | 7 | 41 | 47 | MTDI | Input | LOW | via U6 | Accesso CPU a `$DE00–$DEFF`; abilita anche `U19` nelle letture GeoRAM (§ 6). Ex `EXTSEL_N`, ex-JTAG, reclaimed. |
 | /IO2 | 10 | 42 | 48 | MTMS | Input | LOW | via U6 | Accesso CPU a `$DF00–$DFFF`. Ex-JTAG, reclaimed. |
-| DEV\_SEL\_N | — | 40 | 45 | MTDO | **Output** | LOW | **direct** | VERA chip select (3.3 V) per `$DF00–$DF1F` a scheda selezionata. Ex-JTAG, reclaimed. |
+| DEV\_SEL\_N | — | 40 | 45 | MTDO | **Output** | LOW | **direct** | VERA chip select (3.3 V) per `$DF00–$DF1F` con la VERA selezionata (`$DFFD`). Ex-JTAG, reclaimed. |
 | ARESET | C | 37 | 42 | GPIO37 | **Output** | LOW | via U16 | `/RESET` del C64 — tenuto basso finché la FPGA non è configurata (open-drain consigliato). |
 | CRESET | — | 38 | 43 | GPIO38 | **Output** | LOW | **direct** | VERA FPGA Reset — 3.3 V, diretto al chip FPGA. |
 | CDONE | — | 39 | 44 | MTCK | Input | HIGH | **direct** | VERA FPGA configured status — HIGH = configurazione completata. Ex-JTAG, reclaimed. |
@@ -302,9 +302,8 @@ verso il C64 durante i cicli di lettura del 6510, verso l'ESP32 durante i cicli 
 > 5 V). Il terzo ingresso dell'AND3 Atari (ex `MPD`) va legato a HIGH. Tempi e parti in
 > `VERA-ATARI-HW-REQUIREMENTS.md` §2.1.
 >
-> **Scheda deselezionata:** una lettura a `$DExx` abilita comunque `U19`, ma l'ESP32 non pilota
-> D0–D7 e il valore letto è indeterminato. Sul C64 senza cartuccia quegli indirizzi sono già
-> open bus, quindi il comportamento è equivalente.
+> **GeoRAM sempre attiva:** ogni lettura a `$DExx` abilita `U19` e l'ESP32 pilota D0–D7 con
+> il byte della pagina GeoRAM corrente, indipendentemente dal latch `$DFFD`.
 
 | Canale | Lato A (3.3 V, ESP32-S3) | Lato B (5 V, C64) |
 |---|---|---|

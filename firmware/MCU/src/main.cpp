@@ -8,11 +8,12 @@
  * decoded at runtime from the full 16-bit address bus (A0–A15):
  *   - IO1 ($DE00–$DEFF): GeoRAM 256 KB data window (one 256-byte page)
  *   - IO2 ($DF00–$DF1F): VERA card registers (FPGA, DEV_SEL_N)
- *   - IO2 ($DFFD)      : card select latch (write != 0 selects, 0 deselects)
+ *   - IO2 ($DFFD)      : VERA select latch (write != 0 selects, 0 deselects)
  *   - IO2 ($DFFE)      : GeoRAM page register  (write-only, 0-63)
  *   - IO2 ($DFFF)      : GeoRAM block register (write-only, 0-15)
  *
- * VERA and GeoRAM respond only while the card is selected via $DFFD.
+ * The VERA responds only while selected via $DFFD; the GeoRAM (window and
+ * registers) is always active, like the original cartridge.
  *
  * Every cycle is qualified by the C64 /IO1 and /IO2 lines.  The PLA asserts
  * them only for CPU accesses (AEC high): VIC-II fetches, whose addresses also
@@ -189,7 +190,7 @@ static inline uint8_t IRAM_ATTR decode_data(uint32_t lo)
 #define VERA_REG_BASE       0xDF00u  /* VERA registers $DF00-$DF1F           */
 #define VERA_REG_COUNT      0x20u
 #ifndef CARD_SEL_LATCH
-#define CARD_SEL_LATCH      0xFDu    /* $DFFD: write != 0 selects, 0 deselects */
+#define CARD_SEL_LATCH      0xFDu    /* $DFFD: VERA select, write != 0 selects, 0 deselects */
 #endif
 #define GEORAM_PAGE_REG     0xFEu    /* $DFFE: 256-byte page in block (0-63) */
 #define GEORAM_BLOCK_REG    0xFFu    /* $DFFF: 16 KB block (0-15 for 256 KB) */
@@ -228,7 +229,7 @@ static inline uint8_t IRAM_ATTR decode_data(uint32_t lo)
  * =========================================================================== */
 #define LOG_RING_SIZE 64u   /* power of two */
 
-#define EVT_LATCH 0   /* card select latch state change */
+#define EVT_LATCH 0   /* VERA select latch state change */
 #define EVT_REG   1   /* VERA register ($DFxx) access */
 
 /* flags: bit0=write(1)/read(0)  bit1=latch state (EVT_LATCH)  bit2=DEV_SEL asserted */
@@ -432,9 +433,9 @@ static void IRAM_ATTR MonitorTask(void *arg)
             }
             while (!io_n && (cpu_ll_get_cycle_count() - t0) < IO_QUALIFY_CYCLES);
         }
-        if (!io_n || ((io_n & DEDIC_IN_IO1N) && !selected))
+        if (!io_n)
         {
-            /* Not ours: no /IOx, or the GeoRAM window while deselected. */
+            /* Not ours: no /IOx. */
             while (cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2);
             continue;
         }
@@ -444,7 +445,7 @@ static void IRAM_ATTR MonitorTask(void *arg)
 
         if (io_n & DEDIC_IN_IO1N)
         {
-            /* 3a. IO1 $DE00-$DEFF: GeoRAM window (card selected). */
+            /* 3a. IO1 $DE00-$DEFF: GeoRAM window (always active). */
             if (g_lo & (1UL << PIN_RW))
             {
                 bus_drive(win[off8]);
@@ -504,13 +505,13 @@ static void IRAM_ATTR MonitorTask(void *arg)
                 log_send(EVT_LATCH, off8, data, 0x01u | (selected ? 0x02u : 0x00u));
             }
         }
-        else if (selected && off8 == GEORAM_PAGE_REG)
+        else if (off8 == GEORAM_PAGE_REG)
         {
             page        = data & GEORAM_PAGE_MASK;
             georam_page = page;
             win         = georam_window(block, page);
         }
-        else if (selected && off8 == GEORAM_BLOCK_REG)
+        else if (off8 == GEORAM_BLOCK_REG)
         {
             block        = data & GEORAM_BLOCK_MASK;
             georam_block = block;
@@ -552,7 +553,7 @@ void setup(void)
 
     Serial.printf("[VeraX16] Mode: C64 expansion port (VERA $%04X-$%04X, latch $DF%02X)\n",
                   VERA_REG_BASE, VERA_REG_BASE + VERA_REG_COUNT - 1u, CARD_SEL_LATCH);
-    Serial.println("[VeraX16] GeoRAM 256K: $DE00 window, $DFFE/$DFFF regs");
+    Serial.println("[VeraX16] GeoRAM 256K: $DE00 window, $DFFE/$DFFF regs (always active)");
 
     /* Configure GPIO Modes */
     gpio_config_t cfg = {};
@@ -690,7 +691,7 @@ void loop(void)
         if (evt.type == EVT_LATCH)
         {
             bool enabled = (evt.flags & 0x02) != 0;
-            Serial.printf("[%5lu.%03lu] [SEL ] Card %s ($%02X written to $DF%02X)\n",
+            Serial.printf("[%5lu.%03lu] [SEL ] VERA %s ($%02X written to $DF%02X)\n",
                           sec, ms,
                           enabled ? "ENABLED " : "DISABLED", evt.data,
                           CARD_SEL_LATCH);

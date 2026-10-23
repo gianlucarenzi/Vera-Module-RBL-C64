@@ -12,12 +12,13 @@ use ieee.numeric_std.all;
 -- I/O map:
 --   IO1 $DE00-$DEFF : GeoRAM data window (one 256-byte page), external SRAM
 --   IO2 $DF00-$DF1F : VERA registers, VERA_CS asserted
---   IO2 $DFFD       : card select latch, write != $00 selects, $00 deselects
+--   IO2 $DFFD       : VERA select latch, write != $00 selects, $00 deselects
 --   IO2 $DFFE       : GeoRAM page register  (write only, 0-63)
 --   IO2 $DFFF       : GeoRAM block register (write only, 0-15)
 --
--- VERA, the GeoRAM window and the GeoRAM registers respond only while the
--- card is selected; the latch always responds.
+-- The VERA responds only while selected through $DFFD (per-cycle VERA_CS:
+-- /IO2, $DF00-$DF1F, latch set, PHI2 high).  The GeoRAM window and registers
+-- are always active, like the original cartridge; the latch always responds.
 --
 -- Every access is qualified by the C64 /IO1 and /IO2 lines.  The PLA asserts
 -- them only for CPU accesses (AEC high), so VIC-II fetches, whose addresses
@@ -39,7 +40,7 @@ use ieee.numeric_std.all;
 --   6 x 40 ns = 240 ns, i.e. ~280-320 ns after the real edge), well inside the
 --   ~490 ns PHI2-high window (PAL 0.985 MHz / NTSC 1.023 MHz).
 --
--- Latch and GeoRAM registers power up at zero (card deselected) and are not
+-- Latch and GeoRAM registers power up at zero (VERA deselected) and are not
 -- cleared by a C64 reset, like the original GeoRAM.
 --
 -- BRAM usage: 0 / 30 EBR.
@@ -97,7 +98,7 @@ architecture Behavioral of C6502_Interface is
     -- -------------------------------------------------------------------------
     -- Internal registers
     -- -------------------------------------------------------------------------
-    signal card_sel     : std_logic := '0';                             -- card selected
+    signal vera_sel     : std_logic := '0';                             -- VERA selected ($DFFD)
     signal georam_page  : std_logic_vector(5 downto 0) := (others => '0');
     signal georam_block : std_logic_vector(3 downto 0) := (others => '0');
 
@@ -116,10 +117,10 @@ begin
     -- Address decode
     -- =========================================================================
     sel_latch  <= '1' when IO2_N='0' and A = C_LATCH_OFFS else '0';
-    sel_page   <= '1' when IO2_N='0' and A = C_PAGE_OFFS  and card_sel='1' else '0';
-    sel_block  <= '1' when IO2_N='0' and A = C_BLOCK_OFFS and card_sel='1' else '0';
-    sel_vera   <= '1' when IO2_N='0' and A(7 downto 5) = C_VERA_TOP and card_sel='1' else '0';
-    sel_georam <= '1' when IO1_N='0' and card_sel='1' else '0';
+    sel_page   <= '1' when IO2_N='0' and A = C_PAGE_OFFS  else '0';
+    sel_block  <= '1' when IO2_N='0' and A = C_BLOCK_OFFS else '0';
+    sel_vera   <= '1' when IO2_N='0' and A(7 downto 5) = C_VERA_TOP and vera_sel='1' else '0';
+    sel_georam <= '1' when IO1_N='0' else '0';
 
     -- =========================================================================
     -- PHI2 synchroniser and sample point
@@ -157,7 +158,7 @@ begin
 
     -- =========================================================================
     -- Main process -- register writes in IO2
-    --   1. $DFFD card select latch: != $00 selects, $00 deselects
+    --   1. $DFFD VERA select latch: != $00 selects, $00 deselects
     --   2. $DFFE GeoRAM page  register (6 bits)
     --   3. $DFFF GeoRAM block register (4 bits)
     -- =========================================================================
@@ -166,12 +167,12 @@ begin
         if rising_edge(CLK) then
             if sample = '1' and RNW = '0' then
 
-                -- 1. Card select latch
+                -- 1. VERA select latch
                 if sel_latch = '1' then
                     if D = x"00" then
-                        card_sel <= '0';
+                        vera_sel <= '0';
                     else
-                        card_sel <= '1';
+                        vera_sel <= '1';
                     end if;
                 end if;
 
@@ -208,7 +209,7 @@ begin
     --   while CE# is low.
     --
     -- SRAM_CE_N is also the GeoRAM term of the data transceiver (U19) output
-    -- enable: the card drives the C64 bus only for selected GeoRAM reads.
+    -- enable: the card drives the C64 bus for GeoRAM reads.
     -- =========================================================================
     SRAM_PAGE  <= georam_page;
     SRAM_BLOCK <= georam_block;

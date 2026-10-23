@@ -12,8 +12,9 @@ dual-core Xtensa LX7 @ 240 MHz) montato sul modulo Vera-Module-RBL-XE.
 
 Il modulo si collega alla **porta di espansione del Commodore 64**. Espone i
 registri VERA in `IO2` (`$DF00–$DF1F`) e una **GeoRAM 256 KB** emulata
-(finestra `$DE00–$DEFF` in `IO1`, registri `$DFFE`/`$DFFF`). Entrambe si attivano
-scrivendo un valore ≠ 0 nel latch `$DFFD` e si disattivano scrivendo `0`.
+(finestra `$DE00–$DEFF` in `IO1`, registri `$DFFE`/`$DFFF`). La VERA si attiva
+scrivendo un valore ≠ 0 nel latch `$DFFD` e si disattiva scrivendo `0`; la GeoRAM
+è sempre attiva, come nella cartuccia originale.
 Ogni ciclo è qualificato dalle linee `/IO1` (GPIO 41) e `/IO2` (GPIO 42) della
 porta di espansione, che il PLA asserisce solo per accessi CPU: i fetch del VIC-II
 vengono ignorati. La pagina è data dalla linea `/IOx` attiva, A0–A7 danno l'offset.
@@ -67,15 +68,14 @@ utile con PHI2 alto ≈ 490 ns, circa 117 cicli CPU a 240 MHz):
 2. Attende, per al massimo `IO_QUALIFY_NS` (default 200 ns), che `/IO1` o
    `/IO2` vada basso (sempre via Dedicated GPIO). Se non succede, il ciclo non è
    della scheda (altro indirizzo o fetch VIC-II): salta all'attesa del fronte di
-   discesa senza toccare nulla. Un ciclo `/IO1` a scheda deselezionata viene
-   scartato subito, senza leggere il bus.
+   discesa senza toccare nulla.
 3. Legge A0–A7 e R/W da `GPIO.in` (una lettura APB): ora `AEC` è alto e
    l'indirizzo sulla porta è quello del 6510. La pagina `$DE`/`$DF` è data da
    quale delle due linee `/IOx` è attiva (`decode_addr_lo()`).
 4. **`/IO1` (GeoRAM):** in lettura guida D0–D7 con `bus_drive(win[off8])`, dove
    `win` punta alla pagina GeoRAM corrente; il puntatore è tenuto in un registro e
    ricalcolato solo quando si scrive `$DFFE`/`$DFFF`.
-5. **`/IO2`:** per `$DF00–$DF1F` a scheda selezionata asserisce `DEV_SEL_N`
+5. **`/IO2`:** per `$DF00–$DF1F` con la VERA selezionata asserisce `DEV_SEL_N`
    (**Dedicated GPIO out**, `ee.wr_mask_gpio_out`): risponde la FPGA.
 6. **Scritture:** il dato del 6510 è valido fino a ~200 ns dopo la salita di
    PHI2. Il loop rilegge `GPIO.in` finché PHI2 è alto (PHI2 è nello stesso
@@ -167,19 +167,19 @@ non serve disabilitare nulla sulla scheda madre, basta pilotare il bus dati.
 |---|---|---|---|
 | `$DE00–$DEFF` | R/W | Finestra GeoRAM (pagina da 256 byte) | ESP32 → `georam_256k[]` |
 | `$DF00–$DF1F` | R/W | Registri VERA | FPGA, `DEV_SEL_N` asserito |
-| `$DFFD` | W | **Latch selezione**: valore ≠ 0 seleziona, `0` deseleziona | snoop ESP32 |
+| `$DFFD` | W | **Latch selezione VERA**: valore ≠ 0 seleziona, `0` deseleziona | snoop ESP32 |
 | `$DFFE` | W | GeoRAM registro pagina (0–63) | snoop ESP32 |
 | `$DFFF` | W | GeoRAM registro blocco (0–15) | snoop ESP32 |
 
-VERA e GeoRAM rispondono **solo a scheda selezionata**. Il latch è sempre attivo.
-Con la scheda deselezionata le scritture a `$DFFE`/`$DFFF` sono ignorate.
+La VERA risponde **solo se selezionata** tramite `$DFFD`. La GeoRAM (finestra e
+registri `$DFFE`/`$DFFF`) è **sempre attiva**. Il latch è sempre attivo.
 
 ```
-LDA #$01 : STA $DFFD   ; seleziona la scheda: VERA a $DF00, GeoRAM attiva
-LDA #$04 : STA $DFFF   ; GeoRAM blocco 4
+LDA #$04 : STA $DFFF   ; GeoRAM blocco 4 (sempre attiva)
 LDA #$23 : STA $DFFE   ; GeoRAM pagina 35
 LDA $DE45              ; byte GeoRAM $12345
-LDA #$00 : STA $DFFD   ; deseleziona
+LDA #$01 : STA $DFFD   ; seleziona la VERA a $DF00-$DF1F
+LDA #$00 : STA $DFFD   ; deseleziona la VERA
 ```
 
 ### GeoRAM 256 KB

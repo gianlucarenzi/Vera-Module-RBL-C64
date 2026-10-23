@@ -115,14 +115,14 @@ La scheda occupa le due aree I/O della porta di espansione, \texttt{IO1} (\$DE00
 \midrule
 \$DE00--\$DEFF & R/W & Finestra GeoRAM (pagina da 256\,B) & ESP32, \texttt{georam\_256k[]} \\
 \$DF00--\$DF1F & R/W & Registri VERA & FPGA, \texttt{DEV\_SEL\_N} asserito \\
-\$DFFD & W & Latch selezione scheda & ESP32 (snoop) \\
+\$DFFD & W & Latch selezione VERA & ESP32 (snoop) \\
 \$DFFE & W & GeoRAM, registro pagina (0--63) & ESP32 (snoop) \\
 \$DFFF & W & GeoRAM, registro blocco (0--15) & ESP32 (snoop) \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-VERA e GeoRAM rispondono \textbf{solo a scheda selezionata}: un valore $\neq 0$ scritto in \$DFFD seleziona, \texttt{0} deseleziona. Il latch risponde sempre; con la scheda deselezionata le scritture a \$DFFE/\$DFFF sono ignorate.
+La VERA risponde \textbf{solo se selezionata}: un valore $\neq 0$ scritto in \$DFFD la seleziona, \texttt{0} la deseleziona. La GeoRAM (finestra e registri \$DFFE/\$DFFF) è \textbf{sempre attiva}, come nella cartuccia originale. Il latch risponde sempre.
 
 La GeoRAM è organizzata in 16 blocchi da 16\,KB, ognuno di 64 pagine da 256\,byte:
 \[
@@ -292,10 +292,10 @@ Rs -- resistenza serie & 0--33\,$\Omega$ (opzionale) & Limita il drive dell'osci
 \subsection{Sequenza di un ciclo}
 \begin{enumerate}
     \item \textbf{Fronte di salita di PHI2}, letto con \texttt{ee.get\_gpio\_in}.
-    \item \textbf{Qualificazione}: attesa limitata (\texttt{IO\_QUALIFY\_NS}, default 200\,ns) di \texttt{/IO1} o \texttt{/IO2} basso. Se nessuna delle due si attiva, il ciclo non è della scheda (altro indirizzo o fetch VIC-II) e viene saltato. Un ciclo \texttt{/IO1} a scheda deselezionata viene scartato subito, senza leggere il bus.
+    \item \textbf{Qualificazione}: attesa limitata (\texttt{IO\_QUALIFY\_NS}, default 200\,ns) di \texttt{/IO1} o \texttt{/IO2} basso. Se nessuna delle due si attiva, il ciclo non è della scheda (altro indirizzo o fetch VIC-II) e viene saltato.
     \item \textbf{Lettura di \texttt{GPIO.in}} (A0--A7, R/W\_): a questo punto \texttt{AEC} è alto e l'indirizzo è quello del 6510.
     \item \textbf{\texttt{/IO1}, finestra GeoRAM}: in lettura l'ESP32 pilota D0--D7 con \texttt{win[off8]}, dove \texttt{win} è il puntatore alla pagina corrente, tenuto in un registro e ricalcolato solo quando si scrive \$DFFE/\$DFFF.
-    \item \textbf{\texttt{/IO2}}: per \$DF00--\$DF1F a scheda selezionata asserisce \texttt{DEV\_SEL\_N} (risponde la FPGA).
+    \item \textbf{\texttt{/IO2}}: per \$DF00--\$DF1F con la VERA selezionata asserisce \texttt{DEV\_SEL\_N} (risponde la FPGA).
     \item \textbf{Scritture}: il dato del 6510 a 1\,MHz è valido fino a $\approx$200\,ns dopo la salita di PHI2. Il firmware rilegge \texttt{GPIO.in} finché PHI2 è alto (PHI2 è nello stesso registro) e usa l'ultimo campione; poi, durante PHI1, aggiorna GeoRAM, latch e registri.
     \item \textbf{Fronte di discesa di PHI2}: bus rilasciato e \texttt{DEV\_SEL\_N} de-asserito.
 \end{enumerate}
@@ -377,7 +377,7 @@ for (;;) {
     do {
         io_n = ~cpu_ll_read_dedic_gpio_in() & DEDIC_IN_IO_MASK;
     } while (!io_n && cpu_ll_get_cycle_count() - t0 < IO_QUALIFY_CYCLES);
-    if (!io_n || ((io_n & DEDIC_IN_IO1N) && !selected)) {
+    if (!io_n) {
         while (cpu_ll_read_dedic_gpio_in() & DEDIC_IN_PHI2);
         continue;
     }
@@ -415,9 +415,9 @@ for (;;) {
     /* 4. Effetti durante PHI1 */
     if (off8 == CARD_SEL_LATCH) {
         selected = (data != 0);              /* + log_send() al Core 1 */
-    } else if (selected && off8 == GEORAM_PAGE_REG) {
+    } else if (off8 == GEORAM_PAGE_REG) {
         page = data & GEORAM_PAGE_MASK;   win = georam_window(block, page);
-    } else if (selected && off8 == GEORAM_BLOCK_REG) {
+    } else if (off8 == GEORAM_BLOCK_REG) {
         block = data & GEORAM_BLOCK_MASK; win = georam_window(block, page);
     }
 }
@@ -441,13 +441,13 @@ Il \texttt{MonitorTask} gira da solo sul Core\,0 con priorità massima; il Core\
     \node[term] (start) {Inizio \texttt{MonitorTask} (Core 0)};
     \node[proc, below=of start]      (wait_phi2) {Spin-wait salita PHI2};
     \node[proc, below=of wait_phi2]  (qualify)   {Attesa limitata di /IO1 o /IO2\\(\texttt{IO\_QUALIFY\_NS})};
-    \node[test, below=of qualify]    (ours)      {/IOx basso e\\(/IO2 o selezionata)?};
+    \node[test, below=of qualify]    (ours)      {/IO1 o /IO2\\basso?};
     \node[proc, right=1.5cm of ours] (skip)      {Spin-wait discesa PHI2\\(ciclo non della scheda)};
     \node[proc, below=of ours]       (read_in)   {Lettura \texttt{GPIO.in}: A0--A7, R/W\_};
     \node[test, below=of read_in]    (is_io1)    {/IO1?};
 
     \node[proc, below=of is_io1, xshift=-4cm] (geo)  {GeoRAM: lettura \texttt{bus\_drive(win[off8])} fino alla discesa di PHI2;\\scrittura: ultimo campione a PHI2 alto $\rightarrow$ \texttt{win[off8]}};
-    \node[proc, below=of is_io1, xshift=+4cm] (io2)  {IO2: \texttt{DEV\_SEL\_N} basso se \$DF00--\$DF1F e selezionata;\\scrittura: ultimo campione a PHI2 alto};
+    \node[proc, below=of is_io1, xshift=+4cm] (io2)  {IO2: \texttt{DEV\_SEL\_N} basso se \$DF00--\$DF1F e VERA selezionata;\\scrittura: ultimo campione a PHI2 alto};
 
     \node[proc, below=1.2cm of io2] (effects) {Discesa PHI2: \texttt{DEV\_SEL\_N} alto;\\scrittura: latch \$DFFD (+ \texttt{log\_send()}), pagina/blocco $\rightarrow$ ricalcolo \texttt{win}};
 
@@ -479,7 +479,7 @@ I punti seguenti derivano dalla netlist della versione Atari e dalle modifiche p
 
 \begin{itemize}
   \item \textbf{Ritardo di \texttt{/IO1}/\texttt{/IO2}.} \texttt{IO\_QUALIFY\_NS} va tarato misurando il ritardo di \texttt{/IOx} rispetto a PHI2 (PLA + 74LS139, qualche decina di ns): troppo corto e la scheda perde cicli, troppo lungo e resta meno tempo per il dato in lettura.
-  \item \textbf{Gating di \texttt{U19}.} \texttt{\textasciitilde OE\_} deve essere attivo solo in scrittura, nelle letture VERA e nelle letture GeoRAM: \texttt{NAND(PHI2, NAND(R/W, AND(DEV\_SEL\_N, /IO1)))}. Con la scheda deselezionata una lettura a \$DExx abilita comunque \texttt{U19} senza che l'ESP32 piloti il bus: su un C64 senza cartuccia quegli indirizzi sono già \emph{open bus}, quindi il comportamento è equivalente.
+  \item \textbf{Gating di \texttt{U19}.} \texttt{\textasciitilde OE\_} deve essere attivo solo in scrittura, nelle letture VERA e nelle letture GeoRAM: \texttt{NAND(PHI2, NAND(R/W, AND(DEV\_SEL\_N, /IO1)))}. La GeoRAM è sempre attiva: ogni lettura a \$DExx abilita \texttt{U19} e l'ESP32 pilota il bus con il byte della pagina corrente, indipendentemente dal latch \$DFFD.
   \item \textbf{Hold del dato in scrittura verso la VERA.} Lo stesso fronte di discesa di PHI2 chiude WR\_n e \texttt{U19}: verificare che il dato resti stabile dopo la salita di WR\_n.
   \item \textbf{\texttt{/RESET} e \texttt{/IRQ} open-drain.} Sul C64 sono linee wired-OR: \texttt{ARESET} e l'IRQ della VERA (oggi push-pull) richiedono uno stadio open-drain (per esempio \texttt{74LVC1G07}).
   \item \textbf{Linee non usate.} \texttt{/GAME}, \texttt{/EXROM}, \texttt{/ROML}, \texttt{/ROMH}, \texttt{BA}, \texttt{/DMA}, \texttt{/NMI} e Dot Clock restano scollegate: la scheda non mappa ROM e non fa DMA.

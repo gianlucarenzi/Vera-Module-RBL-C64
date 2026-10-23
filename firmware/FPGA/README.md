@@ -11,21 +11,22 @@ Single bitstream, no generics to choose.
 |---------|------|----------|----------------|
 | `$DE00–$DEFF` | 256 B | GeoRAM data window (one page of 256 KB) | External SRAM |
 | `$DF00–$DF1F` | 32 B | VERA registers — `VERA_CS` asserted | Combinational |
-| `$DFFD` | 1 B | Card select latch (write only): `≠ $00` selects, `$00` deselects | Register |
+| `$DFFD` | 1 B | VERA select latch (write only): `≠ $00` selects, `$00` deselects | Register |
 | `$DFFE` | 1 B | GeoRAM page register (write only, 0–63, D5–D0) | Register |
 | `$DFFF` | 1 B | GeoRAM block register (write only, 0–15, D3–D0) | Register |
 
-VERA, the GeoRAM window and the GeoRAM registers respond **only while the card is
-selected**; the latch always responds.  Latch and GeoRAM registers power up at
-zero (card deselected) and are not cleared by a C64 reset, like the original
-GeoRAM.
+The VERA responds **only while selected** through `$DFFD` (`VERA_CS` per cycle:
+`/IO2`, `$DF00–$DF1F`, latch set, PHI2 high).  The GeoRAM window and registers
+are **always active**, like the original cartridge; the latch always responds.
+Latch and GeoRAM registers power up at zero (VERA deselected) and are not
+cleared by a C64 reset, like the original GeoRAM.
 
 ```
-LDA #$01 : STA $DFFD   ; select the card: VERA at $DF00, GeoRAM on
-LDA #$04 : STA $DFFF   ; GeoRAM block 4
+LDA #$04 : STA $DFFF   ; GeoRAM block 4 (always active)
 LDA #$23 : STA $DFFE   ; GeoRAM page 35
 LDA $DE45              ; GeoRAM byte $12345
-LDA #$00 : STA $DFFD   ; deselect
+LDA #$01 : STA $DFFD   ; select the VERA at $DF00-$DF1F
+LDA #$00 : STA $DFFD   ; deselect the VERA
 ```
 
 **Qualification by `/IO1` and `/IO2`.**  Every access is qualified by the C64
@@ -71,7 +72,7 @@ FPGA, and is powered at 3.3 V.
 
 | Signal | Active when |
 |--------|-------------|
-| `SRAM_CE_N` | card selected, `/IO1` low, PHI2 high |
+| `SRAM_CE_N` | `/IO1` low, PHI2 high |
 | `SRAM_OE_N` | as `CE#`, and R/W = read |
 | `SRAM_WE_N` | as `CE#`, and R/W = write — data latched by the SRAM on the WE# rising edge (PHI2 fall) |
 
@@ -84,9 +85,9 @@ FPGA, and is powered at 3.3 V.
 
 **Data transceiver.**  The board must drive the C64 data bus during GeoRAM
 reads.  `SRAM_CE_N` is the GeoRAM term of the data transceiver output enable:
-`~OE_ = NAND(PHI2, NAND(R/W, AND(VERA_CS, SRAM_CE_N)))`.  Since `SRAM_CE_N`
-already includes the card select, the bus is never driven at `$DExx` while the
-card is deselected.
+`~OE_ = NAND(PHI2, NAND(R/W, AND(VERA_CS, SRAM_CE_N)))`: every `$DExx` read
+is driven from the SRAM (GeoRAM always active), `$DF00–$DF1F` reads only with
+the VERA selected.
 
 ### SPI flash (FPGA configuration)
 Any **SPI NOR flash** compatible with the iCE40 boot protocol, e.g.
@@ -330,7 +331,7 @@ nextpnr rejects them with an error.
 | `RNW` | In | 36 | 5 | Read/Not-Write: high = read, low = write |
 | `IO1_N` | In | 26 | 7 | `/IO1`, CPU access to `$DE00–$DEFF` (active low) |
 | `IO2_N` | In | 27 | 10 | `/IO2`, CPU access to `$DF00–$DFFF` (active low) |
-| `VERA_CS` | Out | 32 | — | VERA chip select (active low): `$DF00–$DF1F`, card selected, PHI2 high |
+| `VERA_CS` | Out | 32 | — | VERA chip select (active low): `$DF00–$DF1F`, VERA selected (`$DFFD`), PHI2 high |
 | `SRAM_PAGE[0]` | Out | 2 | — | SRAM A[8] — page bit 0 |
 | `SRAM_PAGE[1]` | Out | 3 | — | SRAM A[9] — page bit 1 |
 | `SRAM_PAGE[2]` | Out | 4 | — | SRAM A[10] — page bit 2 |
