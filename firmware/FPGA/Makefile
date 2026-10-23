@@ -9,7 +9,7 @@
 #   icestorm          https://github.com/YosysHQ/icestorm  (icepack, iceprog)
 #   openFPGALoader    https://github.com/trabucayre/openFPGALoader
 #
-# Commodore 64 expansion port, VERA only (no GeoRAM):
+# Commodore 64 expansion port, VERA + GeoRAM 256 KB:
 #
 #   make               -- build C6502_Interface.bin
 #   make flash         -- flash the bitstream via openFPGALoader

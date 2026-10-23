@@ -82,8 +82,8 @@
 % ---------------------------------------------------------------------------
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small VERA RBL-XE -- FPGA Build \& Programming Guide}
-\fancyhead[R]{\small Rev~4}
+\fancyhead[L]{\small VERA RBL-C64 -- FPGA Build \& Programming Guide}
+\fancyhead[R]{\small Rev~6}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -108,14 +108,14 @@
 \begin{titlepage}
     \centering
     \vspace*{30mm}
-    {\Huge\bfseries VERA RBL-XE\\[4mm]
+    {\Huge\bfseries VERA RBL-C64\\[4mm]
      FPGA Build \& Programming Guide\par}
     \vspace{10mm}
-    {\large iCE40UP5K -- Rev~4\par}
+    {\large iCE40UP5K -- Rev~6\par}
     \vspace{8mm}
     {\normalsize
-        6502 bus controller with RAMbo 256\,KB, PBI RAM/ROM,\\
-        and external SRAM support\par}
+        Commodore 64 expansion-port interface:\\
+        VERA registers in IO2 and GeoRAM 256\,KB on external SRAM\par}
     \vfill
     {\small Last updated: \today\par}
 \end{titlepage}
@@ -128,65 +128,94 @@
 % ===========================================================================
 
 This document describes the complete workflow for building and programming
-the FPGA firmware for the VERA RBL-XE module.  The firmware implements a
-6502 bus controller on a Lattice iCE40UP5K, replacing the ESP32-S3 MCU
-used in the previous design.
+the FPGA firmware for the VERA RBL-C64 module.  The firmware implements the
+Commodore 64 expansion-port bus interface on a Lattice iCE40UP5K\@.  It drives
+the VERA chip select for the registers in \sig{IO2} and implements a
+\textbf{GeoRAM 256\,KB} on an external AS6C4008 SRAM, with the GeoRAM bank
+registers inside the FPGA.
+
+There is a single bitstream (\file{C6502\_Interface.bin}); no generics or
+build variants have to be chosen.
 
 \subsection{Architecture summary}
 
 \begin{itemize}[noitemsep]
-    \item \textbf{PBI RAM} (\hex{D600}--\hex{D7FF}, 512\,B): stored in
-          iCE40 BRAM (1 EBR block).
-    \item \textbf{PBI ROM} (\hex{D800}--\hex{DFFF}, 2\,KB): stored in
-          iCE40 BRAM (4 EBR blocks), pre-loaded at synthesis time from
-          the assembled 6502 driver binary.
-    \item \textbf{RAMbo} (\hex{4000}--\hex{7FFF}, 16\,KB window,
-          256\,KB total): served by an external 512K$\times$8 SRAM
-          (e.g.\ AS6C4008-55SIN).  The FPGA controls chip-enable,
-          output-enable, write-enable, and the upper four address bits
-          (bank), using only 7 new I/O pins.
+    \item \textbf{Qualification by \sig{/IO1} and \sig{/IO2}}: every access
+          is qualified by the C64 \sig{/IO1} (port pin~7, \hex{DE00}--\hex{DEFF})
+          and \sig{/IO2} (port pin~10, \hex{DF00}--\hex{DFFF}) lines.  The C64
+          PLA asserts them only for CPU accesses (\sig{AEC} high), so VIC-II
+          fetches, whose addresses also appear on the port, never reach VERA
+          or the SRAM.  \sig{/IOx} already decodes A15--A8, so only
+          \textbf{A7--A0} are wired to the FPGA.
+    \item \textbf{VERA registers} (\hex{DF00}--\hex{DF1F}, 32\,B): the FPGA
+          asserts \sig{VERA\_CS} for one bus cycle only when \sig{/IO2} is
+          low, A7--A5 are zero, the VERA select latch at \hex{DFFD} is set
+          and PHI2 is high.  The VERA FPGA drives the data bus.
+    \item \textbf{VERA select latch} (\hex{DFFD}): a write of any non-zero
+          value selects the VERA, \texttt{\$00} deselects it.  The latch
+          always responds and selects only the VERA.
+    \item \textbf{GeoRAM} (\hex{DE00}--\hex{DEFF} window, 256\,KB total):
+          served by an external 512K$\times$8 SRAM (AS6C4008-55).  Window and
+          page/block registers (\hex{DFFE}/\hex{DFFF}) are \textbf{always
+          active}, independent of the \hex{DFFD} latch, like the original
+          cartridge: existing GeoRAM software works without touching
+          \hex{DFFD}.
     \item \textbf{PHI2 synchronisation}: PHI2 is treated as a data input
           and synchronised to the 25\,MHz FPGA clock via a two-stage
           flip-flop chain, producing a single-cycle \cmd{phi2\_rise}
-          pulse used to trigger all registered logic.
-    \item \textbf{Two bitstreams -- \cmd{VERA\_IS\_PBI} generic}: the
-          top-level entity exposes a VHDL-2008 boolean generic that
-          selects the bus interface at synthesis time.
-          \emph{PBI mode} (\cmd{VERA\_IS\_PBI=true}): latch at
-          \hex{D1FF}, PBI RAM and ROM in BRAM (5 EBR blocks), EXTSEL
-          for PBI RAM and RAMbo, MPD for PBI ROM reads.
-          \emph{CCTL mode} (\cmd{VERA\_IS\_PBI=false}): latch at
-          \hex{D5FF} (write \texttt{\$80} to select, \texttt{\$00}
-          to deselect), no BRAM (Yosys eliminates dead code: 0 EBR),
-          EXTSEL for RAMbo only, MPD always inactive.
-    \item \textbf{Hardware configuration pins}: \sig{PBI\_ID\_SEL}
-          (pin~27) is wired via PCB jumper to one of D[0..7]; the
-          sampled bit value latches VERA\_CS in PBI mode
-          (\cmd{vera\_cs\_latch <= not PBI\_ID\_SEL}).
-          \sig{RAMBO\_EN} (pin~28) with pullup (VCC) enables RAMbo;
-          with pulldown (GND) disables it regardless of PBCTL[2].
+          pulse.  Register writes are sampled \cmd{SAMPLE\_CLKS} clocks later
+          (Section~\ref{sec:timing}).
+    \item \textbf{No BRAM}: the design uses 0 of the 30 EBR blocks.
 \end{itemize}
 
 \subsection{Memory map}
 
 \begin{center}
-\begin{tabular}{llll}
+\begin{tabular}{llp{5.2cm}l}
 \toprule
-\textbf{Range} & \textbf{Size} & \textbf{Function} & \textbf{Implementation} \\
+\textbf{Address} & \textbf{Size} & \textbf{Function} & \textbf{Implementation} \\
 \midrule
-\hex{4000}--\hex{7FFF} & 16\,KB window & RAMbo (256\,KB banked) & External SRAM \\
-\hex{D1FF}            & 1\,B          & VERA\_CS latch (write) & Register \\
-\hex{D301}            & 1\,B          & PIA PORTB snoop        & Register \\
-\hex{D303}            & 1\,B          & PIA PBCTL snoop        & Register \\
-\hex{D600}--\hex{D7FF} & 512\,B        & PBI RAM                & BRAM (1 EBR) \\
-\hex{D800}--\hex{DFFF} & 2\,KB         & PBI ROM                & BRAM (4 EBR) \\
+\hex{DE00}--\hex{DEFF} & 256\,B & GeoRAM data window (one page),
+                                   always active & External SRAM \\
+\hex{DF00}--\hex{DF1F} & 32\,B  & VERA registers, \sig{VERA\_CS}
+                                   when the VERA is selected & VERA FPGA \\
+\hex{DFFD}             & 1\,B   & VERA select latch (write only):
+                                   $\neq$\,\texttt{\$00} selects,
+                                   \texttt{\$00} deselects & Register \\
+\hex{DFFE}             & 1\,B   & GeoRAM page register (write only,
+                                   0--63, D5--D0) & Register \\
+\hex{DFFF}             & 1\,B   & GeoRAM block register (write only,
+                                   0--15, D3--D0) & Register \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\noindent\textbf{Note (CCTL mode):} when built with \cmd{VERA\_IS\_PBI=false}
-the VERA\_CS latch address changes to \hex{D5FF} (write \texttt{\$80} to
-select, \texttt{\$00} to deselect), and PBI RAM/ROM are absent (0~EBR\@).
+\hex{DF20}--\hex{DFFC} are not decoded.  The GeoRAM registers are decoded
+exactly at \hex{DFFE}/\hex{DFFF}, without the \hex{DF80}--\hex{DFFD}
+mirrors of some GeoRAM cartridges, so the latch at \hex{DFFD} does not
+collide with them.  Latch and GeoRAM registers power up at zero (VERA
+deselected) and are not cleared by a C64 reset, like the original GeoRAM.
+
+\begin{lstlisting}[style=shell,caption={Typical use from 6510 code}]
+LDA #$04 : STA $DFFF   ; GeoRAM block 4 (always active)
+LDA #$23 : STA $DFFE   ; GeoRAM page 35
+LDA $DE45              ; GeoRAM byte $12345
+LDA #$01 : STA $DFFD   ; select the VERA at $DF00-$DF1F
+LDA #$00 : STA $DFFD   ; deselect the VERA
+\end{lstlisting}
+
+\subsection{VERA chip select}
+
+\begin{lstlisting}[style=vhdl,caption={VERA decode in \file{C6502\_Interface.vhd}}]
+sel_vera <= '1' when IO2_N='0' and A(7 downto 5) = "000" and vera_sel='1' else '0';
+VERA_CS  <= '0' when sel_vera='1' and PHI2='1' else '1';
+\end{lstlisting}
+
+\sig{VERA\_CS} is never asserted for \hex{DF20}--\hex{DFFF} (latch and
+GeoRAM registers included), for \hex{DExx}, for any other address, for
+VIC-II cycles (no \sig{/IO2}), or for \hex{DF00}--\hex{DF1F} while
+\hex{DFFD} holds zero.  PHI2 gating hides the address decode glitches of
+PHI1.
 
 % ===========================================================================
 \section{Prerequisites}
@@ -266,24 +295,6 @@ Ensure \file{\$HOME/bin} is in your \cmd{PATH} if you used the home directory pr
 \subsubsection{Iceprog}
 The \cmd{iceprog} tool is already included in the \cmd{fpga-icestorm} package and supports FTDI-based programmers (e.g. FT2232H).
 
-\subsection{6502 assembler (cc65)}
-
-The PBI ROM driver is written in 6502 assembly and built with the
-cc65 toolchain.
-
-\begin{lstlisting}[style=shell]
-sudo apt install cc65
-\end{lstlisting}
-
-\subsection{Python 3}
-
-Required to run \file{gen\_pbi\_rom\_pkg.py}, which converts the
-assembled 6502 binary into a VHDL constant package.
-
-\begin{lstlisting}[style=shell]
-sudo apt install python3
-\end{lstlisting}
-
 \subsection{Tool roles at a glance}
 
 \begin{center}
@@ -291,13 +302,11 @@ sudo apt install python3
 \toprule
 \textbf{Tool} & \textbf{Input} & \textbf{Output} & \textbf{Purpose} \\
 \midrule
-\cmd{ca65} / \cmd{ld65}    & \file{.s} sources    & \file{.bin}      & 6502 assembly \\
-\cmd{gen\_pbi\_rom\_pkg.py} & \file{.bin}          & \file{.vhd}      & ROM initialisation \\
 \cmd{ghdl} (plugin)         & VHDL sources         & RTLIL            & VHDL elaboration \\
 \cmd{yosys}                 & RTLIL                & \file{.json}     & Synthesis \\
 \cmd{nextpnr-ice40}         & \file{.json + .pcf}  & \file{.asc}      & Place \& route \\
 \cmd{icepack}               & \file{.asc}          & \file{.bin}      & Bitstream packing \\
-\cmd{openFPGALoader}        & \file{.bin}          & SPI flash        & Programming \\
+\cmd{openFPGALoader} / \cmd{iceprog} & \file{.bin} & SPI flash        & Programming \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -306,144 +315,74 @@ sudo apt install python3
 \section{Build Flow}
 % ===========================================================================
 
-\subsection{Step 1 -- Assemble the 6502 ROM driver}
+The design is a single VHDL file with no ROM to pre-load, so the build
+starts directly from synthesis.
 
-The PBI ROM at \hex{D800}--\hex{DFFF} contains a 2\,KB 6502 driver
-assembled from \file{firmware/MCU/6502/src/vera\_pbi\_handler.s}.
+\subsection{Step 1 -- Synthesis}
 
-\begin{lstlisting}[style=shell,caption={Assemble the 6502 driver}]
-cd firmware/MCU/6502
-make
-\end{lstlisting}
-
-This single command runs three sub-steps:
-
-\begin{enumerate}[noitemsep]
-    \item \textbf{Assemble}: \cmd{ca65} compiles
-          \file{vera\_pbi\_handler.s} into \file{vera\_pbi\_handler.o}.
-    \item \textbf{Link}: \cmd{ld65} links with \file{pbi-driver.ld}
-          to produce \file{vera\_pbi\_handler.bin}.
-    \item \textbf{Generate VHDL ROM package}: \file{gen\_pbi\_rom\_pkg.py}
-          reads the binary and writes
-          \file{../../FPGA/pbi\_rom\_pkg.vhd} with the
-          \cmd{PBI\_ROM\_INIT} constant.
-\end{enumerate}
-
-To regenerate only the VHDL package when the binary already exists:
-
-\begin{lstlisting}[style=shell]
-make fpga-rom
-\end{lstlisting}
-
-\subsection{Step 2 -- Synthesis}
-
-The top-level entity exposes a VHDL-2008 boolean generic,
-\cmd{VERA\_IS\_PBI} (default \cmd{true}), that selects the bus interface
-at synthesis time.  The Makefile invokes Yosys twice, producing two
-independent bitstreams from the same source:
-
-\begin{lstlisting}[style=shell,caption={PBI synthesis (VERA\_IS\_PBI=true)}]
+\begin{lstlisting}[style=shell,caption={Synthesis with Yosys and the GHDL plugin}]
 cd firmware/FPGA
 yosys -m ghdl -p \
-    "ghdl --std=08 -gVERA_IS_PBI=true \
-          custom_types.vhd pbi_rom_pkg.vhd C6502_Interface.vhd \
-          -e C6502_Interface; \
-     synth_ice40 -top C6502_Interface -json C6502_Interface_PBI.json"
-\end{lstlisting}
-
-\begin{lstlisting}[style=shell,caption={CCTL synthesis (VERA\_IS\_PBI=false)}]
-yosys -m ghdl -p \
-    "ghdl --std=08 -gVERA_IS_PBI=false \
-          custom_types.vhd pbi_rom_pkg.vhd C6502_Interface.vhd \
-          -e C6502_Interface; \
-     synth_ice40 -top C6502_Interface -json C6502_Interface_CCTL.json"
+    "ghdl --std=08 C6502_Interface.vhd -e C6502_Interface; \
+     synth_ice40 -top C6502_Interface -json C6502_Interface.json"
 \end{lstlisting}
 
 The \cmd{-m ghdl} flag loads the GHDL plugin into Yosys, which handles
-VHDL analysis and elaboration.  When \cmd{VERA\_IS\_PBI=false}, Yosys
-eliminates all PBI RAM/ROM dead code, reducing resource usage
-dramatically.  Measured values after place-and-route with nextpnr-ice40:
+VHDL analysis and elaboration.  The entity has one generic,
+\cmd{SAMPLE\_CLKS} (default 6), that sets the register write sample point
+(Section~\ref{sec:timing}); the default needs no override.
+
+Last measured results (OSS CAD Suite 2025-10-08):
 
 \begin{center}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrr}
 \toprule
-\textbf{Resource} & \textbf{PBI} & \textbf{CCTL} & \textbf{Available} & \textbf{\% (PBI)} \\
+\textbf{Resource} & \textbf{Used} & \textbf{Available} \\
 \midrule
-ICESTORM\_LC (total)     &  87 &  1 & 5280 &  1\% \\
-\quad of which LUT4 only &  52 &  1 &      &     \\
-\quad of which LUT4+DFF  &   5 &  0 &      &     \\
-\quad of which DFF only  &   5 &  0 &      &     \\
-\quad of which CARRY only&  21 &  0 &      &     \\
+ICESTORM\_LC          &  40 & 5280 \\
+ICESTORM\_RAM (EBR)   &   0 &   30 \\
+SB\_IO (user I/O)     &  35 &   39 \\
+ICESTORM\_SPRAM       &   0 &    4 \\
 \midrule
-ICESTORM\_RAM (EBR)      &   5 &  0 &   30 & 16\% \\
-SB\_IO (I/O buffers)     &  39 & 39 &   39 & 100\% \\
-ICESTORM\_SPRAM          &   0 &  0 &    4 &  0\% \\
-\midrule
-\textbf{Fmax (CLK)}      & \multicolumn{4}{l}{\textbf{62.72\,MHz} (PBI, PASS at 25\,MHz)} \\
+\textbf{Fmax (CLK)}   & \multicolumn{2}{l}{\textbf{89.54\,MHz} post-route (target 25\,MHz)} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{I/O budget note:} the iCE40UP5K-SG48 exposes exactly 39 user I/O
-pins, and this design uses all 39.  The mode selection (PBI vs.\ CCTL)
-is compiled into the bitstream via \cmd{VERA\_IS\_PBI} rather than being
-a runtime input, freeing the two former \sig{DIP\_SEL} pins for
-dedicated hardware functions: \sig{PBI\_ID\_SEL} (pin~27) and
-\sig{RAMBO\_EN} (pin~28).
+These figures predate the change that made the GeoRAM independent of the
+\hex{DFFD} latch; the logic is slightly smaller now.  Re-measure after the
+next build.
 
-\subsection{Step 3 -- Place \& Route}
+\subsection{Step 2 -- Place \& Route}
 
 Place \& route assigns logic cells and routes signals to physical
 iCE40 resources, guided by the pin constraints file.
 
-\begin{lstlisting}[style=shell,caption={Place \& route with nextpnr-ice40 (PBI example)}]
+\begin{lstlisting}[style=shell,caption={Place \& route with nextpnr-ice40}]
 nextpnr-ice40 --up5k --package sg48 \
-    --json C6502_Interface_PBI.json \
+    --json C6502_Interface.json \
     --pcf board-pin-mapping.pcf \
-    --asc C6502_Interface_PBI.asc
+    --asc C6502_Interface.asc
 \end{lstlisting}
-
-The CCTL build uses the same command with \file{\_CCTL} filename suffixes.
 
 \textbf{Important:} all pin numbers in \file{board-pin-mapping.pcf} are
 placeholders.  Edit the file to match your actual schematic before this
 step (see Section~\ref{sec:pins}).
 
-nextpnr reports timing after routing.  Measured results:
-
-\begin{center}
-\begin{tabular}{llr}
-\toprule
-\textbf{Path type} & \textbf{Description} & \textbf{Worst delay} \\
-\midrule
-CLK $\to$ CLK   & Registered path (Fmax) & 15.94\,ns (62.72\,MHz) \\
-async $\to$ async & Combinational (PHI2 gate) & 28.12\,ns \\
-async $\to$ CLK  & Input setup time        & 26.89\,ns \\
-CLK $\to$ async  & Clock-to-output         & 17.17\,ns \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The 25\,MHz system clock (period 40\,ns) has \textbf{24.06\,ns of slack}
-on the registered path.  The combinational PHI2-gated outputs settle in
-at most 28.12\,ns after address/control inputs change --- well within the
-6502 PHI2-high window of $\approx$279\,ns at 1.79\,MHz.
-
-\subsection{Step 4 -- Pack the bitstream}
+\subsection{Step 3 -- Pack the bitstream}
 
 \cmd{icepack} converts the ASCII intermediate format produced by
 nextpnr into the binary bitstream that is written to the SPI flash.
 
-\begin{lstlisting}[style=shell,caption={Pack binary bitstreams}]
-icepack C6502_Interface_PBI.asc  C6502_Interface_PBI.bin
-icepack C6502_Interface_CCTL.asc C6502_Interface_CCTL.bin
+\begin{lstlisting}[style=shell,caption={Pack the binary bitstream}]
+icepack C6502_Interface.asc C6502_Interface.bin
 \end{lstlisting}
 
 The \file{.bin} file is what gets programmed into the SPI flash.
 Bitstream size is device-dependent (not design-dependent) on the iCE40:
-both bitstreams measure \textbf{$\approx$104\,KB} (iCE40UP5K SG48).
+\textbf{$\approx$104\,KB} for the iCE40UP5K SG48.
 
-\subsection{Step 5 -- Program the SPI flash}
+\subsection{Step 4 -- Program the SPI flash}
 
 The iCE40UP5K loads its configuration from an external SPI NOR flash
 at power-up.  The programmer writes the bitstream into that flash.
@@ -451,29 +390,25 @@ at power-up.  The programmer writes the bitstream into that flash.
 \subsubsection{Using openFPGALoader (recommended)}
 
 \begin{lstlisting}[style=shell,caption={Program with openFPGALoader}]
-# PBI bitstream (PBI connector, $D1xx)
-openFPGALoader -b ice40_generic C6502_Interface_PBI.bin
-# CCTL bitstream (cartridge port, $D5xx)
-openFPGALoader -b ice40_generic C6502_Interface_CCTL.bin
+openFPGALoader -b ice40_generic C6502_Interface.bin
 \end{lstlisting}
 
 Select the programmer cable explicitly if needed:
 
 \begin{lstlisting}[style=shell]
-openFPGALoader --cable ft2232      C6502_Interface_PBI.bin   # FTDI FT2232H
-openFPGALoader --cable ft232       C6502_Interface_PBI.bin   # FTDI FT232H
-openFPGALoader --cable tigard      C6502_Interface_PBI.bin   # Tigard
-openFPGALoader --cable raspberrypi C6502_Interface_PBI.bin   # Raspberry Pi GPIO
+openFPGALoader --cable ft2232      C6502_Interface.bin   # FTDI FT2232H
+openFPGALoader --cable ft232       C6502_Interface.bin   # FTDI FT232H
+openFPGALoader --cable tigard      C6502_Interface.bin   # Tigard
+openFPGALoader --cable raspberrypi C6502_Interface.bin   # Raspberry Pi GPIO
 \end{lstlisting}
 
 \subsubsection{Using iceprog (FTDI FT2232H)}
 
 \begin{lstlisting}[style=shell,caption={Program with iceprog}]
-iceprog C6502_Interface_PBI.bin    # PBI bitstream
-iceprog C6502_Interface_CCTL.bin   # CCTL bitstream
+iceprog C6502_Interface.bin
 
 # Erase + write (useful if previous write was partial)
-iceprog -e 1048576 C6502_Interface_PBI.bin
+iceprog -e 1048576 C6502_Interface.bin
 \end{lstlisting}
 
 \subsection{One-command build and flash}
@@ -482,14 +417,10 @@ The \file{firmware/FPGA/Makefile} wraps all steps:
 
 \begin{lstlisting}[style=shell]
 cd firmware/FPGA
-make pbi               # synthesise + P&R + pack -> C6502_Interface_PBI.bin
-make cctl              # synthesise + P&R + pack -> C6502_Interface_CCTL.bin
-make                   # build both (default)
-make flash-pbi         # write PBI  bitstream via openFPGALoader
-make flash-cctl        # write CCTL bitstream via openFPGALoader
-make flash-pbi-iceprog   # write PBI  via iceprog (FTDI FT2232H)
-make flash-cctl-iceprog  # write CCTL via iceprog
-make doc               # regenerate PDF documentation
+make                   # synthesise + P&R + pack -> C6502_Interface.bin
+make flash             # write the bitstream via openFPGALoader
+make flash-iceprog     # write the bitstream via iceprog (FTDI FT2232H)
+make doc               # regenerate this PDF
 make clean             # remove all generated files
 \end{lstlisting}
 
@@ -518,13 +449,29 @@ CDONE & CDONE     & -- \\
 
 Recommended SPI flash: Winbond W25Q16 (2\,MB) or W25Q32 (4\,MB).
 
+Supported programmers:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Hardware} & \textbf{Interface} & \textbf{Tool} \\
+\midrule
+FTDI FT232H breakout   & SPI bitbang & \cmd{iceprog}, \cmd{openFPGALoader} \\
+FTDI FT2232H breakout  & MPSSE SPI   & \cmd{iceprog}, \cmd{openFPGALoader} \\
+Tigard                 & JTAG/SPI    & \cmd{openFPGALoader} \\
+Raspberry Pi (GPIO)    & SPI bitbang & \cmd{openFPGALoader} \\
+dirtyJTAG (STM32F103)  & JTAG        & \cmd{openFPGALoader} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 % ===========================================================================
 \section{Reset Sequencing}
 \label{sec:reset}
 % ===========================================================================
 
-The VERA RBL-XE module requires a defined power-on boot sequence: the
-Atari computer and the VERA graphics chip must remain in reset until all
+The VERA RBL-C64 module requires a defined power-on boot sequence: the
+Commodore 64 and the VERA graphics chip must remain in reset until all
 FPGA configurations have completed.  This is implemented with a single
 74LVC1G08 logic gate --- no MCU or firmware is needed.
 
@@ -532,14 +479,14 @@ FPGA configurations have completed.  This is implemented with a single
 
 \begin{enumerate}[noitemsep]
     \item \textbf{Power-on:} both \sig{VERA\_RESET\#} and
-          \sig{ATARI\_RESET\#} are held low.
+          \sig{C64\_RESET\#} are held low.
     \item \textbf{FPGA ready} (\sig{FPGA\_CDONE} goes high,
           $\approx$50--100\,ms after power-on): \sig{VERA\_RESET\#} is
           released, allowing VERA to start loading its own bitstream
           from its SPI flash.
     \item \textbf{VERA ready} (\sig{VERA\_CDONE} goes high,
-          $\approx$200--500\,ms later): \sig{ATARI\_RESET\#} is released
-          and the Atari boots normally.
+          $\approx$200--500\,ms later): \sig{C64\_RESET\#} is released
+          and the C64 boots normally.
 \end{enumerate}
 
 The natural SPI flash loading times provide all necessary delays; no RC
@@ -552,17 +499,17 @@ timer or additional delay circuit is required.
 \toprule
 \textbf{Signal} & \textbf{Boolean expression} \\
 \midrule
-\sig{VERA\_RESET\#}  & \sig{FPGA\_CDONE} \\
-\sig{ATARI\_RESET\#} & \sig{FPGA\_CDONE}~AND~\sig{VERA\_CDONE} \\
+\sig{VERA\_RESET\#} & \sig{FPGA\_CDONE} \\
+\sig{C64\_RESET\#}  & \sig{FPGA\_CDONE}~AND~\sig{VERA\_CDONE} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \begin{center}
-\begin{tabular}{ccccp{3.5cm}}
+\begin{tabular}{ccccl}
 \toprule
-\textbf{FPGA\_CDONE} & \textbf{VERA\_CDONE} &
-\textbf{VERA\_RST\#} & \textbf{ATARI\_RST\#} & \textbf{Phase} \\
+\sig{FPGA\_CDONE} & \sig{VERA\_CDONE} &
+\sig{VERA\_RST\#} & \sig{C64\_RST\#} & \textbf{Phase} \\
 \midrule
 0 & 0 & 0 & 0 & Power-on / FPGA loading \\
 1 & 0 & 1 & 0 & FPGA ready, VERA loading \\
@@ -574,7 +521,7 @@ timer or additional delay circuit is required.
 \subsection{Circuit -- 74LVC1G08 (SOT-23-5)}
 
 A single \textbf{74LVC1G08} (2-input AND gate, SOT-23-5) implements
-\sig{ATARI\_RESET\#}.  \sig{VERA\_RESET\#} connects directly from
+\sig{C64\_RESET\#}.  \sig{VERA\_RESET\#} connects directly from
 \sig{FPGA\_CDONE} through a 33\,$\Omega$ series resistor.
 
 \begin{lstlisting}[style=shell]
@@ -583,7 +530,7 @@ VCC --[4k7]--+-------- FPGA_CDONE (open-drain)
              +--[33R]- VERA_RESET#
              |
              +-- A -\
-                     +--- 74LVC1G08 ---[33R]--- ATARI_RESET#
+                     +--- 74LVC1G08 ---[33R]--- C64_RESET#
              +-- B -/
              |
 VCC --[4k7]--+-------- VERA_CDONE (open-drain)
@@ -591,13 +538,13 @@ VCC --[4k7]--+-------- VERA_CDONE (open-drain)
 
 Both CDONE outputs are open-drain; they require an external pullup to
 VCC\@.  The 33\,$\Omega$ series resistors limit current if an external
-driver (e.g.\ the Atari RESET button, which pulls the line to GND via
-an open-collector circuit) conflicts with the 74LVC output.
+driver (e.g.\ a reset button on the C64 \sig{/RESET} line, which pulls it
+to GND) conflicts with the 74LVC output.
 
 \textbf{Why 74LVC and not 74HC?}  The 74LVC family has \emph{5\,V
 tolerant inputs} while operating at 3.3\,V VCC\@.  The CDONE signals
-are at 3.3\,V; the Atari RESET line belongs to a 5\,V TTL system.  The
-74LVC output at 3.3\,V is correctly recognised as HIGH by 5\,V TTL
+are at 3.3\,V; the C64 \sig{/RESET} line belongs to a 5\,V TTL system.
+The 74LVC output at 3.3\,V is correctly recognised as HIGH by 5\,V TTL
 logic (V$_{\text{IH}} = 2.0$\,V).  The 74HC family is not suitable for
 this mixed-voltage interface.
 
@@ -612,7 +559,7 @@ U1  & 74LVC1G08      & SOT-23-5 & 2-input AND gate \\
 R1  & 4.7\,k$\Omega$ & 0402     & Pullup for FPGA\_CDONE \\
 R2  & 4.7\,k$\Omega$ & 0402     & Pullup for VERA\_CDONE \\
 R3  & 33\,$\Omega$   & 0402     & Series resistor on VERA\_RESET\# \\
-R4  & 33\,$\Omega$   & 0402     & Series resistor on ATARI\_RESET\# \\
+R4  & 33\,$\Omega$   & 0402     & Series resistor on C64\_RESET\# \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -629,7 +576,8 @@ actual pad number from your schematic before running nextpnr-ice40.
 
 The \sig{CLK} signal must be assigned to a \textbf{Global Buffer (GB)
 input} pin.  Valid GB pins on the iCE40UP5K SG48 package are:
-\textbf{20, 28, 31, 38, 41, 43, 48}.
+\textbf{20, 28, 31, 38, 41, 43, 48}.  The placeholder in the current PCF
+(pin~35) is \emph{not} a GB pin.
 
 \textbf{Valid user I/O pin numbers for SG48} (39 total):
 \begin{quote}\ttfamily
@@ -641,115 +589,108 @@ Pins 1, 5, 7, 8, 22, 24, 29, 30, 33 are power/ground or reserved and
 \textbf{must not} appear in the PCF file --- nextpnr rejects them with an
 error.
 
+\textbf{I/O budget:} the design uses 35 of the 39 user I/O pins; 4 are
+free.
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{Group} & \textbf{Pins} \\
+\midrule
+Address A[7:0] (A15--A8 decoded by \sig{/IO1}, \sig{/IO2}) & 8 \\
+Data D[7:0] (input only, shared net with SRAM DQ)          & 8 \\
+\sig{PHI2}, \sig{RNW}                                      & 2 \\
+\sig{IO1\_N}, \sig{IO2\_N}                                 & 2 \\
+\sig{VERA\_CS}                                             & 1 \\
+SRAM: \sig{SRAM\_PAGE[5:0]}, \sig{SRAM\_BLOCK[3:0]}, CE/OE/WE & 13 \\
+\sig{CLK} (25\,MHz, GB pin)                                & 1 \\
+\midrule
+\textbf{Total}                                             & \textbf{35} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \subsection{Complete pin table}
 
 \begin{center}
 \small
-\begin{longtable}{llllp{5.5cm}}
+\begin{longtable}{lllllp{4.6cm}}
 \toprule
-\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{Std} &
+\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{C64 port} & \textbf{Std} &
 \textbf{Description} \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{Std} &
+\textbf{Signal} & \textbf{Dir} & \textbf{PCF pin} & \textbf{C64 port} & \textbf{Std} &
 \textbf{Description} \\
 \midrule
 \endhead
 \midrule
-\multicolumn{5}{r}{\small continued on next page}\\
+\multicolumn{6}{r}{\small continued on next page}\\
 \endfoot
 \bottomrule
 \endlastfoot
 
 % --- Clock ---
-\sig{CLK}           & In    & 35* & LVCMOS33 &
+\sig{CLK}      & In  & 35* & --- & LVCMOS33 &
     25\,MHz system clock. Must land on a GB pin. \\[2pt]
 
-% --- 6502 address bus ---
-\sig{A[0]}          & In    & 40* & LVCMOS33 & 6502 address bit 0 \\
-\sig{A[1]}          & In    & 41* & LVCMOS33 & 6502 address bit 1 \\
-\sig{A[2]}          & In    & 42* & LVCMOS33 & 6502 address bit 2 \\
-\sig{A[3]}          & In    & 43* & LVCMOS33 & 6502 address bit 3 \\
-\sig{A[4]}          & In    & 44* & LVCMOS33 & 6502 address bit 4 \\
-\sig{A[5]}          & In    & 45* & LVCMOS33 & 6502 address bit 5 \\
-\sig{A[6]}          & In    & 46* & LVCMOS33 & 6502 address bit 6 \\
-\sig{A[7]}          & In    & 47* & LVCMOS33 & 6502 address bit 7 \\
-\sig{A[8]}          & In    & 48* & LVCMOS33 & 6502 address bit 8 \\
-\sig{A[9]}          & In    &  6* & LVCMOS33 & 6502 address bit 9 \\
-\sig{A[10]}         & In    &  2* & LVCMOS33 & 6502 address bit 10 \\
-\sig{A[11]}         & In    &  3* & LVCMOS33 & 6502 address bit 11 \\
-\sig{A[12]}         & In    &  4* & LVCMOS33 & 6502 address bit 12 \\
-\sig{A[13]}         & In    & 26* & LVCMOS33 &
-    6502 address bit 13. Also wired to SRAM A[13] on PCB. \\
-\sig{A[14]}         & In    &  9* & LVCMOS33 & 6502 address bit 14 \\
-\sig{A[15]}         & In    & 10* & LVCMOS33 & 6502 address bit 15 \\[2pt]
+% --- Address bus ---
+\sig{A[0]}     & In  & 40* & Y & LVCMOS33 &
+    Address bit 0. Also wired to SRAM A[0] (same for A1--A7). \\
+\sig{A[1]}     & In  & 41* & X & LVCMOS33 & Address bit 1 \\
+\sig{A[2]}     & In  & 42* & W & LVCMOS33 & Address bit 2 \\
+\sig{A[3]}     & In  & 43* & V & LVCMOS33 & Address bit 3 \\
+\sig{A[4]}     & In  & 44* & U & LVCMOS33 & Address bit 4 \\
+\sig{A[5]}     & In  & 45* & T & LVCMOS33 & Address bit 5 \\
+\sig{A[6]}     & In  & 46* & S & LVCMOS33 & Address bit 6 \\
+\sig{A[7]}     & In  & 47* & R & LVCMOS33 & Address bit 7 \\[2pt]
 
-% --- 6502 data bus ---
-\sig{D[0]}          & InOut & 11* & LVCMOS33 &
-    6502 data bit 0. Shared net with SRAM DQ[0]. \\
-\sig{D[1]}          & InOut & 12* & LVCMOS33 &
-    6502 data bit 1. Shared net with SRAM DQ[1]. \\
-\sig{D[2]}          & InOut & 13* & LVCMOS33 &
-    6502 data bit 2. Shared net with SRAM DQ[2]. \\
-\sig{D[3]}          & InOut & 14* & LVCMOS33 &
-    6502 data bit 3. Shared net with SRAM DQ[3]. \\
-\sig{D[4]}          & InOut & 15* & LVCMOS33 &
-    6502 data bit 4. Shared net with SRAM DQ[4]. \\
-\sig{D[5]}          & InOut & 16* & LVCMOS33 &
-    6502 data bit 5. Shared net with SRAM DQ[5]. \\
-\sig{D[6]}          & InOut & 17* & LVCMOS33 &
-    6502 data bit 6. Shared net with SRAM DQ[6]. \\
-\sig{D[7]}          & InOut & 18* & LVCMOS33 &
-    6502 data bit 7. Shared net with SRAM DQ[7]. \\[2pt]
+% --- Data bus ---
+\sig{D[0]}     & In  & 11* & 21 & LVCMOS33 &
+    Data bit 0 (register writes). Shared net with SRAM DQ[0]
+    (same for D1--D7). \\
+\sig{D[1]}     & In  & 12* & 20 & LVCMOS33 & Data bit 1 \\
+\sig{D[2]}     & In  & 13* & 19 & LVCMOS33 & Data bit 2 \\
+\sig{D[3]}     & In  & 14* & 18 & LVCMOS33 & Data bit 3 \\
+\sig{D[4]}     & In  & 15* & 17 & LVCMOS33 & Data bit 4 \\
+\sig{D[5]}     & In  & 16* & 16 & LVCMOS33 & Data bit 5 \\
+\sig{D[6]}     & In  & 17* & 15 & LVCMOS33 & Data bit 6 \\
+\sig{D[7]}     & In  & 18* & 14 & LVCMOS33 & Data bit 7 \\[2pt]
 
-% --- 6502 control ---
-\sig{PHI2}          & In    & 34* & LVCMOS33 &
-    6502 phase-2 clock. Synchronised internally; not used as FPGA clock. \\
-\sig{RNW}           & In    & 36* & LVCMOS33 &
-    Read/Not-Write. High = read, Low = write. \\[2pt]
+% --- Control ---
+\sig{PHI2}     & In  & 34* & E  & LVCMOS33 &
+    Phase-2 clock. Synchronised internally; not used as FPGA clock. \\
+\sig{RNW}      & In  & 36* & 5  & LVCMOS33 &
+    Read/Not-Write. High = read, low = write. \\
+\sig{IO1\_N}   & In  & 26* & 7  & LVCMOS33 &
+    \sig{/IO1}: CPU access to \hex{DE00}--\hex{DEFF} (active low). \\
+\sig{IO2\_N}   & In  & 27* & 10 & LVCMOS33 &
+    \sig{/IO2}: CPU access to \hex{DF00}--\hex{DFFF} (active low). \\[2pt]
 
-% --- PBI control ---
-\sig{VERA\_CS}      & Out   & 32* & LVCMOS33 &
-    VERA chip-select latch output (active low). \\
-\sig{MPD}           & Out   & 31* & LVCMOS33 &
-    Machine Program Data (active low, \textbf{PBI mode only}).
-    Asserted during PBI ROM (\hex{D800}--\hex{DFFF}) reads; blocks
-    Atari from driving D[7:0].  Always inactive (high) in CCTL mode. \\
-\sig{EXTSEL}        & Out   & 37* & LVCMOS33 &
-    External Select (active low).  \textbf{PBI mode:} asserted for
-    PBI RAM (\hex{D600}--\hex{D7FF}) and RAMbo (\hex{4000}--\hex{7FFF}).
-    \textbf{CCTL mode:} asserted for RAMbo only.  Blocks Atari
-    internal RAM from responding. \\[2pt]
-
-% --- Hardware configuration inputs ---
-\sig{PBI\_ID\_SEL}  & In    & 27* & LVCMOS33 &
-    Hardware jumper to one of D[0..7] on PCB.  Sampled when \hex{D1FF}
-    is written (PBI mode only); \texttt{vera\_cs\_latch <= not PBI\_ID\_SEL}.
-    Logic~1 on the chosen bit selects VERA, logic~0 deselects.
-    Ignored in CCTL build. \\
-\sig{RAMBO\_EN}     & In    & 28* & LVCMOS33 &
-    Tie to VCC (pullup) to enable RAMbo hardware; tie to GND (pulldown)
-    to disable RAMbo completely, overriding PBCTL[2].  Both
-    \sig{RAMBO\_EN} and PBCTL[2] must be high for RAMbo to respond. \\[2pt]
+% --- VERA ---
+\sig{VERA\_CS} & Out & 32* & --- & LVCMOS33 &
+    VERA chip select (active low), per cycle: \sig{/IO2} low,
+    \hex{DF00}--\hex{DF1F}, VERA selected (\hex{DFFD}), PHI2 high. \\[2pt]
 
 % --- External SRAM ---
-\sig{SRAM\_A\_BANK[0]} & Out & 19* & LVCMOS33 &
-    SRAM address bit 14 (bank LSB). \\
-\sig{SRAM\_A\_BANK[1]} & Out & 20* & LVCMOS33 &
-    SRAM address bit 15. \\
-\sig{SRAM\_A\_BANK[2]} & Out & 21* & LVCMOS33 &
-    SRAM address bit 16. \\
-\sig{SRAM\_A\_BANK[3]} & Out & 38* & LVCMOS33 &
-    SRAM address bit 17 (bank MSB). \\
-\sig{SRAM\_CE\_N}   & Out   & 23* & LVCMOS33 &
-    SRAM chip enable (active low). Asserted during PHI2-high when
-    address is in \hex{4000}--\hex{7FFF} and RAMbo is enabled. \\
-\sig{SRAM\_OE\_N}   & Out   & 39* & LVCMOS33 &
-    SRAM output enable (active low). Asserted on read cycles only. \\
-\sig{SRAM\_WE\_N}   & Out   & 25* & LVCMOS33 &
-    SRAM write enable (active low). Asserted on write cycles only.
-    Pulse width equals PHI2-high time ($\approx$279\,ns at 1.79\,MHz). \\
+\sig{SRAM\_PAGE[0]}  & Out &  2* & --- & LVCMOS33 & SRAM A[8], page bit 0 \\
+\sig{SRAM\_PAGE[1]}  & Out &  3* & --- & LVCMOS33 & SRAM A[9], page bit 1 \\
+\sig{SRAM\_PAGE[2]}  & Out &  4* & --- & LVCMOS33 & SRAM A[10], page bit 2 \\
+\sig{SRAM\_PAGE[3]}  & Out &  6* & --- & LVCMOS33 & SRAM A[11], page bit 3 \\
+\sig{SRAM\_PAGE[4]}  & Out &  9* & --- & LVCMOS33 & SRAM A[12], page bit 4 \\
+\sig{SRAM\_PAGE[5]}  & Out & 10* & --- & LVCMOS33 & SRAM A[13], page bit 5 \\
+\sig{SRAM\_BLOCK[0]} & Out & 19* & --- & LVCMOS33 & SRAM A[14], block bit 0 \\
+\sig{SRAM\_BLOCK[1]} & Out & 20* & --- & LVCMOS33 & SRAM A[15], block bit 1 \\
+\sig{SRAM\_BLOCK[2]} & Out & 21* & --- & LVCMOS33 & SRAM A[16], block bit 2 \\
+\sig{SRAM\_BLOCK[3]} & Out & 38* & --- & LVCMOS33 & SRAM A[17], block bit 3 \\
+\sig{SRAM\_CE\_N}    & Out & 23* & --- & LVCMOS33 &
+    SRAM chip enable (active low): \sig{/IO1} low and PHI2 high.
+    Also the GeoRAM term of the data transceiver output enable. \\
+\sig{SRAM\_OE\_N}    & Out & 39* & --- & LVCMOS33 &
+    SRAM output enable (active low), read cycles only. \\
+\sig{SRAM\_WE\_N}    & Out & 25* & --- & LVCMOS33 &
+    SRAM write enable (active low), write cycles only. \\
 
 \end{longtable}
 \end{center}
@@ -757,79 +698,109 @@ error.
 \textit{* Pin numbers are placeholders.  Replace with actual pad numbers
 from your board schematic.}
 
-\subsection{External SRAM address wiring}
+% ===========================================================================
+\section{GeoRAM}
+% ===========================================================================
 
-The SRAM address bus is split between PCB traces (lower 14 bits) and
-FPGA outputs (upper 4 bank bits):
+\subsection{External SRAM wiring}
+
+\textbf{AS6C4008-55} (Alliance Memory, 512K$\times$8, 55\,ns, 2.7--5.5\,V),
+lower 256\,KB used.  The SRAM sits on the 3.3\,V side of the level
+shifters, on the same nets as the FPGA, and is powered at 3.3\,V.
 
 \begin{center}
 \begin{tabular}{lll}
 \toprule
-\textbf{SRAM address bit} & \textbf{Source} & \textbf{Note} \\
+\textbf{SRAM pin} & \textbf{Source} & \textbf{Note} \\
 \midrule
-A[13:0]  & 6502 A[13:0] (PCB net) & Direct trace, no FPGA I/O pin \\
-A[14]    & FPGA \sig{SRAM\_A\_BANK[0]} & Bank bit 0 = PORTB[2] \\
-A[15]    & FPGA \sig{SRAM\_A\_BANK[1]} & Bank bit 1 = PORTB[3] \\
-A[16]    & FPGA \sig{SRAM\_A\_BANK[2]} & Bank bit 2 = PORTB[5] \\
-A[17]    & FPGA \sig{SRAM\_A\_BANK[3]} & Bank bit 3 = PORTB[6] \\
-A[18]    & GND (PCB)               & Selects lower 256\,KB of 512\,KB chip \\
+A[7:0]   & C64 A[7:0] (PCB net)         & Direct trace, no FPGA I/O pin \\
+A[13:8]  & FPGA \sig{SRAM\_PAGE[5:0]}   & Page register \hex{DFFE} \\
+A[17:14] & FPGA \sig{SRAM\_BLOCK[3:0]}  & Block register \hex{DFFF} \\
+A[18]    & GND (PCB)                    & Lower 256\,KB of the 512\,KB chip \\
+DQ[7:0]  & C64 D[7:0] (PCB net)         & Shared with FPGA D[7:0] \\
+CE\#     & FPGA \sig{SRAM\_CE\_N}       & \\
+OE\#     & FPGA \sig{SRAM\_OE\_N}       & \\
+WE\#     & FPGA \sig{SRAM\_WE\_N}       & \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\subsection{RAMbo bank formula}
+\subsection{Address formula}
 
-The FPGA snoops writes to the Atari PIA to derive the active bank:
+16 blocks of 16\,KB, each made of 64 pages of 256\,bytes:
 
-\begin{lstlisting}[style=shell]
-PORTB at $D301  -- bank bits
-PBCTL at $D303  -- bit 2 enables RAMbo
+\[
+\text{offset} = \text{block} \times 16384 + \text{page} \times 256 + A[7:0]
+\]
 
-bank[1:0] = PORTB[3:2]
-bank[3:2] = PORTB[6:5]
-=> SRAM A[17:14] = { PORTB[6], PORTB[5], PORTB[3], PORTB[2] }
+\begin{lstlisting}[style=vhdl,caption={GeoRAM decode in \file{C6502\_Interface.vhd}}]
+sel_page   <= '1' when IO2_N='0' and A = x"FE" else '0';
+sel_block  <= '1' when IO2_N='0' and A = x"FF" else '0';
+sel_georam <= '1' when IO1_N='0' else '0';
 \end{lstlisting}
 
-RAMbo is active only when both \sig{RAMBO\_EN} (pin~28 tied to VCC)
-and \sig{PBCTL[2] = 1} (software enable written by the Atari OS).
+None of these terms depends on the \hex{DFFD} latch: the GeoRAM is always
+active.
+
+\subsection{Data transceiver}
+
+The board must drive the C64 data bus during GeoRAM reads.
+\sig{SRAM\_CE\_N} is the GeoRAM term of the data transceiver output enable:
+
+\[
+\overline{OE} = \text{NAND}\bigl(\text{PHI2},\ \text{NAND}(\text{R/W},\
+                \text{AND}(\sig{VERA\_CS},\ \sig{SRAM\_CE\_N}))\bigr)
+\]
+
+Every \hex{DExx} read is driven from the SRAM (GeoRAM always active);
+\hex{DF00}--\hex{DF1F} reads are driven only while the VERA is selected.
 
 % ===========================================================================
 \section{Timing}
+\label{sec:timing}
 % ===========================================================================
 
-\subsection{Read cycle (SRAM)}
+The C64 runs at 0.985\,MHz (PAL) or 1.023\,MHz (NTSC); PHI2 is high for
+$\approx$490\,ns.
+
+\subsection{Register writes}
+
+The 6510 drives write data during PHI2 high, up to $\approx$150\,ns after
+the rising edge.  The latch (\hex{DFFD}) and the GeoRAM registers
+(\hex{DFFE}/\hex{DFFF}) are sampled \cmd{SAMPLE\_CLKS} clock cycles after
+the synchronised PHI2 rising edge: with the default of 6 clocks at
+25\,MHz this is 240\,ns after \cmd{phi2\_rise}, i.e.\ $\approx$280--320\,ns
+after the real edge, well inside the PHI2-high window.  A PHI2 pulse that
+ends before the sample point never samples.
+
+\subsection{SRAM read cycle}
 
 \begin{center}
 \begin{tabular}{lrl}
 \toprule
 \textbf{Event} & \textbf{Time from PHI2 rise} & \textbf{Note} \\
 \midrule
-Address valid (6502 tADS) & $-$40\,ns & Before PHI2 rise \\
-SRAM\_CE\# asserted       & $\approx$0\,ns   & Combinational gate on PHI2 \\
-SRAM data valid (tAA=55\,ns) & $+$55\,ns & AS6C4008-55 \\
-6502 data setup deadline  & $+$249\,ns & 279\,ns $-$ 30\,ns tDSR \\
-\textbf{Read margin}      & \textbf{$+$194\,ns} & Adequate \\
+\sig{/IO1} asserted by the PLA & $\approx$50--80\,ns & \\
+\sig{SRAM\_CE\_N} asserted     & $\approx$50--80\,ns & \sig{/IO1} AND PHI2 \\
+SRAM data valid (tAA = 55\,ns) & $\approx$105--135\,ns & AS6C4008-55 \\
+6510 samples the data bus      & $\approx$490\,ns & At PHI2 fall \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\subsection{Write cycle (SRAM)}
+The read margin is several hundred nanoseconds.
 
-WE\# is asserted combinationally when PHI2 is high and the address is
-in the RAMbo window.  The pulse width equals the PHI2-high time:
+\subsection{SRAM write cycle}
 
-\[
-t_{WC} = t_{\text{PHI2-high}} \approx 279\,\text{ns}
-\quad \gg \quad
-t_{WC(\text{SRAM})} = 55\,\text{ns}
-\]
+\sig{SRAM\_WE\_N} is asserted combinationally while \sig{/IO1} is low,
+PHI2 is high and R/W is low.  The pulse lasts $\approx$400\,ns, far above
+the 40\,ns tWP of the AS6C4008-55.  The SRAM latches the data on the WE\#
+rising edge (PHI2 fall); tDH = 0\,ns is covered by the 6510 data hold
+after PHI2 fall.
 
-\subsection{PBI RAM / ROM (BRAM)}
-
-BRAM reads are triggered on \cmd{phi2\_rise} (one clock cycle after the
-real PHI2 edge, $\approx$40\,ns delay).  The BRAM output is registered
-and valid within one additional clock cycle ($\approx$40\,ns), leaving
-$\approx$199\,ns of margin before the 6502 samples the bus.
+\sig{SRAM\_PAGE}/\sig{SRAM\_BLOCK} change only on \hex{DFFE}/\hex{DFFF}
+writes, which are \sig{/IO2} cycles, so they never change while CE\# is
+low.
 
 % ===========================================================================
 \section{Source File Reference}
@@ -841,24 +812,14 @@ $\approx$199\,ns of margin before the 6502 samples the bus.
 \textbf{File} & \textbf{Description} \\
 \midrule
 \file{C6502\_Interface.vhd} &
-    Top-level VHDL entity (Rev~4).  Generic \cmd{VERA\_IS\_PBI}
-    selects PBI or CCTL mode at synthesis time.  Contains all bus
-    logic, BRAM instances, and SRAM control. \\
-\file{custom\_types.vhd} &
-    Package defining \cmd{rom\_array} (2048$\times$8) and
-    \cmd{ram\_512\_array} (512$\times$8) array types. \\
-\file{pbi\_rom\_pkg.vhd} &
-    Auto-generated package containing the \cmd{PBI\_ROM\_INIT}
-    constant (2048 bytes).  Do not edit manually. \\
-\file{gen\_pbi\_rom\_pkg.py} &
-    Python~3 script that converts a 6502 \file{.bin} file into
-    \file{pbi\_rom\_pkg.vhd}.  Invoked by the MCU Makefile. \\
+    Top-level VHDL entity (Rev~6, C64 expansion port, VERA + GeoRAM).
+    Contains the whole bus logic: \sig{/IO1}/\sig{/IO2} decode, VERA
+    select latch, GeoRAM registers and SRAM control. \\
 \file{board-pin-mapping.pcf} &
     Pin constraints for iCE40UP5K SG48.
     All pin numbers are placeholders -- edit before use. \\
 \file{Makefile} &
-    Targets: \cmd{pbi}, \cmd{cctl}, \cmd{all}, \cmd{flash-pbi},
-    \cmd{flash-cctl}, \cmd{flash-pbi-iceprog}, \cmd{flash-cctl-iceprog},
+    Targets: \cmd{all} (default), \cmd{flash}, \cmd{flash-iceprog},
     \cmd{doc}, \cmd{clean}. \\
 \bottomrule
 \end{tabular}
