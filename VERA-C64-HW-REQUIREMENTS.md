@@ -1,7 +1,6 @@
 # VERA RBL-C64 — Requisiti e verifiche hardware
 
-Documento derivato da quello di VERA Module RBL-XE (stesso nome di file, per non rompere i
-riferimenti). La scheda C64 usa lo schema di RBL-XE della revisione del 2026-10-26, con il foglio
+Documento derivato da `VERA-ATARI-HW-REQUIREMENTS.md` di VERA Module RBL-XE. La scheda C64 usa lo schema di RBL-XE della revisione del 2026-10-26, con il foglio
 del connettore riadattato alla porta di espansione del Commodore 64 (`PIN-MAPPING.md` § 9). Qui
 sono riportati i requisiti che valgono anche per il C64, con i riferimenti alla netlist C64, e quelli
 propri del C64.

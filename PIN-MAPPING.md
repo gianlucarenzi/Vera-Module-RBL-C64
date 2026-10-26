@@ -14,7 +14,7 @@ VERA e una GeoRAM 256 KB emulata nelle aree I/O `IO1`/`IO2`:
 | `$DFFE` / `$DFFF` | `/IO2` | GeoRAM registro pagina (0–63) / blocco (0–15), sola scrittura |
 
 > **Documenti collegati:** requisiti e verifiche hardware in
-> [`VERA-ATARI-HW-REQUIREMENTS.md`](VERA-ATARI-HW-REQUIREMENTS.md).
+> [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md).
 >
 > **Origine e allineamento con RBL-XE.** Lo schema è quello di VERA Module RBL-XE (revisione del
 > 2026-10-26: gating di `~OE` di `U19`, strapping dell'ESP32, IRQ open-drain, canali di riserva) con il
@@ -197,7 +197,7 @@ all'oscilloscopio sulla scheda reale.
 | /IO1 | 7 | 41 | 47 | MTDI | Input | LOW | via U6 | Accesso CPU a `$DE00–$DEFF`; abilita anche `U19` nelle letture GeoRAM (§ 6). Rete `~mIO1` (era `~mEXSEL` su RBL-XE). Ex-JTAG, reclaimed. |
 | /IO2 | 10 | 42 | 48 | MTMS | Input | LOW | via U6 | Accesso CPU a `$DF00–$DFFF`. Rete `~mIO2` (era `~mMPD` su RBL-XE). Ex-JTAG, reclaimed. |
 | DEV\_SEL\_N | — | 40 | 45 | MTDO | **Output** | LOW | **direct** | VERA chip select (3.3 V, rete `~mVCS0`) per `$DF00–$DF1F` con la VERA selezionata (`$DFFD`); pull-up `R36`. Ex-JTAG, reclaimed. |
-| ARESET | C | 37 | 42 | GPIO37 | **Output** | LOW | via U27 | `/RESET` del C64 (rete `~C64_RESET` → `~RST`) attraverso il buffer **open-drain** `U27` SN74LVC1G07: la scheda tira solo in basso, la linea resta condivisa con la scheda madre e le altre cartucce. Pull-down `R70` 10 kΩ: C64 in reset anche mentre l'ESP32 si avvia; basso finché la FPGA non è configurata. Vedere `VERA-ATARI-HW-REQUIREMENTS.md` §2.12. |
+| ARESET | C | 37 | 42 | GPIO37 | **Output** | LOW | via U27 | `/RESET` del C64 (rete `~C64_RESET` → `~RST`) attraverso il buffer **open-drain** `U27` SN74LVC1G07: la scheda tira solo in basso, la linea resta condivisa con la scheda madre e le altre cartucce. Pull-down `R70` 10 kΩ: C64 in reset anche mentre l'ESP32 si avvia; basso finché la FPGA non è configurata. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.12. |
 | CRESET | — | 38 | 43 | GPIO38 | **Output** | LOW | **direct** | VERA FPGA Reset — 3.3 V, diretto al chip FPGA. |
 | CDONE | — | 39 | 44 | MTCK | Input | HIGH | **direct** | VERA FPGA configured status — HIGH = configurazione completata. Ex-JTAG, reclaimed. |
 | ABUS\_OE\_N | — | 47 | 37 | SPICLK\_P | **Output** | LOW | **direct** | Rete `~ABUS_OE`: `~OE` di `U3` (A8–A15) e `U4` (A0–A7), pull-up `R7`/`R34` 10 kΩ → 3V3. Alto (traslatori spenti) durante il reset dell'ESP32, così GPIO 45/46 leggono LOW; il firmware lo porta basso in `setup()`. Dominio VDD\_SPI = 3,3 V. |
@@ -227,7 +227,7 @@ e il canale 0 in scrittura puntano a pin fisici diversi.
 | UART TX | 43 | 49 | U0TXD | Serial debug output — UART0 hardware pin |
 | UART RX | 44 | 50 | U0RXD | Serial debug input  — UART0 hardware pin |
 
-> **Programmazione e USB solo a scheda scollegata dal C64.** La rete 5 V della scheda è unita al +5 V del C64 (`CART1` pin 2 e 3) senza diodo: con il cavo USB (`J4`) o il jack (`J5`) collegati mentre la scheda è inserita, la scheda alimenterebbe il C64 (spento) o lavorerebbe in parallelo al suo alimentatore (acceso). Vale anche per il monitor seriale: con la scheda nel C64 usare un adattatore senza VBUS. Vedere `VERA-ATARI-HW-REQUIREMENTS.md` §2.11.
+> **Programmazione e USB solo a scheda scollegata dal C64.** La rete 5 V della scheda è unita al +5 V del C64 (`CART1` pin 2 e 3) senza diodo: con il cavo USB (`J4`) o il jack (`J5`) collegati mentre la scheda è inserita, la scheda alimenterebbe il C64 (spento) o lavorerebbe in parallelo al suo alimentatore (acceso). Vale anche per il monitor seriale: con la scheda nel C64 usare un adattatore senza VBUS. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.11.
 
 ---
 
@@ -354,8 +354,8 @@ qui portano i segnali C64 corrispondenti per funzione o per misura.
 | Canale | Lato B (3,3 V, ESP32-S3) | Lato A (5 V, C64) | Note |
 |---|---|---|---|
 | — | GND con una 0 Ω ciascuno (pin 16 `R80`, 18 `R78`, 17 `R79`, 19 `R73`, 20 `R76`, 21 `R77`, 14 `R72`, 15 `R75`) | non collegati (pin 8, 6, 7, 5, 4, 3, 10, 9) | Canali di riserva: `U16` non pilota più nessuna linea del C64. I pin 18/17 erano `EXTSEL`/`MPD` su RBL-XE, il pin 16 → 8 il reset push-pull (ora `U27`) |
-| — | GPIO 37 (pin 42) — `~C64_RESET` | `/RESET` (C) | **Non passa da `U16`**: buffer open-drain `U27` SN74LVC1G07DBVR (A pin 2 ← `~C64_RESET`, Y pin 4 → `~RST`), 3V3 con `C70` 100 nF. Vedere `VERA-ATARI-HW-REQUIREMENTS.md` §2.12 |
-| — | `~mVIRQ` (FPGA `U2` pin 32) | `/IRQ` (4) | **Non passa da `U16`**: buffer open-drain `U26` SN74LVC1G07DBVR (A pin 2 ← `~mVIRQ`, Y pin 4 → `~IRQ`), 3V3 con `C69` 100 nF. Vedere `VERA-ATARI-HW-REQUIREMENTS.md` §2.3 |
+| — | GPIO 37 (pin 42) — `~C64_RESET` | `/RESET` (C) | **Non passa da `U16`**: buffer open-drain `U27` SN74LVC1G07DBVR (A pin 2 ← `~C64_RESET`, Y pin 4 → `~RST`), 3V3 con `C70` 100 nF. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.12 |
+| — | `~mVIRQ` (FPGA `U2` pin 32) | `/IRQ` (4) | **Non passa da `U16`**: buffer open-drain `U26` SN74LVC1G07DBVR (A pin 2 ← `~mVIRQ`, Y pin 4 → `~IRQ`), 3V3 con `C69` 100 nF. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.3 |
 
 ### U19 — Data bus D0–D7 (bidirezionale, direzione dinamica)
 
@@ -366,7 +366,7 @@ il C64 durante i cicli di lettura del 6510, verso l'ESP32 durante i cicli di scr
 > RBL-XE (`U24`, `U25`): `U19` è acceso in scrittura, nelle letture VERA (`DEV_SEL_N`) e nelle letture
 > della finestra GeoRAM (`/IO1`), spento in φ1 e in tutte le altre letture (RAM, ROM e I/O della scheda
 > madre). Rispetto a RBL-XE l'ingresso `~mEXSEL` di `U24` (pin 4) è diventato `~mIO1` e `~mMPD` (pin 5)
-> è fisso a 3V3. Dettaglio, piedinatura e tempi in `VERA-ATARI-HW-REQUIREMENTS.md` §2.1.
+> è fisso a 3V3. Dettaglio, piedinatura e tempi in `VERA-C64-HW-REQUIREMENTS.md` §2.1.
 >
 > **GeoRAM sempre attiva:** ogni lettura a `$DExx` abilita `U19` e l'ESP32 pilota D0–D7 con il
 > byte della pagina GeoRAM corrente, indipendentemente dal latch `$DFFD`.
@@ -503,4 +503,4 @@ script che ne ricava la connettività (246 reti, nessuna differenza).
 | 7 | Test point `RD4`, `RD5`, `~HALT1` (segnali Atari): `RD4` eliminato, gli altri riusati (`TP6` = `~mIO2`, `TP5` = `AUDIO`); `TP2`–`TP7` rinumerati | schema, netlist |
 | 8 | `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `/NMI`, Dot Clock: non collegati (flag NC) | schema, netlist |
 | 9 | **PCB**: contorno scheda, posizione del connettore a pettine e sbroglio dei nuovi collegamenti vanno rifatti partendo dal PCB Atari con "Update PCB from netlist" | **da fare** |
-| 10 | Loghi/etichette sul PCB (`ATARI READY`, `ATARI DUO BUS`) | da sostituire |
+| 10 | Loghi: `LOGO2` diventa `C64 READY` (footprint `c64_ready_8mm_REV`), `LOGO4` (logo del bus DUOCart Atari) eliminato; BOM `VERA-MODULE-RBL.csv` rigenerata dalla netlist | schema, netlist |

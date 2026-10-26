@@ -167,7 +167,7 @@ I pin GPIO 39–42 erano originariamente riservati a JTAG; vengono liberati in
 
 Fino a quando `setup()` porta basso `PIN_ABUS_OE_N`, U3 e U4 sono spenti: GPIO 45/46
 (A14/A15) leggono LOW dai pull-down interni a ogni reset del chip, quindi VDD\_SPI = 3,3 V
-e il download boot funziona anche con il C64 acceso (`VERA-ATARI-HW-REQUIREMENTS.md` §2.9).
+e il download boot funziona anche con il C64 acceso (`VERA-C64-HW-REQUIREMENTS.md` §2.9).
 
 Per la mappatura completa GPIO→QFN-56, i level shifter e le modifiche rispetto alla
 versione Atari vedere `PIN-MAPPING.md` nella root.
@@ -266,7 +266,7 @@ nella struttura `card` in DRAM.
 
 È necessario avere **PlatformIO Core** installato (`pip install platformio`).
 
-> ⚠ **Programmazione e USB solo a scheda scollegata dal C64.** La rete 5 V della scheda è unita al +5 V del C64 (`CART1` pin 2 e 3) senza diodo: con il cavo USB (`J4`) o il jack (`J5`) collegati mentre la scheda è inserita, la scheda alimenterebbe il C64 (spento) o lavorerebbe in parallelo al suo alimentatore (acceso). Vale anche per il monitor seriale: con la scheda nel C64 usare un adattatore senza VBUS. (`VERA-ATARI-HW-REQUIREMENTS.md` §2.11)
+> ⚠ **Programmazione e USB solo a scheda scollegata dal C64.** La rete 5 V della scheda è unita al +5 V del C64 (`CART1` pin 2 e 3) senza diodo: con il cavo USB (`J4`) o il jack (`J5`) collegati mentre la scheda è inserita, la scheda alimenterebbe il C64 (spento) o lavorerebbe in parallelo al suo alimentatore (acceso). Vale anche per il monitor seriale: con la scheda nel C64 usare un adattatore senza VBUS. (`VERA-C64-HW-REQUIREMENTS.md` §2.11)
 
 ```bash
 # Compila

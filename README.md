@@ -308,7 +308,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 3. **External**: Optional external 5V supply (J5)
 
 #### Power Protection
-- **Ideal diodes** (`U17`, `U18` MAX40200) on the jack and USB inputs; **no diode on the C64 5 V**: program the board and use USB/jack only with the board out of the C64 (`VERA-ATARI-HW-REQUIREMENTS.md` §2.11)
+- **Ideal diodes** (`U17`, `U18` MAX40200) on the jack and USB inputs; **no diode on the C64 5 V**: program the board and use USB/jack only with the board out of the C64 (`VERA-C64-HW-REQUIREMENTS.md` §2.11)
 - **Ferrite Beads**: EMI filtering
 - **Decoupling**: Extensive capacitor network
 - **Current Limiting**: Overcurrent protection
@@ -496,7 +496,7 @@ pio run -e esp32s3fn8 --target upload
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # This documentation
 ├── 📄 PIN-MAPPING.md               # ESP32-S3 / level-shifter pin mapping, C64 port, changes vs. ATARI (§ 9)
-├── 📄 VERA-ATARI-HW-REQUIREMENTS.md # VERA bus requirements & bring-up plan (from the ATARI version)
+├── 📄 VERA-C64-HW-REQUIREMENTS.md # VERA bus requirements & bring-up plan (from the ATARI version)
 ├── 📄 LICENSE                      # GPL v3 license
 ├── 📁 firmware/
 │   ├── 📁 MCU/                     # ESP32-S3 firmware (PlatformIO), analysis document
@@ -533,7 +533,7 @@ Vera-Module-RBL-C64/
   changes from the ATARI board, now in schematic and netlist: expansion port connector,
   `/IO1`/`/IO2` inputs on GPIO 41/42 through `U6`, `U19` output-enable gating with
   `DEV_SEL_N` and `/IO1`, open-drain `/IRQ` and `/RESET`; the PCB is still to be redone.
-- [`VERA-ATARI-HW-REQUIREMENTS.md`](VERA-ATARI-HW-REQUIREMENTS.md) — what the VERA FPGA
+- [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md) — what the VERA FPGA
   requires from the bus (separate RD/WR, write data hold, read side effects, reconfiguration),
   adapted to the C64 from the RBL-XE document, plus the bring-up test plan.
 
@@ -942,7 +942,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 3. **Esterno**: Alimentazione 5V esterna opzionale (J5)
 
 #### Protezione Alimentazione
-- **Diodi ideali** (`U17`, `U18` MAX40200) sugli ingressi jack e USB; **nessun diodo sul 5 V del C64**: programmare e usare USB/jack solo con la scheda fuori dal C64 (`VERA-ATARI-HW-REQUIREMENTS.md` §2.11)
+- **Diodi ideali** (`U17`, `U18` MAX40200) sugli ingressi jack e USB; **nessun diodo sul 5 V del C64**: programmare e usare USB/jack solo con la scheda fuori dal C64 (`VERA-C64-HW-REQUIREMENTS.md` §2.11)
 - **Perle di Ferrite**: Filtraggio EMI
 - **Disaccoppiamento**: Rete estesa di condensatori
 - **Limitazione Corrente**: Protezione sovracorrente
@@ -1130,7 +1130,7 @@ pio run -e esp32s3fn8 --target upload
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # Questa documentazione
 ├── 📄 PIN-MAPPING.md               # Pin ESP32-S3 / level shifter, porta C64, modifiche rispetto all'ATARI (§ 9)
-├── 📄 VERA-ATARI-HW-REQUIREMENTS.md # Requisiti VERA sul bus e piano di bring-up (dalla versione ATARI)
+├── 📄 VERA-C64-HW-REQUIREMENTS.md # Requisiti VERA sul bus e piano di bring-up (dalla versione ATARI)
 ├── 📄 LICENSE                      # Licenza GPL v3
 ├── 📁 firmware/
 │   ├── 📁 MCU/                     # Firmware ESP32-S3 (PlatformIO), documento di analisi
@@ -1167,7 +1167,7 @@ Vera-Module-RBL-C64/
   modifiche rispetto alla scheda ATARI, ora in schema e netlist: connettore della porta di
   espansione, ingressi `/IO1`/`/IO2` su GPIO 41/42 attraverso `U6`, gating di `~OE_` di `U19` con
   `DEV_SEL_N` e `/IO1`, `/IRQ` e `/RESET` open-drain; il PCB è ancora da rifare.
-- [`VERA-ATARI-HW-REQUIREMENTS.md`](VERA-ATARI-HW-REQUIREMENTS.md) — cosa richiede la FPGA VERA
+- [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md) — cosa richiede la FPGA VERA
   dal bus (RD/WR distinti, hold del dato in scrittura, effetti collaterali in lettura,
   riconfigurazione), adattato al C64 dal documento di RBL-XE, più il piano di bring-up.
 
