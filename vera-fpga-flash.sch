@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 5 7
 Title "uSD Card, FPGA FLASH and AUDIO SECTION"
-Date "2026-09-01"
+Date "2026-10-26"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -331,12 +331,6 @@ Wire Wire Line
 Wire Wire Line
 	3300 5210 3300 5240
 Connection ~ 3300 5210
-Text GLabel 4050 5110 2    39   Output ~ 0
-AUDIOL
-Wire Wire Line
-	3300 5210 4050 5210
-Text GLabel 4050 5210 2    39   Output ~ 0
-AUDIOR
 Text Label 3240 2645 0    39   ~ 0
 SD_SSEL_N
 Text Label 3290 3570 0    39   ~ 0
@@ -848,10 +842,10 @@ F 4 "C20142780" H 8090 2780 50  0001 C CNN "LCSC"
 $EndComp
 Wire Wire Line
 	1325 6010 960  6010
-Text GLabel 1035 5685 2    39   BiDi ~ 0
+Text GLabel 1035 5570 2    39   BiDi ~ 0
 3V3
 Wire Wire Line
-	1035 5685 960  5685
+	1035 5570 960  5570
 Wire Wire Line
 	1325 5910 960  5910
 Wire Wire Line
@@ -952,9 +946,6 @@ Wire Wire Line
 	10415 1835 10415 1925
 Text Label 5565 1060 2    39   ~ 0
 SD_SSEL_N
-Wire Wire Line
-	960  5685 960  5910
-Connection ~ 960  5910
 $Comp
 L RetroBitLab:SJ-3523-SMT-TR J7
 U 1 1 6912EA11
@@ -976,10 +967,10 @@ F 13 "C4991872" H 5970 5865 50  0001 C CNN "LCSC"
 	1    5970 5865
 	-1   0    0    1   
 $EndComp
-Text GLabel 5085 5665 0    39   Input ~ 0
-AUDIOL
-Text GLabel 5095 5965 0    39   Input ~ 0
-AUDIOR
+Text GLabel 5525 5965 0    39   Input ~ 0
+AUD1L
+Text GLabel 5520 5665 0    39   Input ~ 0
+AUD1R
 $Comp
 L power:GND #PWR03
 U 1 1 69130C31
@@ -992,45 +983,27 @@ F 3 "" H 5525 6105 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5570 5665 5440 5665
-Wire Wire Line
-	5570 5965 5450 5965
+	5015 5110 4885 5110
 Wire Wire Line
 	5570 6065 5525 6065
 Wire Wire Line
 	5525 6065 5525 6105
-Text Notes 5135 5370 0    79   Italic 16
+Text Notes 5340 5500 0    79   Italic 16
 AUDIO 3.5mm OUTPUT
 Text Notes 3515 7405 0    118  ~ 24
 AUDIO SECTION
 $Comp
 L CRES0805:560R R67
 U 1 1 68CDB550
-P 5345 5665
-F 0 "R67" V 5410 5665 50  0000 C CNN
-F 1 "560R" V 5275 5670 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 5345 5665 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2411221126_UNI-ROYAL-0805W8F4700T5E_C17710.pdf" H 5345 5665 50  0001 C CNN
-F 4 "C28636" H 5345 5665 50  0001 C CNN "LCSC"
-	1    5345 5665
+P 4790 5110
+F 0 "R67" V 4855 5110 50  0000 C CNN
+F 1 "560R" V 4720 5115 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 4790 5110 50  0001 C CNN
+F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2411221126_UNI-ROYAL-0805W8F4700T5E_C17710.pdf" H 4790 5110 50  0001 C CNN
+F 4 "C28636" H 4790 5110 50  0001 C CNN "LCSC"
+	1    4790 5110
 	0    1    1    0   
 $EndComp
-$Comp
-L CRES0805:560R R68
-U 1 1 68CDE7A1
-P 5355 5965
-F 0 "R68" V 5420 5965 50  0000 C CNN
-F 1 "560R" V 5285 5970 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 5355 5965 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2411221126_UNI-ROYAL-0805W8F4700T5E_C17710.pdf" H 5355 5965 50  0001 C CNN
-F 4 "C28636" H 5355 5965 50  0001 C CNN "LCSC"
-	1    5355 5965
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	5240 5665 5085 5665
-Wire Wire Line
-	5250 5965 5095 5965
 $Comp
 L RetroBitLab:CD4011B U9
 U 1 1 68D3338E
@@ -1141,8 +1114,6 @@ Wire Wire Line
 	3800 5240 3800 5110
 Connection ~ 3800 5110
 Wire Wire Line
-	3800 5110 4050 5110
-Wire Wire Line
 	3800 5440 3800 5485
 Wire Wire Line
 	3800 5485 4175 5485
@@ -1177,4 +1148,47 @@ F 3 "~" H 3225 6010 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 3225 6010
+$Comp
+L CRES0805:560R R68
+U 1 1 68CDE7A1
+P 4310 5210
+F 0 "R68" V 4375 5210 50  0000 C CNN
+F 1 "560R" V 4240 5215 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 4310 5210 50  0001 C CNN
+F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2411221126_UNI-ROYAL-0805W8F4700T5E_C17710.pdf" H 4310 5210 50  0001 C CNN
+F 4 "C28636" H 4310 5210 50  0001 C CNN "LCSC"
+	1    4310 5210
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3300 5210 4205 5210
+Wire Wire Line
+	3800 5110 4685 5110
+Wire Wire Line
+	4405 5210 5020 5210
+Wire Wire Line
+	5520 5665 5570 5665
+Wire Wire Line
+	5525 5965 5570 5965
+Text GLabel 5020 5210 2    39   Output ~ 0
+AUD1R
+Text GLabel 5015 5110 2    39   Output ~ 0
+AUD1L
+$Comp
+L CRES0805:CREZ08051% R35
+U 1 1 6ADC11D2
+P 960 5725
+F 0 "R35" H 1005 5715 50  0000 L CNN
+F 1 "CREZ08051%" V 870 5470 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 960 5725 50  0001 C CNN
+F 3 "https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D" H 960 5725 50  0001 C CNN
+F 4 "C328378" H 960 5725 50  0001 C CNN "LCSC"
+	1    960  5725
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	960  5570 960  5630
+Wire Wire Line
+	960  5830 960  5910
+Connection ~ 960  5910
 $EndSCHEMATC

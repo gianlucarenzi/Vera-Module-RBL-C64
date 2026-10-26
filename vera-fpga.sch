@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 2 7
 Title "VERA MODULE AND PROGRAMMING CONNECTOR"
-Date "2026-09-01"
+Date "2026-10-26"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -316,7 +316,7 @@ Text GLabel 1990 2700 0    39   Input ~ 0
 ~mVCS0
 Text GLabel 1990 2800 0    39   Input ~ 0
 ~mWE
-Text GLabel 1400 2900 0    39   Input ~ 0
+Text GLabel 1400 2900 0    39   Output ~ 0
 ~mVIRQ
 Text GLabel 1990 3000 0    39   Input ~ 0
 mA4
@@ -658,31 +658,6 @@ F 4 "C84260" H 9690 4830 50  0001 C CNN "LCSC"
 	1    9690 4830
 	1    0    0    -1  
 $EndComp
-$Comp
-L CRES0805:10K R65
-U 1 1 68CF9E81
-P 1570 2525
-F 0 "R65" H 1629 2566 50  0000 L CNN
-F 1 "10K" H 1629 2475 50  0000 L CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 1570 2525 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf" H 1570 2525 50  0001 C CNN
-F 4 "C84376" H 1570 2525 50  0001 C CNN "LCSC"
-	1    1570 2525
-	1    0    0    -1  
-$EndComp
-Text GLabel 1465 2135 0    50   BiDi ~ 0
-3V3
-Wire Wire Line
-	1465 2135 1570 2135
-Wire Wire Line
-	1570 2135 1570 2430
-Wire Wire Line
-	1570 2900 2190 2900
-Wire Wire Line
-	1570 2630 1570 2900
-Wire Wire Line
-	1570 2900 1400 2900
-Connection ~ 1570 2900
 Text GLabel 8410 1090 0    50   BiDi ~ 0
 5V
 Wire Wire Line
@@ -916,7 +891,7 @@ U 1 1 6A3662B0
 P 8480 1270
 F 0 "JP1" V 8480 1338 50  0000 L CNN
 F 1 "SolderJumper_2_Open" V 8525 1338 50  0001 L CNN
-F 2 "" H 8480 1270 50  0001 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm" H 8480 1270 50  0001 C CNN
 F 3 "~" H 8480 1270 50  0001 C CNN
 	1    8480 1270
 	0    1    1    0   
@@ -929,7 +904,7 @@ U 1 1 6A375357
 P 8980 1270
 F 0 "JP3" V 8980 1338 50  0000 L CNN
 F 1 "SolderJumper_2_Open" V 9025 1338 50  0001 L CNN
-F 2 "" H 8980 1270 50  0001 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm" H 8980 1270 50  0001 C CNN
 F 3 "~" H 8980 1270 50  0001 C CNN
 	1    8980 1270
 	0    1    1    0   
@@ -949,4 +924,6 @@ Wire Wire Line
 	8410 1090 8480 1090
 Wire Wire Line
 	8480 1090 8480 1120
+Wire Wire Line
+	1400 2900 2190 2900
 $EndSCHEMATC

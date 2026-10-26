@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 7 7
 Title "VGA ANALOG AND EXTERNAL VIDEO CONNECTOR"
-Date "2026-09-01"
+Date "2026-10-26"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -638,9 +638,9 @@ Wire Notes Line
 Text Notes 6295 4885 2    110  ~ 22
 EXTERNAL VIDEO CONNECTOR
 Text GLabel 4890 5715 0    39   Input ~ 0
-AUDIOL
+AUD1L
 Text GLabel 5510 5715 2    39   Input ~ 0
-AUDIOR
+AUD1R
 Wire Wire Line
 	4890 5715 4950 5715
 Text GLabel 4875 5615 0    50   BiDi ~ 0

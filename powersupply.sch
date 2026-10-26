@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 6 7
 Title "POWERSUPPLY and USB"
-Date "2026-09-01"
+Date "2026-10-26"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -996,13 +996,13 @@ F 4 "C105881" H 10580 2455 50  0001 C CNN "LCSC"
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:0R R56
+L CRES0805:CREZ08051% R56
 U 1 1 68B89F7F
 P 3720 4940
 F 0 "R56" V 3645 4940 50  0000 C CNN
-F 1 "0R" V 3795 4935 50  0000 C CNN
+F 1 "CREZ08051%" V 3795 4935 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 3720 4940 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C328378.pdf" H 3720 4940 50  0001 C CNN
+F 3 "https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D" H 3720 4940 50  0001 C CNN
 F 4 "C328378" H 3720 4940 50  0001 C CNN "LCSC"
 	1    3720 4940
 	0    1    1    0   
