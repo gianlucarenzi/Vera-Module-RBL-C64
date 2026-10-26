@@ -51,9 +51,11 @@ The **VERA Module RBL-C64** is an FPGA-based audio and video expansion card for 
 **Commodore 64**. It plugs into the **expansion (cartridge) port** and adds, in the I/O
 areas `IO1`/`IO2`, the VERA registers and a **256 KB GeoRAM** emulated by the ESP32.
 
-> **Origin:** the project is derived from the ATARI version (VERA Module RBL-XE).
-> Schematic and PCB are still the ATARI ones: the hardware changes needed for the C64 are
-> listed in [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari).
+> **Origin:** the project is derived from the ATARI version (VERA Module RBL-XE). The
+> schematic is the RBL-XE one (2026-10-26 revision) with the connector sheet adapted to the
+> C64 expansion port, and the ESP32-S3 pin mapping is the same as RBL-XE wherever possible;
+> the netlist matches the schematic. **The PCB is still the ATARI one.** Changes are listed in
+> [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari).
 
 ### What is VERA?
 
@@ -161,7 +163,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 - **Package**: QFN-56 (7×7 mm)
 - **Crystal**: requires an external **40 MHz crystal** on dedicated analog pins XTAL\_P (QFN56 pin 54) and XTAL\_N (pin 53) — mandatory for PLL startup; see PIN-MAPPING.md § 5
 - **Role**: software 6510-bus controller — qualifies every cycle with `/IO1`/`/IO2`, reads A0–A7, R/W and D0–D7, drives `DEV_SEL_N` for the VERA registers and the data bus for GeoRAM reads; emulates the 256 KB GeoRAM in its internal RAM
-- **Timing**: bus loop alone on Core 0 at max FreeRTOS priority (Core 1 prints the log on Serial); PHI2, `/IO1`, `/IO2` and `DEV_SEL_N` through **Dedicated GPIO** Xtensa TIE instructions (`ee.get_gpio_in` / `ee.wr_mask_gpio_out`, 1 CPU cycle) within the ~490 ns PHI2-high window of the ~1 MHz 6510 clock
+- **Timing**: bus loop alone on Core 1 with interrupts masked (Core 0 prints the log on Serial); PHI2, R/W, `/IO1`, `/IO2` and `DEV_SEL_N` through **Dedicated GPIO** Xtensa TIE instructions (`ee.get_gpio_in` / `ee.wr_mask_gpio_out`, 1 CPU cycle) within the ~490 ns PHI2-high window of the ~1 MHz 6510 clock
 
 ### Interface Components
 
@@ -204,7 +206,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 - **Length**: TBD mm
 - **Width**: TBD mm  
 - **Thickness**: 1.6mm (4-layer PCB)
-- **Mounting**: Commodore 64 expansion port (2×22 contacts, 3.96 mm pitch)
+- **Mounting**: Commodore 64 expansion port (2×22 edge contacts, 2.54 mm pitch)
 - **Connectors**: Flat for space efficiency. It needs a custom 3D printed case
 
 </div>
@@ -244,11 +246,12 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 ### External Connections
 
 #### Commodore 64 Expansion Port
-- **Connector**: expansion (cartridge) port, 2×22 contacts, 3.96 mm pitch
+- **Connector**: expansion (cartridge) port, 2×22 edge contacts, 2.54 mm pitch
 - **Address Range**: `IO1` $DE00–$DEFF, `IO2` $DF00–$DFFF
-- **Signals used**: D0–D7, A0–A15, PHI2, R/W, `/IO1`, `/IO2`, `/RESET`, `/IRQ`
-- **Unused lines**: `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `BA`, `/DMA`, `/NMI`, Dot Clock — left unconnected
-- **Open-drain outputs**: `/RESET` and `/IRQ` are wired-OR on the C64 board
+- **Signals used**: D0–D7, A0–A15, PHI2, R/W, `/IO1`, `/IO2`, `/RESET`, `/IRQ`; `BA` and `/DMA` only to test points
+- **Unused lines**: `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `/NMI`, Dot Clock — left unconnected
+- **Outputs**: `/IRQ` and `/RESET` through the open-drain buffers `U26` and `U27` (SN74LVC1G07): the board only pulls the shared lines low
+- **No audio input** on the expansion port: the VERA audio mix is on test point `TP5`
 
 #### Video Output (J2)
 | Pin | Signal | Description |
@@ -305,7 +308,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 3. **External**: Optional external 5V supply (J5)
 
 #### Power Protection
-- **Schottky Diodes**: Reverse polarity protection
+- **Ideal diodes** (`U17`, `U18` MAX40200) on the jack and USB inputs; **no diode on the C64 5 V**: program the board and use USB/jack only with the board out of the C64 (`VERA-ATARI-HW-REQUIREMENTS.md` §2.11)
 - **Ferrite Beads**: EMI filtering
 - **Decoupling**: Extensive capacitor network
 - **Current Limiting**: Overcurrent protection
@@ -428,12 +431,12 @@ iceprog -c
 
 #### ESP32 Firmware
 The ESP32-S3FN8 handles:
-- **Core split**: the bus loop (`MonitorTask`) runs alone on **Core 0** at max FreeRTOS priority and never yields; **Core 1** runs `setup()`/`loop()` and prints on Serial the events passed through a lock-free ring buffer
-- **Startup sync**: ARESET and CRESET asserted LOW immediately in `setup()` (before `Serial.begin`). `MonitorTask` releases CRESET, polls CDONE until the ICE40UP5K bitstream is loaded (< 100 ms typical, 5 s timeout), waits for the VERA power-on reset, then releases ARESET — the C64 starts with bus and FPGA already ready
+- **Core split**: the bus loop (`MonitorTask`) runs alone on **Core 1** with interrupts masked and never yields; **Core 0** runs `LogTask`, which prints on Serial the events passed through a lock-free ring buffer (same architecture as RBL-XE)
+- **Startup sync**: ARESET and CRESET asserted LOW immediately in `setup()`. `setup()` enables the address translators (`ABUS_OE_N`, GPIO 47, after the strapping pins are latched), releases CRESET, polls CDONE until the ICE40UP5K bitstream is loaded (< 100 ms typical, 5 s timeout) and waits for the VERA power-on reset; `MonitorTask` then releases ARESET — the C64 starts with bus and FPGA already ready
 - **Cycle qualification**: after the PHI2 rising edge the loop waits, for at most `IO_QUALIFY_NS` (200 ns), for `/IO1` or `/IO2`; other cycles, including VIC-II fetches, are skipped untouched
-- **Dedicated GPIO**: PHI2, `/IO1`, `/IO2` read and `DEV_SEL_N` written with single Xtensa TIE instructions (1 CPU cycle)
-- **GeoRAM**: D0–D7 driven via `GPIO.out` for reads of the `$DE00` window, from a pointer to the current page updated only on `$DFFE`/`$DFFF` writes
-- **Writes**: the 6510 data is valid up to ~200 ns after PHI2 rise, so the loop keeps the last `GPIO.in` sample taken while PHI2 is still high
+- **Critical path in inline assembly**: once `/IOx` is seen, 5 instructions + 1 APB read to `DEV_SEL_N`, ~10 instructions to the GeoRAM byte on the bus (two posted stores); IO2 decoded by a table in `include/bus_decode.h`, checked by a host test
+- **GeoRAM**: 256 KB in ordinary DRAM `.bss`; D0–D7 driven via `GPIO.out` for reads of the `$DE00` window, from a pointer to the current page updated only on `$DFFE`/`$DFFF` writes
+- **Writes**: the 6510 data is sampled `BUS_WR_SAMPLE_NS` (300 ns) after PHI2 rises; side effects are applied in the rest of PHI2
 - **Debugging**: UART0 on GPIO43 (TX) / GPIO44 (RX), 115200 baud
 
 I/O map (single build, `esp32s3fn8`):
@@ -527,11 +530,12 @@ Vera-Module-RBL-C64/
 ### Hardware notes (read before bring-up)
 
 - [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari) —
-  hardware changes from the ATARI board: expansion port connector, `/IO1`/`/IO2` inputs on
-  GPIO 41/42, `U19` output-enable gating `AND(DEV_SEL_N, /IO1)`, open-drain `/RESET` and `/IRQ`.
+  changes from the ATARI board, now in schematic and netlist: expansion port connector,
+  `/IO1`/`/IO2` inputs on GPIO 41/42 through `U6`, `U19` output-enable gating with
+  `DEV_SEL_N` and `/IO1`, open-drain `/IRQ` and `/RESET`; the PCB is still to be redone.
 - [`VERA-ATARI-HW-REQUIREMENTS.md`](VERA-ATARI-HW-REQUIREMENTS.md) — what the VERA FPGA
   requires from the bus (separate RD/WR, write data hold, read side effects, reconfiguration),
-  written for the ATARI version and valid for the C64 too, plus the bring-up test plan.
+  adapted to the C64 from the RBL-XE document, plus the bring-up test plan.
 
 ### Design Files
 
@@ -681,8 +685,10 @@ Il **VERA Module RBL-C64** è una scheda di espansione audio e video basata su F
 **Commodore 64**. Si collega alla **porta di espansione (cartuccia)** e aggiunge, nelle aree
 I/O `IO1`/`IO2`, i registri VERA e una **GeoRAM da 256 KB** emulata dall'ESP32.
 
-> **Origine:** il progetto deriva dalla versione ATARI (VERA Module RBL-XE). Schema e PCB
-> sono ancora quelli ATARI: le modifiche hardware necessarie per il C64 sono raccolte in
+> **Origine:** il progetto deriva dalla versione ATARI (VERA Module RBL-XE). Lo schema è
+> quello di RBL-XE (revisione del 2026-10-26) con il foglio del connettore adattato alla porta
+> di espansione del C64, e la piedinatura dell'ESP32-S3 è la stessa di RBL-XE dove possibile;
+> la netlist è allineata allo schema. **Il PCB è ancora quello ATARI.** Le modifiche sono in
 > [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari).
 
 ### Cos'è VERA?
@@ -791,7 +797,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 - **Package**: QFN-56 (7×7 mm)
 - **Quarzo**: richiede un **quarzo esterno 40 MHz** sui pin analogici dedicati XTAL\_P (QFN56 pin 54) e XTAL\_N (pin 53) — obbligatorio per il PLL di avvio; vedere PIN-MAPPING.md § 5
 - **Ruolo**: controllore software del bus 6510 — qualifica ogni ciclo con `/IO1`/`/IO2`, legge A0–A7, R/W e D0–D7, pilota `DEV_SEL_N` per i registri VERA e il bus dati per le letture GeoRAM; emula la GeoRAM da 256 KB nella propria RAM
-- **Tempi**: loop del bus da solo sul Core 0 a priorità massima FreeRTOS (il Core 1 stampa il log su Serial); PHI2, `/IO1`, `/IO2` e `DEV_SEL_N` tramite istruzioni **Dedicated GPIO** Xtensa TIE (1 ciclo CPU) nella finestra di PHI2 alto di ~490 ns del clock 6510 a ~1 MHz
+- **Tempi**: loop del bus da solo sul Core 1 a interruzioni mascherate (il Core 0 stampa il log su Serial); PHI2, R/W, `/IO1`, `/IO2` e `DEV_SEL_N` tramite istruzioni **Dedicated GPIO** Xtensa TIE (1 ciclo CPU) nella finestra di PHI2 alto di ~490 ns del clock 6510 a ~1 MHz
 
 ### Componenti Interfaccia
 
@@ -834,7 +840,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 - **Lunghezza**: TBD mm
 - **Larghezza**: TBD mm  
 - **Spessore**: 1.6mm (PCB 4-layer)
-- **Montaggio**: porta di espansione del Commodore 64 (2×22 contatti, passo 3,96 mm)
+- **Montaggio**: porta di espansione del Commodore 64 (2×22 contatti a pettine, passo 2,54 mm)
 - **Connettori**: Piatti per efficienza spazio. Necessita di case stampato in 3D
 
 </div>
@@ -874,11 +880,12 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 ### Connessioni Esterne
 
 #### Porta di espansione Commodore 64
-- **Connettore**: porta di espansione (cartuccia), 2×22 contatti, passo 3,96 mm
+- **Connettore**: porta di espansione (cartuccia), 2×22 contatti a pettine, passo 2,54 mm
 - **Range Indirizzi**: `IO1` $DE00–$DEFF, `IO2` $DF00–$DFFF
-- **Segnali usati**: D0–D7, A0–A15, PHI2, R/W, `/IO1`, `/IO2`, `/RESET`, `/IRQ`
-- **Linee non usate**: `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `BA`, `/DMA`, `/NMI`, Dot Clock — scollegate
-- **Uscite open-drain**: `/RESET` e `/IRQ` sono wired-OR sulla scheda madre del C64
+- **Segnali usati**: D0–D7, A0–A15, PHI2, R/W, `/IO1`, `/IO2`, `/RESET`, `/IRQ`; `BA` e `/DMA` solo verso test point
+- **Linee non usate**: `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `/NMI`, Dot Clock — scollegate
+- **Uscite**: `/IRQ` e `/RESET` attraverso i buffer open-drain `U26` e `U27` (SN74LVC1G07): la scheda tira solo in basso le linee condivise
+- **Nessun ingresso audio** sulla porta di espansione: il mix audio della VERA è sul test point `TP5`
 
 #### Uscita Video (J2)
 | Pin | Segnale | Descrizione |
@@ -935,7 +942,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 3. **Esterno**: Alimentazione 5V esterna opzionale (J5)
 
 #### Protezione Alimentazione
-- **Diodi Schottky**: Protezione polarità inversa
+- **Diodi ideali** (`U17`, `U18` MAX40200) sugli ingressi jack e USB; **nessun diodo sul 5 V del C64**: programmare e usare USB/jack solo con la scheda fuori dal C64 (`VERA-ATARI-HW-REQUIREMENTS.md` §2.11)
 - **Perle di Ferrite**: Filtraggio EMI
 - **Disaccoppiamento**: Rete estesa di condensatori
 - **Limitazione Corrente**: Protezione sovracorrente
@@ -1058,12 +1065,12 @@ iceprog -c
 
 #### Firmware ESP32
 L'ESP32-S3FN8 gestisce:
-- **Divisione dei core**: il loop del bus (`MonitorTask`) gira da solo sul **Core 0** a priorità massima FreeRTOS e non cede mai la CPU; il **Core 1** esegue `setup()`/`loop()` e stampa su Serial gli eventi ricevuti tramite un ring buffer senza lock
-- **Sincronizzazione startup**: ARESET e CRESET abbassati subito in `setup()` (prima di `Serial.begin`). `MonitorTask` rilascia CRESET, attende CDONE = HIGH (bitstream ICE40UP5K caricato, tipicamente < 100 ms, timeout 5 s), attende il power-on reset della VERA, poi rilascia ARESET — il C64 parte con bus e FPGA già operativi
+- **Divisione dei core**: il loop del bus (`MonitorTask`) gira da solo sul **Core 1** a interruzioni mascherate e non cede mai la CPU; il **Core 0** esegue `LogTask`, che stampa su Serial gli eventi ricevuti tramite un ring buffer senza lock (stessa architettura di RBL-XE)
+- **Avvio sincronizzato**: ARESET e CRESET bassi subito in `setup()`. `setup()` abilita i traslatori degli indirizzi (`ABUS_OE_N`, GPIO 47, dopo il campionamento degli strapping), rilascia CRESET, attende CDONE (< 100 ms tipici, timeout 5 s) e il power-on reset della VERA; poi `MonitorTask` rilascia ARESET — il C64 parte con bus e FPGA già pronti
 - **Qualificazione dei cicli**: dopo il fronte di salita di PHI2 il loop attende, per al massimo `IO_QUALIFY_NS` (200 ns), `/IO1` o `/IO2`; gli altri cicli, compresi i fetch del VIC-II, vengono saltati senza toccare nulla
-- **Dedicated GPIO**: PHI2, `/IO1`, `/IO2` letti e `DEV_SEL_N` scritto con singole istruzioni Xtensa TIE (1 ciclo CPU)
-- **GeoRAM**: D0–D7 pilotati via `GPIO.out` nelle letture della finestra `$DE00`, da un puntatore alla pagina corrente aggiornato solo quando si scrive `$DFFE`/`$DFFF`
-- **Scritture**: il dato del 6510 è valido fino a ~200 ns dopo la salita di PHI2, quindi il loop usa l'ultimo campione di `GPIO.in` preso con PHI2 ancora alto
+- **Percorso critico in assembly inline**: visto `/IOx`, 5 istruzioni + 1 lettura APB fino a `DEV_SEL_N`, ~10 istruzioni fino al byte GeoRAM sul bus (due store "posted"); IO2 decodificato con una tabella in `include/bus_decode.h`, verificata da un test sul PC
+- **GeoRAM**: 256 KB in `.bss` ordinaria in DRAM; D0–D7 pilotati via `GPIO.out` nelle letture della finestra `$DE00`, da un puntatore alla pagina corrente aggiornato solo quando si scrive `$DFFE`/`$DFFF`
+- **Scritture**: il dato del 6510 è campionato `BUS_WR_SAMPLE_NS` (300 ns) dopo la salita di PHI2; gli effetti sono applicati nel resto di PHI2
 - **Debug**: UART0 su GPIO43 (TX) / GPIO44 (RX), 115200 baud
 
 Mappa I/O (build unica, `esp32s3fn8`):
@@ -1157,13 +1164,12 @@ Vera-Module-RBL-C64/
 ### Note hardware (da leggere prima del bring-up)
 
 - [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari) —
-  modifiche hardware rispetto alla scheda ATARI: connettore della porta di espansione,
-  ingressi `/IO1`/`/IO2` su GPIO 41/42, gating di `~OE_` di `U19` con `AND(DEV_SEL_N, /IO1)`,
-  `/RESET` e `/IRQ` open-drain.
+  modifiche rispetto alla scheda ATARI, ora in schema e netlist: connettore della porta di
+  espansione, ingressi `/IO1`/`/IO2` su GPIO 41/42 attraverso `U6`, gating di `~OE_` di `U19` con
+  `DEV_SEL_N` e `/IO1`, `/IRQ` e `/RESET` open-drain; il PCB è ancora da rifare.
 - [`VERA-ATARI-HW-REQUIREMENTS.md`](VERA-ATARI-HW-REQUIREMENTS.md) — cosa richiede la FPGA VERA
   dal bus (RD/WR distinti, hold del dato in scrittura, effetti collaterali in lettura,
-  riconfigurazione), scritto per la versione ATARI e valido anche per il C64, più il piano di
-  bring-up.
+  riconfigurazione), adattato al C64 dal documento di RBL-XE, più il piano di bring-up.
 
 ### File Design
 
