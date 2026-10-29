@@ -152,7 +152,7 @@ I pin GPIO 39–42 erano originariamente riservati a JTAG; vengono liberati in
 | R/W          | 2           | 7          | Input dedicated                   |
 | D0–D7        | 4–11        | 9–16       | Bus dati bidirezionale            |
 | A0–A7        | 12–19       | 17–25      | Offset nella pagina I/O; GPIO 19=USB D− (USB disabilitato) |
-| A8–A15       | 20–21, 35–36, 33–34, 45–46 | 26–27, 40–41, 38–39, 51–52 | Cablati, non usati dalla decodifica (A14/A15 = strapping) |
+| A8–A15       | 20–21, 33–36, 45–46 | 26–27, 38–41, 51–52 | Cablati, non usati dalla decodifica (A14/A15 = strapping) |
 | ARESET       | 37          | 42         | `/RESET` del C64 (output, open-drain `U27`, pull-down R70) |
 | BOOT0        | 0           | 5          | Pulsante BOOT / auto-reset (non usato dal firmware) |
 | CRESET       | 38          | 43         | Chip reset VERA (output)          |

@@ -52,10 +52,10 @@
 #define ABUS_LO_MASK    0x003FF000UL
 
 /* --- Bank 1 Signals (GPIO 32-48) --- */
-#define PIN_A12         33   /* Address Bit 12 (Pin 38) */
-#define PIN_A13         34   /* Address Bit 13 (Pin 39) */
-#define PIN_A10         35   /* Address Bit 10 (Pin 40) */
-#define PIN_A11         36   /* Address Bit 11 (Pin 41) */
+#define PIN_A10         33   /* Address Bit 10 (Pin 38) */
+#define PIN_A11         34   /* Address Bit 11 (Pin 39) */
+#define PIN_A12         35   /* Address Bit 12 (Pin 40) */
+#define PIN_A13         36   /* Address Bit 13 (Pin 41) */
 #define PIN_ARESET      37   /* C64 /RESET via U27 open-drain, net ~C64_RESET, pull-down R70 (Pin 42) */
 #define PIN_CRESET      38   /* Vera Chip Reset Output (Pin 43) */
 #define PIN_CDONE       39   /* Vera Programmed Status Input (Pin 44) */

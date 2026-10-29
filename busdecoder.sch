@@ -782,9 +782,9 @@ mA8
 Text GLabel 9765 5420 2    39   BiDi ~ 0
 mA9
 Text GLabel 9765 5720 2    39   BiDi ~ 0
-mA10
+mA12
 Text GLabel 9765 5820 2    39   BiDi ~ 0
-mA11
+mA13
 Wire Wire Line
 	9765 4720 9085 4720
 Wire Wire Line
@@ -806,11 +806,11 @@ Wire Wire Line
 Wire Wire Line
 	9765 5820 9085 5820
 Text GLabel 9765 5520 2    39   BiDi ~ 0
-mA12
+mA10
 Wire Wire Line
 	9085 5520 9765 5520
 Text GLabel 9765 5620 2    39   BiDi ~ 0
-mA13
+mA11
 Wire Wire Line
 	9085 5620 9765 5620
 Wire Wire Line

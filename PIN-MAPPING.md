@@ -72,7 +72,7 @@ del C64, 22/Z sono a sinistra e 1/A a destra.
 | D | `/NMI` | — | non collegato |
 | E | φ2 | `PHI2` | `U6` → GPIO 1, gating `U25`, strobe VERA |
 | F, H | A15, A14 | `A15`, `A14` | `U3` → GPIO 46, 45 (strapping) |
-| J, K, L, M, N, P | A13…A8 | `A13`…`A8` | `U3` → GPIO 34, 33, 36, 35, 21, 20 |
+| J, K, L, M, N, P | A13…A8 | `A13`…`A8` | `U3` → GPIO 36, 35, 34, 33, 21, 20 |
 | R…Y | A7…A0 | `A7`…`A0` | `U4` → GPIO 19…12 |
 
 > **Audio.** La porta di espansione non ha un ingresso audio (sull'Atari c'era `AUDIO`, ECI pin 5).
@@ -127,7 +127,7 @@ Firmware data decode: `data = (GPIO.in >> 4) & 0xFF`
 | A6 | S | 18 | 24 | GPIO18        | 18 | |
 | A7 | R | 19 | 25 | USB\_D−       | 19 | USB disabilitato; pin condiviso con USB D− |
 
-### A8–A15 (Bank 0/1, GPIO 20–21, 35–36, 33–34, 45–46, via 74LVC4245APW_118 U3)
+### A8–A15 (Bank 0/1, GPIO 20–21, 33–36, 45–46, via 74LVC4245APW_118 U3)
 
 Non usati dalla decodifica (vedere nota sopra), disponibili per debug o usi futuri.
 A14/A15 sono comunque gli strapping di GPIO 45/46, resi sicuri dalla rete `~ABUS_OE`.
@@ -136,10 +136,10 @@ A14/A15 sono comunque gli strapping di GPIO 45/46, resi sicuri dalla rete `~ABUS
 |---|---|---|---|---|---|---|
 | A8  | P | 20 | 26 | USB\_D+ | Bank 0 bit 20 | USB disabilitato; pin condiviso con USB D+ |
 | A9  | N | 21 | 27 | GPIO21  | Bank 0 bit 21 | |
-| A10 | M | 35 | 40 | GPIO35  | Bank 1 bit 3  | |
-| A11 | L | 36 | 41 | GPIO36  | Bank 1 bit 4  | |
-| A12 | K | 33 | 38 | GPIO33  | Bank 1 bit 1  | |
-| A13 | J | 34 | 39 | GPIO34  | Bank 1 bit 2  | |
+| A10 | M | 33 | 38 | GPIO33  | Bank 1 bit 1  | |
+| A11 | L | 34 | 39 | GPIO34  | Bank 1 bit 2  | |
+| A12 | K | 35 | 40 | GPIO35  | Bank 1 bit 3  | |
+| A13 | J | 36 | 41 | GPIO36  | Bank 1 bit 4  | |
 | A14 | H | 45 | 51 | GPIO45  | Bank 1 bit 13 | Strapping pin (VDD_SPI); `U3` spento durante il reset (`~ABUS_OE`) → pull-down → LOW |
 | A15 | F | 46 | 52 | GPIO46  | Bank 1 bit 14 | Strapping pin (ROM msgs / download); `U3` spento durante il reset → pull-down → LOW |
 
@@ -326,10 +326,10 @@ GPIO 47 è in alta impedenza (nessuna pull interna, nessun glitch), `R7` spegne 
 |---|---|---|
 | A0/B0 | GPIO 20 (pin 26) — A8  | C64 A8 (P) (pin condiviso USB D+) |
 | A1/B1 | GPIO 21 (pin 27) — A9  | C64 A9 (N)  |
-| A2/B2 | GPIO 35 (pin 40) — A10 | C64 A10 (M) |
-| A3/B3 | GPIO 36 (pin 41) — A11 | C64 A11 (L) |
-| A4/B4 | GPIO 33 (pin 38) — A12 | C64 A12 (K) |
-| A5/B5 | GPIO 34 (pin 39) — A13 | C64 A13 (J) |
+| A2/B2 | GPIO 33 (pin 38) — A10 | C64 A10 (M) |
+| A3/B3 | GPIO 34 (pin 39) — A11 | C64 A11 (L) |
+| A4/B4 | GPIO 35 (pin 40) — A12 | C64 A12 (K) |
+| A5/B5 | GPIO 36 (pin 41) — A13 | C64 A13 (J) |
 | A6/B6 | GPIO 45 (pin 51) — A14 | C64 A14 (H) |
 | A7/B7 | GPIO 46 (pin 52) — A15 | C64 A15 (F) |
 
@@ -403,9 +403,9 @@ Pin non assegnati al progetto, esclusi strapping e flash in-package.
 | 22–25 | — | — | Non esistono su ESP32-S3 |
 
 > Resta libero solo GPIO 48 (pin 36), come su RBL-XE; GPIO 47 (pin 37) è `ABUS_OE_N`. GPIO 41 =
-> /IO1, GPIO 42 = /IO2; GPIO 33, 34, 45, 46 = A12–A15. GPIO 3 non è usato ma è un pin di strapping:
+> /IO1, GPIO 42 = /IO2; GPIO 33–36 = A10–A13, GPIO 45, 46 = A14–A15. GPIO 3 non è usato ma è un pin di strapping:
 > lo fissa `R71` (10 kΩ → 3V3). A8–A15 non servono alla decodifica: se occorressero altri ingressi
-> (per esempio `BA` o `/DMA`, oggi solo su test point), A8–A13 (GPIO 20, 21, 35, 36, 33, 34) sono i
+> (per esempio `BA` o `/DMA`, oggi solo su test point), A8–A13 (GPIO 20, 21, 33, 34, 35, 36) sono i
 > candidati; GPIO 45/46 vanno lasciati su A14/A15.
 
 **Pin esclusi (non utilizzabili):**
@@ -463,10 +463,10 @@ memoria da Table 2-14 "Pin Mapping Between Chip and Flash or PSRAM" (pag. 31).
 | 35  | GPIO 32 (SPID)   | **Flash in-package (DI) — NC esterno** |
 | 36  | GPIO 48 (SPICLK\_N) | GPIO libero — usato dalla memoria solo in Octal SPI; non usato in questo progetto |
 | 37  | GPIO 47 (SPICLK\_P) | ABUS\_OE\_N output → `~OE` di U3/U4 (rete `~ABUS_OE`, pull-up `R7`/`R34`) |
-| 38  | GPIO 33 | A12 (via U3) |
-| 39  | GPIO 34 | A13 (via U3) |
-| 40  | GPIO 35 | A10 (via U3) |
-| 41  | GPIO 36 | A11 (via U3) |
+| 38  | GPIO 33 | A10 (via U3) |
+| 39  | GPIO 34 | A11 (via U3) |
+| 40  | GPIO 35 | A12 (via U3) |
+| 41  | GPIO 36 | A13 (via U3) |
 | 42  | GPIO 37 | ARESET output → C64 /RESET (open-drain U27) |
 | 43  | GPIO 38 | CRESET output (diretto VERA) |
 | 44  | GPIO 39 / MTCK | CDONE input (diretto VERA) — ex-JTAG |
