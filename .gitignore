@@ -10,3 +10,5 @@
 /firmware/MCU/Vera_Module_Analisys.ITA.out
 /firmware/MCU/Vera_Module_Analisys.ITA.toc
 *.sch-bak
+# created by kicad-cli (KiCad 7+) when exporting the 3D models
+*.kicad_prl

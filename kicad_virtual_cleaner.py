@@ -393,8 +393,9 @@ class KiCadVirtualCleaner:
         virtual_refs, fiducial_refs, silkscreen_refs = self.extract_excluded_references(kicad_pcb_file)
         
         if not self.all_excluded_references:
+            # Niente da togliere: i CSV vanno già bene, non è un errore
             self.log("Nessun oggetto da escludere trovato. Operazione terminata.")
-            return False
+            return True
         
         # Verifica che i file CSV esistano
         existing_csv_files = []
