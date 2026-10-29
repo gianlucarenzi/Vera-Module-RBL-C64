@@ -176,18 +176,18 @@ if [ -f ${PCBNAME}_cpl_top.csv ]; then
 	# Verify if the bot is present
 	if [ -f ${PCBNAME}_cpl_bot.csv ]; then
 		# We are 2 side board
-		./clean_virtual.sh ${PCBNAME}_cpl_top.csv ${PCBNAME}_cpl_bot.csv ${PCBNAME}.kicad_pcb
+		./clean_virtual.sh ${PCBNAME}_cpl_top.csv ${PCBNAME}_cpl_bot.csv --pcb ${PCBNAME}.kicad_pcb
 		cat ${PCBNAME}_cpl_top.csv <(tail -n +2 ${PCBNAME}_cpl_bot.csv) > ${PCBNAMEOUT}-JLCPCB-CPL.csv
 	else
 		# We have only TOP Side components!
-		./clean_virtual.sh ${PCBNAME}_cpl_top.csv ${PCBNAME}.kicad_pcb
+		./clean_virtual.sh ${PCBNAME}_cpl_top.csv --pcb ${PCBNAME}.kicad_pcb
 		cp ${PCBNAME}_cpl_top.csv ${PCBNAMEOUT}-JLCPCB-CPL.csv
 	fi
 else
 	# Verify if the bot is present
 	if [ -f ${PCBNAME}_cpl_bot.csv ]; then
 		# We have only BOT side components
-		./clean_virtual.sh ${PCBNAME}_cpl_bot.csv ${PCBNAME}.kicad_pcb
+		./clean_virtual.sh ${PCBNAME}_cpl_bot.csv --pcb ${PCBNAME}.kicad_pcb
 		cp ${PCBNAME}_cpl_bot.csv ${PCBNAMEOUT}-JLCPCB-CPL.csv
 	else
 		# There is no top and no bottom!
