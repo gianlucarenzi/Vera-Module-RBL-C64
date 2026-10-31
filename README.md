@@ -490,7 +490,7 @@ pio run -e esp32s3fn8 --target upload
 
 ## 📁 Project Structure
 
-The design workflow, from the schematic to the JLCPCB order (stock check, library update, ERC, netlist, PCB and net classes, DRC, `output_job.sh`, files to send), is described in [WORKFLOW.md](WORKFLOW.md) (in Italian).
+The design workflow, from the schematic to the JLCPCB order (stock check, library update, ERC, netlist, PCB and net classes, DRC, `output_job.sh`, files to send), is described in [WORKFLOW.md](WORKFLOW.md) (in Italian, also as [PDF](WORKFLOW.pdf)).
 
 ### Repository Organization
 
@@ -1127,7 +1127,7 @@ pio run -e esp32s3fn8 --target upload
 
 ## 📁 Struttura Progetto
 
-Il workflow di progetto, dallo schematico all'ordine JLCPCB (disponibilità dei componenti, aggiornamento della libreria, ERC, netlist, PCB e netclass, DRC, `output_job.sh`, file da consegnare), è descritto in [WORKFLOW.md](WORKFLOW.md).
+Il workflow di progetto, dallo schematico all'ordine JLCPCB (disponibilità dei componenti, aggiornamento della libreria, ERC, netlist, PCB e netclass, DRC, `output_job.sh`, file da consegnare), è descritto in [WORKFLOW.md](WORKFLOW.md) (anche in [PDF](WORKFLOW.pdf)).
 
 ### Organizzazione Repository
 

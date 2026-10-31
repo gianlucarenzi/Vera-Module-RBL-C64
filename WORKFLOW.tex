@@ -1,0 +1,323 @@
+% Workflow di progetto: dallo schematico all'ordine JLCPCB.
+% Derivato da WORKFLOW.md: le modifiche vanno fatte prima li', poi qui.
+%
+% PDF:  firmware/MCU/produce-pdf-from-tex.sh WORKFLOW   ->  WORKFLOW.pdf
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\projname}{VERA-MODULE-RBL-C64}
+
+\geometry{top=25mm, bottom=25mm, left=25mm, right=25mm}
+
+% ---------------------------------------------------------------------------
+% Colori e stili
+% ---------------------------------------------------------------------------
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{stepfill}{RGB}{232,240,252}
+\definecolor{stepline}{RGB}{60,90,150}
+\definecolor{stopfill}{RGB}{252,232,232}
+\definecolor{okfill}{RGB}{232,248,236}
+
+\lstdefinestyle{shell}{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    framerule=0.4pt,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false,
+    xleftmargin=6pt,
+    xrightmargin=6pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+}
+
+% Nomi di file: a capo dopo i trattini, i nomi qui sono lunghi
+% (solo dopo i trattini veri: niente sillabazione dentro i nomi)
+\makeatletter
+\newcommand{\file}[1]{{\ttfamily\hyphenchar\font=`\-\relax\language=\l@nohyphenation #1}}
+\makeatother
+\setlength{\emergencystretch}{3em}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small \projname}
+\rhead{\small Workflow di progetto}
+\cfoot{\small \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\Large\bfseries\color{stepline}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+
+\title{\textbf{Workflow di progetto}\\[4pt]
+       \large Dallo schematico all'ordine JLCPCB\\[2pt]
+       \normalsize \projname}
+\author{RetroBitLab}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\noindent
+Strumenti: KiCad~5 (Eeschema, CvPcb, Pcbnew) per schematico e PCB, la libreria
+\nolinkurl{~/Progetti/RetroBitLab-Library} per simboli, footprint e
+modelli 3D, e gli script del repository per tutto ciò che si produce (PDF,
+Gerber, 3D, BOM, CPL).
+
+In questa fase \textbf{non} si esportano a mano PDF, BOM, Gerber o CPL da
+KiCad: li genera tutti \file{output\_job.sh} al passo~10, sempre dai sorgenti.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=4mm and 8mm,
+    wfstep/.style={draw=stepline, fill=stepfill, rounded corners=2pt,
+                 minimum width=50mm, minimum height=7mm, font=\small, align=center},
+    check/.style={wfstep, fill=stopfill},
+    done/.style={wfstep, fill=okfill},
+    arr/.style={-{Stealth[length=2mm]}, stepline, thick},
+]
+\node[wfstep]  (s1)  {1. Schematico e annotazione};
+\node[check, below=of s1] (s2) {2. Disponibilità dei componenti};
+\node[wfstep, right=16mm of s2]  (lib) {Aggiornare la libreria};
+\node[check, below=of s2] (s3) {3. ERC};
+\node[wfstep,  below=of s3] (s4) {4. Assegnamento dei footprint};
+\node[wfstep,  below=of s4] (s5) {5. Salvataggio della netlist};
+\node[wfstep,  below=of s5] (s6) {6. PCB: netlist e netclass};
+\node[wfstep,  below=of s6] (s7) {7. Sbroglio};
+\node[check, below=of s7] (s8) {8. Riempimento aree e DRC};
+\node[wfstep,  below=of s8] (s9) {9. Salvataggio del PCB};
+\node[wfstep,  below=of s9] (s10) {10. \texttt{./output\_job.sh <versione>}};
+\node[done,  below=of s10] (s11) {11. Consegna: zip, BOM, CPL};
+
+\foreach \a/\b in {s1/s2, s2/s3, s3/s4, s4/s5, s5/s6, s6/s7, s7/s8, s8/s9, s9/s10, s10/s11}
+    \draw[arr] (\a) -- (\b);
+\draw[arr] (s2) -- node[below, font=\scriptsize] {no} (lib);
+\draw[arr] (lib) |- (s1);
+\draw[arr] (s8.west) -- ++(-6mm,0) |- node[pos=0.25, left, font=\scriptsize, align=right] {errori\\o warning} (s7.west);
+\end{tikzpicture}
+\caption{Sequenza dei passi. In rosso i controlli che possono rimandare indietro.}
+\end{figure}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+% ---------------------------------------------------------------------------
+\section{Schematico e annotazione}
+
+\begin{itemize}[leftmargin=*]
+  \item Si disegna lo schematico in Eeschema (KiCad~5): foglio principale
+        \file{VERA-MODULE-RBL.sch} e fogli gerarchici.
+  \item Ogni componente da montare ha il campo \textbf{\file{LCSC}} con il
+        codice del pezzo (es.\ \file{C17713}). La BOM raggruppa per valore,
+        footprint e LCSC; un componente senza LCSC non viene montato da
+        JLCPCB e viene tolto anche dalla CPL.
+  \item Si annota tutto (\emph{Strumenti $\rightarrow$ Annota schematico}).
+        Nessun riferimento deve restare con \file{?}: \file{sch2bomxml.py} si
+        ferma se ne trova uno, o se due parti diverse hanno lo stesso
+        riferimento.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Disponibilità dei componenti}
+
+Subito dopo l'annotazione, prima di andare avanti:
+
+\begin{lstlisting}[style=shell]
+./check_jlcpcb_stock.sh          # 5 schede
+./check_jlcpcb_stock.sh -n 10    # 10 schede
+\end{lstlisting}
+
+Lo script costruisce la BOM dallo schematico in una cartella temporanea (non
+scrive file del progetto) e la confronta con il catalogo JLCPCB in tempo reale.
+Per ogni riga riporta stock, quantità necessaria (con scarto e minimo), tipo
+Basic / Preferred / Extended e costo.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\ttfamily}l L c}
+\toprule
+\normalfont\textbf{Stato} & \textbf{Significato} & \textbf{Blocca} \\
+\midrule
+OK      & stock sufficiente & no \\
+LOW     & sufficiente ora, ma meno di 5 volte il necessario & no (avviso) \\
+GLOBAL  & stock insufficiente, ma il codice è in \file{jlcpcb-global-sourcing.txt} & no \\
+SHORT   & stock minore del necessario & sì \\
+OUT     & stock zero & sì \\
+MISSING & codice non presente nel catalogo JLCPCB & sì \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Per le righe che bloccano propone alternative con stock sufficiente (stessa
+categoria e package, stesso valore per i passivi, Basic prima). Esce con~0 se
+tutto si può montare, 1 se qualcosa va cambiato, 2 se il servizio non risponde.
+
+Se un componente è attivo ma JLCPCB ne ha pochi, lo si può far comprare a
+JLCPCB con il \textbf{Global Sourcing}: si aggiunge il codice LCSC a
+\file{jlcpcb-global-sourcing.txt} (uno per riga, \file{\#} per il commento) e
+all'ordine si sceglie Global Sourcing per quella riga.
+
+\subsection*{Aggiornare la libreria, se necessario}
+
+Quando un componente va sostituito:
+
+\begin{enumerate}[leftmargin=*]
+  \item in \file{RetroBitLab-Library} si crea o si aggiorna il simbolo
+        (\file{.lib}) con footprint, datasheet e campo \file{LCSC}, e la sua
+        documentazione (\file{.dcm}); per i passivi si usa la libreria della
+        famiglia giusta (\file{CCAP0805}, \file{CRES0805}, \dots). Se cambia il
+        package servono anche footprint e modello 3D;
+  \item si verifica sul datasheet piedinatura e land pattern rispetto al
+        footprint;
+  \item si fa il commit della libreria;
+  \item nello schematico si sostituisce il simbolo e si torna al passo~2
+        finché il controllo non passa.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section{ERC}
+
+\emph{Ispeziona $\rightarrow$ Controllo regole elettriche}. Si correggono tutti
+gli errori e i warning prima di proseguire.
+
+% ---------------------------------------------------------------------------
+\section{Assegnamento dei footprint}
+
+Con CvPcb ogni simbolo deve avere il suo footprint. Per le parti JLCPCB il
+footprint deve corrispondere al package del codice LCSC.
+
+% ---------------------------------------------------------------------------
+\section{Salvataggio della netlist}
+
+Si genera e si salva la netlist \file{VERA-MODULE-RBL.net} (\emph{Strumenti
+$\rightarrow$ Genera netlist}, formato Pcbnew). \textbf{Nessun PDF e nessuna
+BOM} in questa fase.
+
+% ---------------------------------------------------------------------------
+\section{PCB: netlist e netclass}
+
+\begin{itemize}[leftmargin=*]
+  \item In Pcbnew (KiCad~5) si importa la netlist (\emph{Strumenti
+        $\rightarrow$ Carica netlist}).
+  \item Le \textbf{netclass si definiscono e si assegnano nel PCB}
+        (\emph{File $\rightarrow$ Impostazioni scheda $\rightarrow$ Classi di
+        rete}): con KiCad~5 non esiste back annotation dal PCB allo
+        schematico, quindi l'unico posto dove le netclass sono definite è il
+        \file{.kicad\_pcb}. Dopo ogni nuovo import della netlist si controlla
+        che le net nuove o rinominate siano nella netclass giusta.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Sbroglio}
+
+A mano, oppure con fastroute tramite \file{tools/route.sh} (vedi il commento in
+testa allo script). Il risultato si importa come sessione Specctra.
+
+% ---------------------------------------------------------------------------
+\section{Riempimento delle aree e DRC}
+
+\begin{enumerate}[leftmargin=*]
+  \item Al termine dello sbroglio si riempiono tutte le aree (tasto \file{B}).
+  \item Si lancia il DRC (\emph{Ispeziona $\rightarrow$ Controllo regole di
+        progettazione}).
+  \item Si correggono \textbf{tutti} gli errori e i warning, poi si ripetono i
+        punti 1 e 2 finché il DRC è pulito.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section{Salvataggio del PCB}
+
+Il \file{.kicad\_pcb} si salva sempre corretto (DRC pulito) e \textbf{con le
+aree riempite}: Gerber, 3D e CPL vengono generati dal file così come è salvato.
+
+\file{REFILL\_ZONES=1 ./output\_job.sh <versione>} riempie di nuovo le aree solo
+in memoria, senza modificare il file: è un ripiego, non sostituisce il passo~8.
+
+% ---------------------------------------------------------------------------
+\section{Generazione dei file di produzione}
+
+\begin{lstlisting}[style=shell]
+./check_jlcpcb_stock.sh          # di nuovo, lo stock cambia nel tempo
+./output_job.sh <versione>       # es. ./output_job.sh 4
+\end{lstlisting}
+
+\file{output\_job.sh}, in ordine:
+
+\begin{enumerate}[leftmargin=*]
+  \item XML della BOM dallo schematico (\file{sch2bomxml.py})
+        $\rightarrow$ \file{VERA-MODULE-RBL.xml};
+  \item BOM raggruppata (\file{generate\_bom.py})
+        $\rightarrow$ \file{VERA-MODULE-RBL.csv};
+  \item \textbf{BOM JLCPCB} (\file{jlcpcb-check-bom.py})
+        $\rightarrow$ \file{<NOME>-v<versione>-JLCPCB-BOM.csv};
+  \item \textbf{CPL JLCPCB} dal PCB (\file{run\_generate\_cpl.sh},
+        \file{clean\_virtual.sh}) $\rightarrow$
+        \file{<NOME>-v<versione>-JLCPCB-CPL.csv}, poi
+        \file{jlcpcb-sync-cpl.py} toglie dalla CPL ciò che non è in BOM e si
+        ferma se manca qualcosa;
+  \item \textbf{Gerber e forature} con Pcbnew~5 e le impostazioni di stampa
+        salvate nel PCB (\file{generate\_gerbers.py}) $\rightarrow$
+        \file{production/} (svuotata prima);
+  \item \textbf{PDF dello schematico} con eeplot $\rightarrow$
+        \file{VERA-MODULE-RBL.pdf};
+  \item \textbf{scheda in 3D}, STEP e VRML, con kicad-cli $\rightarrow$
+        \file{images/VERA-MODULE-RBL.step} e \file{images/VERA-MODULE-RBL.wrl};
+  \item zip del contenuto di \file{production/} $\rightarrow$
+        \file{<NOME>-v<versione>.zip}.
+\end{enumerate}
+
+Si ferma al primo errore. \file{<NOME>} è \file{\projname} per questo progetto.
+
+% ---------------------------------------------------------------------------
+\section{Consegna}
+
+Il progetto da mandare in produzione è composto da \textbf{3 file}:
+
+\begin{center}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash\ttfamily\small}p{0.42\linewidth} L L}
+\toprule
+\normalfont\normalsize\textbf{File} & \textbf{Contenuto} & \textbf{Dove si carica su JLCPCB} \\
+\midrule
+<NOME>-v<versione>.zip             & Gerber e forature     & ordine PCB \\
+<NOME>-v<versione>-JLCPCB-BOM.csv  & BOM                   & PCB Assembly $\rightarrow$ BOM \\
+<NOME>-v<versione>-JLCPCB-CPL.csv  & posizioni e rotazioni & PCB Assembly $\rightarrow$ CPL \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+All'ordine:
+
+\begin{itemize}[leftmargin=*]
+  \item nell'anteprima di montaggio si controlla la rotazione dei componenti,
+        soprattutto quelli nuovi o con footprint cambiato;
+  \item per le righe elencate come \file{GLOBAL} dal controllo stock si sceglie
+        Global Sourcing.
+\end{itemize}
+
+Zip, BOM e CPL versionati non vanno nel repository; ci vanno invece i sorgenti
+(schematici, netlist, PCB), \file{VERA-MODULE-RBL.xml} e \file{.csv},
+\file{production/}, il PDF e i modelli 3D.
+
+\end{document}

@@ -1,5 +1,9 @@
 # Workflow di progetto: dallo schematico all'ordine JLCPCB
 
+Versione stampabile: [WORKFLOW.pdf](WORKFLOW.pdf), generata da `WORKFLOW.tex`
+(`firmware/MCU/produce-pdf-from-tex.sh WORKFLOW`). Le modifiche si fanno
+prima qui, poi nel `.tex`.
+
 Strumenti: KiCad 5 (Eeschema, CvPcb, Pcbnew) per schematico e PCB, libreria
 `~/Progetti/RetroBitLab-Library` per simboli, footprint e modelli 3D, gli script
 del repository per tutto ciò che si produce (PDF, Gerber, 3D, BOM, CPL).
