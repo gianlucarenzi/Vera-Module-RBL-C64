@@ -14,7 +14,6 @@ Data: 2025-10-27
 import re
 import csv
 import os
-import shutil
 import sys
 import argparse
 from datetime import datetime
@@ -174,14 +173,6 @@ class KiCadVirtualCleaner:
                 return True
         return False
     
-    def create_backup(self, file_path):
-        """Crea un backup del file con timestamp"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = f"{file_path}.backup_{timestamp}"
-        shutil.copy2(file_path, backup_path)
-        self.log(f"Backup creato: {backup_path}")
-        return backup_path
-    
     def clean_csv_file(self, csv_file, excluded_references):
         """
         Rimuove le righe corrispondenti ai riferimenti esclusi dal file CSV
@@ -193,8 +184,10 @@ class KiCadVirtualCleaner:
         
         self.log(f"Processando {csv_file}...")
         
-        # Crea backup
-        backup_path = self.create_backup(csv_file)
+        # Copia in memoria per ripristinare il file in caso di errore: niente
+        # backup su disco, i CSV si rigenerano a ogni output_job.sh
+        with open(csv_file, 'rb') as f:
+            original = f.read()
         
         lines_to_keep = []
         removed_count = 0
@@ -253,7 +246,6 @@ class KiCadVirtualCleaner:
             # Salva informazioni per il report
             file_info = {
                 'name': csv_file,
-                'backup': backup_path,
                 'removed_count': removed_count,
                 'removed_items': removed_items,
                 'original_lines': len(lines_to_keep) + removed_count,
@@ -265,10 +257,10 @@ class KiCadVirtualCleaner:
             
         except Exception as e:
             self.log(f"Errore durante l'elaborazione di {csv_file}: {e}", "ERROR")
-            # Ripristina il backup in caso di errore
-            if os.path.exists(backup_path):
-                shutil.copy2(backup_path, csv_file)
-                self.log(f"File ripristinato dal backup", "INFO")
+            # Ripristina il contenuto originale in caso di errore
+            with open(csv_file, 'wb') as f:
+                f.write(original)
+            self.log(f"File ripristinato", "INFO")
             return False, 0
     
     def find_csv_files(self, base_name=None, directory="."):
@@ -356,7 +348,6 @@ class KiCadVirtualCleaner:
             report_lines.append(f"  - Righe originali: {file_info['original_lines']}")
             report_lines.append(f"  - Righe rimosse: {file_info['removed_count']}")
             report_lines.append(f"  - Righe finali: {file_info['final_lines']}")
-            report_lines.append(f"  - Backup: {file_info['backup']}")
             
             if file_info['removed_items']:
                 report_lines.append(f"  - Oggetti rimossi: {', '.join(file_info['removed_items'])}")
@@ -422,11 +413,6 @@ class KiCadVirtualCleaner:
         report = self.generate_report()
         print("\n" + report)
         
-        # Salva report su file
-        report_file = f"kicad_cleanup_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        with open(report_file, 'w', encoding='utf-8') as f:
-            f.write(report)
-        self.log(f"Report salvato in: {report_file}")
         
         return success_count > 0
 

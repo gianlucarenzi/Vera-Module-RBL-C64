@@ -223,17 +223,7 @@ if python3 "$CLEANER_SCRIPT" "${PYTHON_ARGS[@]}"; then
     
     if [[ "$QUIET" != true ]]; then
         echo
-        print_info "File di backup creati automaticamente con timestamp"
         print_info "Controlla i file CSV per verificare le modifiche"
-        
-        # Mostra file di report generati
-        REPORT_FILES=(kicad_cleanup_report_*.txt)
-        if [[ ${#REPORT_FILES[@]} -gt 0 && -f "${REPORT_FILES[0]}" ]]; then
-            LATEST_REPORT=$(ls -t kicad_cleanup_report_*.txt 2>/dev/null | head -1)
-            if [[ -n "$LATEST_REPORT" ]]; then
-                print_info "Report dettagliato salvato in: $LATEST_REPORT"
-            fi
-        fi
     fi
     
     exit 0
