@@ -18,6 +18,9 @@ EEPLOT_STAMP="${LOCAL_UTILS_DIR}/bin/.eeplot-patches"
 # - eeplot-kicad5-schematics.patch: symbols of a library given without a
 #   directory (e.g. the project -rescue.lib) are found, and embedded images
 #   ($Bitmap) are skipped instead of stopping the plot
+# - eeplot-pdf14-toc.patch: the PDF with the table of contents is written as
+#   PDF 1.4, because cairo 1.18 (Debian 13) otherwise uses cross-reference
+#   streams and the TOC writer aborts with "pdftoc_end: Assertion"
 # Safe to call again: it detects an already-applied patch and skips it.
 apply_eeplot_patches() {
     local patch
@@ -155,7 +158,7 @@ export PATH="${LOCAL_UTILS_DIR}/bin:${PATH}"
 
 
 PCBNAME=VERA-MODULE-RBL
-PCBNAMEOUT=${PCBNAME}-XE
+PCBNAMEOUT=${PCBNAME}-C64
 PDFOUTPUT=${PCBNAME}.pdf
 PYTHON3=$(which python3)
 
@@ -204,17 +207,17 @@ fi
 PCBVER=$1
 PCBNAMEOUT=${PCBNAMEOUT}-v${PCBVER}
 
-# La prima volta va generato il file xml!
-if [ ! -f ${PCBNAME}.xml ]; then
-	echo "Need to run once the BOM Generator from EESCHEMA / Schematic Designer"
-	exit 1
-fi
+# L'XML della BOM viene rigenerato ogni volta dagli schematici, cosi' non
+# e' mai vecchio (prima andava esportato a mano da Eeschema)
+echo "Creating BOM XML from the schematic"
+${PYTHON3} sch2bomxml.py ${PCBNAME}.sch ${PCBNAME}.xml || { echo "Error on creating the BOM XML."; exit 1; }
 
 # Creiamo la BOM per JLCPCB
-${PYTHON3} generate_bom.py ${PCBNAME}.xml ${PCBNAME}.csv
+${PYTHON3} generate_bom.py ${PCBNAME}.xml ${PCBNAME}.csv || { echo "Error on creating the BOM."; exit 1; }
 
 echo "Creating BOM for JLCPCB"
 ${PYTHON3} jlcpcb-check-bom.py ${PCBNAME}.csv ${PCBNAMEOUT}-JLCPCB-BOM.csv
+[ -s ${PCBNAMEOUT}-JLCPCB-BOM.csv ] || { echo "Error on creating the JLCPCB BOM."; exit 1; }
 
 # Generiamo la CPL con uno script simile al plugin di PCBNEW!!!!
 ./run_generate_cpl.sh ${PCBNAME}.kicad_pcb
@@ -248,6 +251,22 @@ else
 	fi
 fi
 
+# La CPL deve avere gli stessi designator della BOM: si tolgono le parti
+# da non montare (senza LCSC, DNP) e si ferma tutto se manca qualcosa
+${PYTHON3} jlcpcb-sync-cpl.py ${PCBNAMEOUT}-JLCPCB-BOM.csv ${PCBNAMEOUT}-JLCPCB-CPL.csv || exit 1
+
+# Gerber e forature con pcbnew di KiCad 5 e le impostazioni di stampa
+# salvate nel PCB (prima andavano esportati a mano da pcbnew). production/
+# viene svuotata prima, cosi' nello zip non finiscono file vecchi.
+# Le zone si usano come salvate nel PCB; con REFILL_ZONES=1 vengono
+# riempite di nuovo prima della stampa (il .kicad_pcb non viene modificato):
+#   REFILL_ZONES=1 ./output_job.sh 4
+echo "Creating Gerber and drill files"
+find production -mindepth 1 -maxdepth 1 ! -name .gitignore -exec rm -rf {} +
+GERBER_ARGS=()
+[ "${REFILL_ZONES}" = "1" ] && GERBER_ARGS+=(--refill-zones)
+./run_pcbnew.sh generate_gerbers.py "${GERBER_ARGS[@]}" ${PCBNAME}.kicad_pcb || { echo "Error on creating the Gerber files."; exit 1; }
+
 echo "Creating PDF..."
 EEPLOT_FILES=(
     ${KILIBPATH}/CCAP0603.lib
@@ -271,8 +290,8 @@ EEPLOT_FILES=(
     ${KILIBPATH}/RetroBitLab.lib
     ${PCBNAME}.sch
 )
-# The table of contents breaks with cairo 1.18 (Debian 13): eeplot aborts
-# with "pdftoc_end: Assertion", so then make the PDF without it (-T)
+# Should the table of contents still fail (e.g. an eeplot built without
+# eeplot-pdf14-toc.patch), make the PDF without it (-T)
 if ! eeplot -o ${PDFOUTPUT} "${EEPLOT_FILES[@]}"; then
 	echo "eeplot failed, creating the PDF without table of contents..."
 	eeplot -T -o ${PDFOUTPUT} "${EEPLOT_FILES[@]}" || { echo "Error on creating the PDF."; exit 1; }

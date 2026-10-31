@@ -1,0 +1,5 @@
+# LCSC codes that JLCPCB buys through Global Sourcing (from DigiKey, Mouser...)
+# when its own stock is not enough. jlcpcb-stock-check.py reports them as
+# GLOBAL instead of failing. Choose Global Sourcing for these rows in the
+# JLCPCB order. One code per line, '#' starts a comment.
+C146242  # U11 WM8524CGEDT: JLCPCB stock too low, active at DigiKey/Mouser
