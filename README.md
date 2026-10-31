@@ -490,11 +490,14 @@ pio run -e esp32s3fn8 --target upload
 
 ## 📁 Project Structure
 
+The design workflow, from the schematic to the JLCPCB order (stock check, library update, ERC, netlist, PCB and net classes, DRC, `output_job.sh`, files to send), is described in [WORKFLOW.md](WORKFLOW.md) (in Italian).
+
 ### Repository Organization
 
 ```
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # This documentation
+├── 📄 WORKFLOW.md                  # Design workflow, schematic to JLCPCB order
 ├── 📄 PIN-MAPPING.md               # ESP32-S3 / level-shifter pin mapping, C64 port, changes vs. ATARI (§ 9)
 ├── 📄 VERA-C64-HW-REQUIREMENTS.md # VERA bus requirements & bring-up plan (from the ATARI version)
 ├── 📄 LICENSE                      # GPL v3 license
@@ -1124,11 +1127,14 @@ pio run -e esp32s3fn8 --target upload
 
 ## 📁 Struttura Progetto
 
+Il workflow di progetto, dallo schematico all'ordine JLCPCB (disponibilità dei componenti, aggiornamento della libreria, ERC, netlist, PCB e netclass, DRC, `output_job.sh`, file da consegnare), è descritto in [WORKFLOW.md](WORKFLOW.md).
+
 ### Organizzazione Repository
 
 ```
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # Questa documentazione
+├── 📄 WORKFLOW.md                  # Workflow di progetto, dallo schema all'ordine JLCPCB
 ├── 📄 PIN-MAPPING.md               # Pin ESP32-S3 / level shifter, porta C64, modifiche rispetto all'ATARI (§ 9)
 ├── 📄 VERA-C64-HW-REQUIREMENTS.md # Requisiti VERA sul bus e piano di bring-up (dalla versione ATARI)
 ├── 📄 LICENSE                      # Licenza GPL v3
