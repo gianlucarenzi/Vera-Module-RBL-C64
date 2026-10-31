@@ -49,14 +49,14 @@ X ~ 2 0 -100 80 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# CCAP0805_2.2uF
+# CCAP0805_2.2uF-X5R
 #
-DEF CCAP0805_2.2uF C 0 40 Y Y 1 F N
+DEF CCAP0805_2.2uF-X5R C 0 40 Y Y 1 F N
 F0 "C" -5 170 50 H V C CNN
-F1 "CCAP0805_2.2uF" 120 100 50 H V C CNN
+F1 "CCAP0805_2.2uF-X5R" 120 100 50 H V C CNN
 F2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-F4 "C7393943" 0 0 50 H I C CNN "LCSC"
+F3 "https://www.lcsc.com/datasheet/C377773.pdf" 0 0 50 H I C CNN
+F4 "C377773" 0 0 50 H I C CNN "LCSC"
 DRAW
 P 2 1 1 13 -65 -20 55 -20 N
 P 2 1 1 12 -65 20 55 20 N
@@ -349,14 +349,14 @@ X ~ 2 0 -105 30 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# CRES0805_47K
+# CRES0805_47K-125mW
 #
-DEF CRES0805_47K R 0 0 N N 1 F N
+DEF CRES0805_47K-125mW R 0 0 N N 1 F N
 F0 "R" 75 65 50 H V C CNN
-F1 "CRES0805_47K" 0 140 50 H V C CNN
+F1 "CRES0805_47K-125mW" 0 140 50 H V C CNN
 F2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-F4 "C20142780" 0 0 50 H I C CNN "LCSC"
+F3 "https://www.lcsc.com/datasheet/C17713.pdf" 0 0 50 H I C CNN
+F4 "C17713" 0 0 50 H I C CNN "LCSC"
 DRAW
 S -30 65 30 -75 1 1 8 N
 X ~ 1 0 95 30 D 50 50 1 1 P
@@ -1148,11 +1148,9 @@ DEF RetroBitLab_ECS-2033-250-BN Y 0 40 Y Y 1 F N
 F0 "Y" -212 221 50 H V L BNN
 F1 "RetroBitLab_ECS-2033-250-BN" -400 -275 50 H V L BNN
 F2 "RetroBitLab:OSC_ECS-2033-250-BN" -475 -375 50 H I L BNN
-F3 "" -475 -375 50 H I L BNN
-F4 "11/15/13" -475 -375 50 H I L BNN "PARTREV"
-F5 "ECS Inc" -475 -375 50 H I L BNN "MANUFACTURER"
-F6 "Manufacturer Recommendations" -475 -375 50 H I L BNN "STANDARD"
-F7 "C2441279" -475 -375 50 H I C CNN "LCSC"
+F3 "https://www.lcsc.com/datasheet/C7471623.pdf" -475 -375 50 H I L BNN
+F4 "YXC" -475 -375 50 H I L BNN "MANUFACTURER"
+F5 "C7471623" -475 -375 50 H I C CNN "LCSC"
 DRAW
 S -200 -200 200 200 0 0 10 f
 P 10 0 0 4 -45 -20 -25 -20 -25 30 -10 30 -10 -20 5 -20 5 30 20 30 20 -20 35 -20 N
@@ -1529,23 +1527,16 @@ X ~ 3 200 0 200 L 40 40 0 0 P
 ENDDRAW
 ENDDEF
 #
-# RetroBitLab_SJ-3523-SMT-TR
+# RetroBitLab_CONN_AUDIO_JACK_3.5_PJ313D
 #
-DEF RetroBitLab_SJ-3523-SMT-TR J 0 40 Y Y 1 F N
+DEF RetroBitLab_CONN_AUDIO_JACK_3.5_PJ313D J 0 40 Y Y 1 F N
 F0 "J" -500 300 50 H V L BNN
-F1 "RetroBitLab_SJ-3523-SMT-TR" -500 -400 50 H V L BNN
-F2 "RetroBitLab:CONN_AUDIO_CUI_SJ-3523-SMT-TR" 0 0 50 H I L BNN
-F3 "" 0 0 50 H I L BNN
-F4 "Same Sky" 0 0 50 H I L BNN "MF"
-F5 "\\n                        \\n                            3.5 mm, Stereo, Right Angle, Surface Mount (SMT), 3 Conductors, 0 Internal Switches, Audio Jack Connector\\n                        \\n" 0 0 50 H I L BNN "Description"
-F6 "None" 0 0 50 H I L BNN "Package"
-F7 "None" 0 0 50 H I L BNN "Price"
-F8 "https://www.snapeda.com/parts/SJ-3523-SMT-TR/Same+Sky/view-part/?ref=eda" 0 0 50 H I L BNN "Check_prices"
-F9 "https://www.snapeda.com/parts/SJ-3523-SMT-TR/Same+Sky/view-part/?ref=snap" 0 0 50 H I L BNN "SnapEDA_Link"
-F10 "SJ-3523-SMT-TR" 0 0 50 H I L BNN "MP"
-F11 "In Stock" 0 0 50 H I L BNN "Availability"
-F12 "CUI Inc" 0 0 50 H I L BNN "MANUFACTURER"
-F13 "C4991872" 0 0 50 H I C CNN "LCSC"
+F1 "RetroBitLab_CONN_AUDIO_JACK_3.5_PJ313D" -500 -400 50 H V L BNN
+F2 "RetroBitLab:jack_3.5_pj313d-smt" 0 0 50 H I L BNN
+F3 "https://www.lcsc.com/datasheet/C668608.pdf" 0 0 50 H I L BNN
+F4 "SHOU HAN" 0 0 50 H I L BNN "MF"
+F5 "PJ-313D" 0 0 50 H I L BNN "MP"
+F6 "C668608" 0 0 50 H I C CNN "LCSC"
 DRAW
 S -525 175 -600 -200 1 1 0 F
 S -525 250 250 -275 1 1 0 f

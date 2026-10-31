@@ -487,26 +487,26 @@ F 4 "C840116" H 7890 4760 50  0001 C CNN "LCSC"
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R43
+L CRES0805:47K-125mW R43
 U 1 1 68B76F19
 P 10640 4815
 F 0 "R43" V 10505 4810 50  0000 C CNN
 F 1 "47K" V 10575 4805 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 10640 4815 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 10640 4815 50  0001 C CNN
-F 4 "C20142780" H 10640 4815 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 10640 4815 50  0001 C CNN
+F 4 "C17713" H 10640 4815 50  0001 C CNN "LCSC"
 	1    10640 4815
 	0    1    1    0   
 $EndComp
 $Comp
-L CRES0805:47K R44
+L CRES0805:47K-125mW R44
 U 1 1 68B7750F
 P 10640 5115
 F 0 "R44" V 10490 5115 50  0000 C CNN
 F 1 "47K" V 10570 5110 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 10640 5115 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 10640 5115 50  0001 C CNN
-F 4 "C20142780" H 10640 5115 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 10640 5115 50  0001 C CNN
+F 4 "C17713" H 10640 5115 50  0001 C CNN "LCSC"
 	1    10640 5115
 	0    1    1    0   
 $EndComp
@@ -648,62 +648,62 @@ F 8 "C543078" H 6090 1360 50  0001 C CNN "LCSC"
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R37
+L CRES0805:47K-125mW R37
 U 1 1 68CF6C3B
 P 7340 1330
 F 0 "R37" H 7399 1371 50  0000 L CNN
 F 1 "47K" H 7399 1280 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 7340 1330 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 7340 1330 50  0001 C CNN
-F 4 "C20142780" H 7340 1330 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 7340 1330 50  0001 C CNN
+F 4 "C17713" H 7340 1330 50  0001 C CNN "LCSC"
 	1    7340 1330
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R38
+L CRES0805:47K-125mW R38
 U 1 1 68D00370
 P 7590 1330
 F 0 "R38" H 7649 1371 50  0000 L CNN
 F 1 "47K" H 7649 1280 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 7590 1330 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 7590 1330 50  0001 C CNN
-F 4 "C20142780" H 7590 1330 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 7590 1330 50  0001 C CNN
+F 4 "C17713" H 7590 1330 50  0001 C CNN "LCSC"
 	1    7590 1330
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R39
+L CRES0805:47K-125mW R39
 U 1 1 68D00935
 P 7840 1330
 F 0 "R39" H 7899 1371 50  0000 L CNN
 F 1 "47K" H 7899 1280 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 7840 1330 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 7840 1330 50  0001 C CNN
-F 4 "C20142780" H 7840 1330 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 7840 1330 50  0001 C CNN
+F 4 "C17713" H 7840 1330 50  0001 C CNN "LCSC"
 	1    7840 1330
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R40
+L CRES0805:47K-125mW R40
 U 1 1 68D00E4E
 P 8090 1330
 F 0 "R40" H 8149 1371 50  0000 L CNN
 F 1 "47K" H 8149 1280 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 8090 1330 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 8090 1330 50  0001 C CNN
-F 4 "C20142780" H 8090 1330 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 8090 1330 50  0001 C CNN
+F 4 "C17713" H 8090 1330 50  0001 C CNN "LCSC"
 	1    8090 1330
 	1    0    0    -1  
 $EndComp
 $Comp
-L CRES0805:47K R41
+L CRES0805:47K-125mW R41
 U 1 1 68D0121B
 P 8340 1330
 F 0 "R41" H 8399 1371 50  0000 L CNN
 F 1 "47K" H 8399 1280 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 8340 1330 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 8340 1330 50  0001 C CNN
-F 4 "C20142780" H 8340 1330 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 8340 1330 50  0001 C CNN
+F 4 "C17713" H 8340 1330 50  0001 C CNN "LCSC"
 	1    8340 1330
 	1    0    0    -1  
 $EndComp
@@ -829,14 +829,14 @@ Wire Wire Line
 Wire Wire Line
 	2600 5435 2600 5510
 $Comp
-L CRES0805:47K R42
+L CRES0805:47K-125mW R42
 U 1 1 68E055B4
 P 8090 2780
 F 0 "R42" H 8149 2821 50  0000 L CNN
 F 1 "47K" H 8149 2730 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 8090 2780 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C20142780.pdf" H 8090 2780 50  0001 C CNN
-F 4 "C20142780" H 8090 2780 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17713.pdf" H 8090 2780 50  0001 C CNN
+F 4 "C17713" H 8090 2780 50  0001 C CNN "LCSC"
 	1    8090 2780
 	1    0    0    -1  
 $EndComp
@@ -947,23 +947,16 @@ Wire Wire Line
 Text Label 5565 1060 2    39   ~ 0
 SD_SSEL_N
 $Comp
-L RetroBitLab:SJ-3523-SMT-TR J7
+L RetroBitLab:CONN_AUDIO_JACK_3.5_PJ313D J7
 U 1 1 6912EA11
 P 5970 5865
 F 0 "J7" H 5342 5806 50  0000 R CNN
-F 1 "SJ-3523-SMT-TR" H 6165 6180 50  0000 R CNN
-F 2 "RetroBitLab:CONN_AUDIO_CUI_SJ-3523-SMT-TR" H 5970 5865 50  0001 L BNN
-F 3 "https://www.lcsc.com/datasheet/C4991872.pdf" H 5970 5865 50  0001 L BNN
-F 4 "Same Sky" H 5970 5865 50  0001 L BNN "MF"
-F 5 "\\n                        \\n                            3.5 mm, Stereo, Right Angle, Surface Mount (SMT), 3 Conductors, 0 Internal Switches, Audio Jack Connector\\n                        \\n" H 5970 5865 50  0001 L BNN "Description"
-F 6 "None" H 5970 5865 50  0001 L BNN "Package"
-F 7 "None" H 5970 5865 50  0001 L BNN "Price"
-F 8 "https://www.snapeda.com/parts/SJ-3523-SMT-TR/Same+Sky/view-part/?ref=eda" H 5970 5865 50  0001 L BNN "Check_prices"
-F 9 "https://www.snapeda.com/parts/SJ-3523-SMT-TR/Same+Sky/view-part/?ref=snap" H 5970 5865 50  0001 L BNN "SnapEDA_Link"
-F 10 "SJ-3523-SMT-TR" H 5970 5865 50  0001 L BNN "MP"
-F 11 "In Stock" H 5970 5865 50  0001 L BNN "Availability"
-F 12 "CUI Inc" H 5970 5865 50  0001 L BNN "MANUFACTURER"
-F 13 "C4991872" H 5970 5865 50  0001 C CNN "LCSC"
+F 1 "PJ-313D" H 6165 6180 50  0000 R CNN
+F 2 "RetroBitLab:jack_3.5_pj313d-smt" H 5970 5865 50  0001 L BNN
+F 3 "https://www.lcsc.com/datasheet/C668608.pdf" H 5970 5865 50  0001 L BNN
+F 4 "SHOU HAN" H 5970 5865 50  0001 L BNN "MF"
+F 5 "PJ-313D" H 5970 5865 50  0001 L BNN "MP"
+F 6 "C668608" H 5970 5865 50  0001 C CNN "LCSC"
 	1    5970 5865
 	-1   0    0    1   
 $EndComp
@@ -1077,14 +1070,14 @@ Wire Wire Line
 Wire Wire Line
 	2745 6535 2745 6610
 $Comp
-L CCAP0805:2.2uF C36
+L CCAP0805:2.2uF-X5R C36
 U 1 1 68B87B28
 P 2750 6435
 F 0 "C36" H 2842 6481 50  0000 L CNN
 F 1 "2.2uF" H 2842 6390 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 2755 6435 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2410121534_CCTC-TCC0805X7R225M500FT_C7393943.pdf" H 2755 6435 50  0001 C CNN
-F 4 "C7393943" H 2750 6435 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C377773.pdf" H 2755 6435 50  0001 C CNN
+F 4 "C377773" H 2750 6435 50  0001 C CNN "LCSC"
 	1    2750 6435
 	1    0    0    -1  
 $EndComp
