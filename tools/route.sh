@@ -8,11 +8,22 @@
 #   Specctra DSN) with the zones in place; the result is WORKDIR/final.ses,
 #   to import with File > Import > Specctra Session, then B and DRC.
 #   Live view of each stage on http://127.0.0.1:7878
+#
+#   fastroute must be installed system wide from its Debian package, see
+#   https://github.com/gianlucarenzi/fastroute (FASTROUTE=/path/to/fastroute
+#   uses another binary instead).
 set -e
 TOOLS=$(cd "$(dirname "$0")" && pwd)
 PROJ=$(dirname "$TOOLS")
 WORK=${1:?usage: tools/route.sh WORKDIR}
-FR=${FASTROUTE:-$HOME/packages/fastroute/target/release/fastroute}
+FR=${FASTROUTE:-$(command -v fastroute || true)}
+if [ -z "$FR" ] || [ ! -x "$FR" ]; then
+	echo "fastroute is not installed: build and install its Debian package," >&2
+	echo "see https://github.com/gianlucarenzi/fastroute" >&2
+	echo "(git clone it, scripts/build-deb.sh, sudo apt install ./dist/fastroute_*.deb)" >&2
+	exit 1
+fi
+echo "Using $FR ($("$FR" --version))"
 COMMON="--router.min_trace_width_um=200 --router.plane_nets=GND,3V3 --live"
 
 mkdir -p "$WORK"

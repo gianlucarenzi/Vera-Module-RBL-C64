@@ -109,6 +109,10 @@ netlist, formato Pcbnew). **Nessun PDF e nessuna BOM** in questa fase.
 
 A mano, oppure con fastroute tramite `tools/route.sh` (vedi il commento in
 testa allo script). Il risultato si importa come sessione Specctra.
+fastroute va installato nel sistema dal suo pacchetto Debian, da
+[github.com/gianlucarenzi/fastroute](https://github.com/gianlucarenzi/fastroute)
+(`scripts/build-deb.sh`, poi `sudo apt install ./dist/fastroute_*.deb`):
+`tools/route.sh` si ferma se non lo trova.
 
 ## 8. Riempimento delle aree e DRC
 

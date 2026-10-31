@@ -235,6 +235,15 @@ BOM} in questa fase.
 A mano, oppure con fastroute tramite \file{tools/route.sh} (vedi il commento in
 testa allo script). Il risultato si importa come sessione Specctra.
 
+fastroute va installato nel sistema dal suo pacchetto Debian, da
+\url{https://github.com/gianlucarenzi/fastroute}; \file{tools/route.sh} si ferma
+se non lo trova:
+
+\begin{lstlisting}[style=shell]
+scripts/build-deb.sh
+sudo apt install ./dist/fastroute_*.deb
+\end{lstlisting}
+
 % ---------------------------------------------------------------------------
 \section{Riempimento delle aree e DRC}
 
