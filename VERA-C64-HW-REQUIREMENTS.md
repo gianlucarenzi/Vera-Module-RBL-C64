@@ -313,6 +313,6 @@ lunghezza dei contatti e lo spessore della scheda (1,6 mm) con una cartuccia rea
 - Architettura: `firmware/FPGA` descrive una variante con GeoRAM su SRAM esterna e registri nell'FPGA
   di interfaccia (`C6502_Interface.vhd`); lo schema attuale serve la GeoRAM dall'ESP32. Va stabilita
   quale è quella di riferimento.
-- `addressdecoder.sch` (74LVC138, decodifica `$D1xx`/`$D6xx`/`$D8xx` Atari) è fuori dalla gerarchia:
-  non serve al C64.
+- `addressdecoder.sch` (74LVC138, decodifica `$D1xx`/`$D6xx`/`$D8xx` Atari) era fuori dalla gerarchia
+  e non serve al C64: tolto dal repository il 2026-11-02 (resta nella storia git).
 - PCB (§2.13).
