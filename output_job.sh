@@ -298,10 +298,32 @@ if ! eeplot -o ${PDFOUTPUT} "${EEPLOT_FILES[@]}"; then
 fi
 
 echo "Creating STEP 3D object..."
-KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export step -o images/${PCBNAME}.step --force --grid-origin --no-dnp --subst-models ${PCBNAME}.kicad_pcb
+# kicad2step of KiCad 5 runs outside the flatpak, so it sees the 3D models in
+# /usr/share/kicad and ${KILIBPATH} (it takes the .step next to each .wrl by
+# itself). Its board is the KiCad 5 green (69,170,69): recoloured to the
+# solder mask green of the KiCad 7+ export (80,124,105)
+if command -v kicad2step >/dev/null 2>&1; then
+	KISYS3DMOD=${KICAD5_3DMODELS} kicad2step -f --grid-origin -o images/${PCBNAME}.step ${PCBNAME}.kicad_pcb || { echo "Error on creating the STEP file."; exit 1; }
+	sed -i -E "s/COLOUR_RGB\('([^']*)',0\.27169[0-9]*,0\.66518[0-9]*,0\.27169[0-9]*\)/COLOUR_RGB('\1',0.313304153717,0.484529207832,0.410020903123)/" images/${PCBNAME}.step
+else
+	KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export step -o images/${PCBNAME}.step --force --grid-origin --no-dnp --subst-models ${PCBNAME}.kicad_pcb
+fi
 
 echo "Creating VRML 3D object..."
-KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export vrml -o images/${PCBNAME}.wrl --force --no-dnp ${PCBNAME}.kicad_pcb
+# From the STEP with FreeCAD (GUI on a virtual display, the VRML export and
+# the colours need it): same models and colours as the STEP, placed like the
+# KiCad VRML. Without FreeCAD or Xvfb, the kicad-cli export as before
+if command -v freecad >/dev/null 2>&1 && command -v xvfb-run >/dev/null 2>&1 && [ -f images/${PCBNAME}.step ]; then
+	WRLLOG=$(mktemp)
+	STEP2WRL_IN="$(pwd)/images/${PCBNAME}.step" STEP2WRL_OUT="$(pwd)/images/${PCBNAME}.wrl" STEP2WRL_LOG="${WRLLOG}" \
+		xvfb-run -a -s "-screen 0 1280x1024x24" freecad "${LOCAL_UTILS_DIR}/step2wrl.py" >/dev/null 2>&1
+	WRLRC=$?
+	cat "${WRLLOG}"
+	rm -f "${WRLLOG}"
+	[ ${WRLRC} -eq 0 ] || { echo "Error on creating the VRML file."; exit 1; }
+else
+	KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export vrml -o images/${PCBNAME}.wrl --force --no-dnp ${PCBNAME}.kicad_pcb
+fi
 
 # Remove the existing
 rm ${PCBNAMEOUT}.zip 2>/dev/null
