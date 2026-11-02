@@ -325,7 +325,7 @@ Wire Notes Line
 	2100 3595 2100 5220
 Wire Wire Line
 	3025 4270 3025 4395
-Text Notes 6140 7480 0    79   ~ 16
+Text Notes 4970 7580 0    79   ~ 16
 C64 Expansion Port Decoder:\n\n/IO1 GeoRAM window ($DE00-$DEFF),\n\n/IO2 VERA registers ($DF00-$DF1F), latch and GeoRAM registers ($DFFD-$DFFF)
 $Comp
 L CRES0805:4K7 R59
