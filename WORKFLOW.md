@@ -167,10 +167,12 @@ memoria, senza modificare il file: è un ripiego, non sostituisce il punto 8.)
    CPL ciò che non è in BOM e si ferma se manca qualcosa;
 5. **Gerber e forature** con pcbnew 5 e le impostazioni di stampa salvate nel
    PCB (`generate_gerbers.py`) → `production/` (svuotata prima);
-6. **PDF dello schematico** con eeplot → `VERA-MODULE-RBL.pdf`;
-7. **scheda in 3D**, STEP e VRML, con kicad-cli → `images/VERA-MODULE-RBL.step`
+6. **BOM interattiva** con il plugin InteractiveHtmlBom e le impostazioni di
+   `ibom.config.ini` (`tools/generate_ibom.py`) → `ibom/ibom.html`;
+7. **PDF dello schematico** con eeplot → `VERA-MODULE-RBL.pdf`;
+8. **scheda in 3D**, STEP e VRML, con kicad-cli → `images/VERA-MODULE-RBL.step`
    e `images/VERA-MODULE-RBL.wrl`;
-8. zip del contenuto di `production/` → `<NOME>-v<versione>.zip`.
+9. zip del contenuto di `production/` → `<NOME>-v<versione>.zip`.
 
 Si ferma al primo errore. `<NOME>` è `VERA-MODULE-RBL-C64` per questo progetto.
 
@@ -193,4 +195,4 @@ All'ordine:
 
 Zip, BOM e CPL versionati non vanno nel repository; ci vanno invece i
 sorgenti (schematici, netlist, PCB), `VERA-MODULE-RBL.xml/.csv`,
-`production/`, il PDF e i modelli 3D.
+`production/`, il PDF, la BOM interattiva e i modelli 3D.

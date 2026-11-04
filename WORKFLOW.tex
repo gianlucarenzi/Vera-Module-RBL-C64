@@ -314,6 +314,9 @@ in memoria, senza modificare il file: è un ripiego, non sostituisce il passo~8.
   \item \textbf{Gerber e forature} con Pcbnew~5 e le impostazioni di stampa
         salvate nel PCB (\file{generate\_gerbers.py}) $\rightarrow$
         \file{production/} (svuotata prima);
+  \item \textbf{BOM interattiva} con il plugin InteractiveHtmlBom e le
+        impostazioni di \file{ibom.config.ini} (\file{tools/generate\_ibom.py})
+        $\rightarrow$ \file{ibom/ibom.html};
   \item \textbf{PDF dello schematico} con eeplot $\rightarrow$
         \file{VERA-MODULE-RBL.pdf};
   \item \textbf{scheda in 3D}, STEP e VRML, con kicad-cli $\rightarrow$
@@ -352,6 +355,6 @@ All'ordine:
 
 Zip, BOM e CPL versionati non vanno nel repository; ci vanno invece i sorgenti
 (schematici, netlist, PCB), \file{VERA-MODULE-RBL.xml} e \file{.csv},
-\file{production/}, il PDF e i modelli 3D.
+\file{production/}, il PDF, la BOM interattiva e i modelli 3D.
 
 \end{document}

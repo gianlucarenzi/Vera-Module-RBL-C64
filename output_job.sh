@@ -267,6 +267,11 @@ GERBER_ARGS=()
 [ "${REFILL_ZONES}" = "1" ] && GERBER_ARGS+=(--refill-zones)
 ./run_pcbnew.sh generate_gerbers.py "${GERBER_ARGS[@]}" ${PCBNAME}.kicad_pcb || { echo "Error on creating the Gerber files."; exit 1; }
 
+# BOM interattiva (plugin InteractiveHtmlBom) dal PCB come salvato, con le
+# impostazioni di ibom.config.ini (prima andava generata a mano da pcbnew)
+echo "Creating the interactive BOM (ibom/ibom.html)"
+./run_pcbnew.sh tools/generate_ibom.py ${PCBNAME}.kicad_pcb || { echo "Error on creating the interactive BOM."; exit 1; }
+
 echo "Creating PDF..."
 EEPLOT_FILES=(
     ${KILIBPATH}/CCAP0603.lib
