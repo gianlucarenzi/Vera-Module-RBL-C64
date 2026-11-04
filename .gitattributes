@@ -1,0 +1,2 @@
+images/*.step filter=lfs diff=lfs merge=lfs -text
+images/*.wrl filter=lfs diff=lfs merge=lfs -text
