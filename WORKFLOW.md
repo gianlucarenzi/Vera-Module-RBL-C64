@@ -114,6 +114,21 @@ fastroute va installato nel sistema dal suo pacchetto Debian, da
 (`scripts/build-deb.sh`, poi `sudo apt install ./dist/fastroute_*.deb`):
 `tools/route.sh` si ferma se non lo trova.
 
+`tools/route.sh` sbroglia **da zero** (cancella tutte le piste). Per completare
+solo i collegamenti mancanti di una scheda già sbrogliata si usa
+`tools/route_incremental.sh WORKDIR` (KiCad chiuso, DSN esportato dalla scheda
+salvata con le aree riempite): le piste esistenti restano fisse e il risultato
+è `VERA-MODULE-RBL.ses`. Due cose da sapere:
+
+- KiCad 5 esporta i segmenti consecutivi come un'unica polilinea e mette le
+  giunzioni a T sui vertici intermedi; fastroute collega le piste solo agli
+  estremi e vedrebbe interrotte net già complete. `tools/split_dsn_wires.py`
+  spezza le polilinee in segmenti.
+- L'import della sessione in KiCad 5 **sostituisce tutte** le piste e le via:
+  `tools/filter_ses.py` tiene lo sbroglio esistente una sola volta e con la
+  larghezza originale, aggiunge il nuovo solo sulle net incomplete
+  (`tools/unrouted_nets.py`) e rifiuta una sessione a cui manca qualcosa.
+
 ## 8. Riempimento delle aree e DRC
 
 1. Al termine dello sbroglio si riempiono tutte le aree (tasto `B`).
