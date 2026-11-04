@@ -904,7 +904,7 @@ U 1 1 68BA8F79
 P 6295 2420
 F 0 "U12" H 6500 3280 50  0000 C CNN
 F 1 "USBCH340T" H 6570 1650 50  0000 C CNN
-F 2 "Package_SO:SSOP-20_5.3x7.2mm_P0.65mm" H 7195 1620 50  0001 C CNN
+F 2 "RetroBitLab:SSOP-20_5.3x7.2mm_P0.65mm_Pad0.45" H 7195 1620 50  0001 C CNN
 F 3 "https://cdn.sparkfun.com/datasheets/Dev/Arduino/Other/CH340DS1.PDF" H 6045 3270 50  0001 C CNN
 F 4 "https://www.lcsc.com/datasheet/C8689.pdf" H 6295 2420 50  0001 C CNN "Datasheet2"
 F 5 "C8689" H 6295 2420 50  0001 C CNN "LCSC"

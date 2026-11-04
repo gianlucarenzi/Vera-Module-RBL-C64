@@ -1615,7 +1615,7 @@
     </comp>
     <comp ref="U12">
       <value>USBCH340T</value>
-      <footprint>Package_SO:SSOP-20_5.3x7.2mm_P0.65mm</footprint>
+      <footprint>RetroBitLab:SSOP-20_5.3x7.2mm_P0.65mm_Pad0.45</footprint>
       <datasheet>https://cdn.sparkfun.com/datasheets/Dev/Arduino/Other/CH340DS1.PDF</datasheet>
       <fields>
         <field name="Datasheet2">https://www.lcsc.com/datasheet/C8689.pdf</field>
