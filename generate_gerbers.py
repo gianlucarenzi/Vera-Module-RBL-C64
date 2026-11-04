@@ -9,7 +9,7 @@ from what pcbnew 5 shows.
 
 Gerbers: the layers, options and output directory saved in the board plot
 settings (pcbplotparams), with the Protel extensions when enabled there.
-Drill:   Excellon, inch, decimal, absolute, PTH and NPTH in separate files,
+Drill:   Excellon, mm, decimal, absolute, PTH and NPTH in separate files,
          PostScript drill maps and the drill report (the same files the
          pcbnew dialog gave so far).
 
@@ -95,8 +95,8 @@ def plot_drill(board, outdir):
     drill = pcbnew.EXCELLON_WRITER(board)
     # mirror, minimal header, offset (no aux origin), merge PTH and NPTH
     drill.SetOptions(False, False, pcbnew.wxPoint(0, 0), False)
-    # inch, decimal format (the precision is unused with decimal)
-    drill.SetFormat(False, pcbnew.EXCELLON_WRITER.DECIMAL_FORMAT, 2, 4)
+    # mm, decimal format (the precision is unused with decimal)
+    drill.SetFormat(True, pcbnew.EXCELLON_WRITER.DECIMAL_FORMAT, 3, 3)
     drill.SetMapFileFormat(pcbnew.PLOT_FORMAT_POST)
     drill.CreateDrillandMapFilesSet(outdir, True, True)
     report = os.path.join(outdir, "%s-drl.rpt" % board_stem(board))
