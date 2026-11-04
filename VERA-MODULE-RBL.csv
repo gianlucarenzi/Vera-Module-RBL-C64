@@ -13,7 +13,7 @@ Comment,Designator,Footprint,LCSC
 "DIOSCH20V","D3,D4","Diode_SMD:D_SMC_Handsoldering","C236151"
 "Fiducial","FID1,FID2,FID3,FID4","Fiducial:Fiducial_0.5mm_Mask1mm",""
 "MountingHole","H1,H2,H3,H4","MountingHole:MountingHole_3.2mm_M3",""
-"CONN_SMD_HEADER_BOX_02x08_Odd_Even_2.54mm","J1","RetroBitLab:PinHeader_BOX_2x08_P2.54mm_Vertical_SMD","C2685064"
+"CONN_SMD_HEADER_BOX_02x08_HX-JN2.54","J1","RetroBitLab:IDC-Header_2x08_P2.54mm_Vertical_SMD","C41376031"
 "DS1038-15FBNSiA74-0CC","J2","RetroBitLab:CONNFLY_DS1038-15FBNSIA74-0CC","C75754"
 "CONN_DM3AT-SF-PEJM5","J3","RetroBitLab:HRS_DM3AT-SF-PEJM5","C114218"
 "DX07S016JA1R1500","J4","RetroBitLab:JAE_DX07S016JA1R1500","C3197885"

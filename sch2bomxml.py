@@ -24,6 +24,18 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
+
+def logical_abspath(path):
+    """Like os.path.abspath, but relative to the shell's $PWD: when the
+    project is reached through a symlink (~/Progetti -> Progetti-CVS) the
+    path written in the outputs keeps ~/Progetti, as the user sees it."""
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+    pwd = os.environ.get("PWD")
+    if pwd and os.path.isabs(pwd) and os.path.samefile(pwd, os.getcwd()):
+        return os.path.normpath(os.path.join(pwd, path))
+    return os.path.abspath(path)
+
 FIELD_RE = re.compile(
     r'^F (\d+) "((?:[^"\\]|\\.)*)"[^\n]*?(?:"((?:[^"\\]|\\.)*)")?[ \t]*$',
     re.M)
@@ -100,7 +112,7 @@ def main():
 
     root = ET.Element("export", version="D")
     design = ET.SubElement(root, "design")
-    ET.SubElement(design, "source").text = os.path.abspath(root_sch)
+    ET.SubElement(design, "source").text = logical_abspath(root_sch)
     ET.SubElement(design, "tool").text = os.path.basename(sys.argv[0])
     components = ET.SubElement(root, "components")
     for ref in sorted(comps, key=ref_key):

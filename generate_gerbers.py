@@ -26,6 +26,18 @@ import sys
 import pcbnew
 
 
+def logical_abspath(path):
+    """Like os.path.abspath, but relative to the shell's $PWD: when the
+    project is reached through a symlink (~/Progetti -> Progetti-CVS) the
+    path written in the outputs keeps ~/Progetti, as the user sees it."""
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+    pwd = os.environ.get("PWD")
+    if pwd and os.path.isabs(pwd) and os.path.samefile(pwd, os.getcwd()):
+        return os.path.normpath(os.path.join(pwd, path))
+    return os.path.abspath(path)
+
+
 def copy_plot_options(src, dst):
     """PLOT_CONTROLLER starts from the default options, not from the board
     ones: copy every option that has a Get/Set pair without arguments."""
@@ -102,7 +114,7 @@ def main():
     if len(args) != 1:
         sys.exit("Usage: %s [--refill-zones] <board.kicad_pcb>" % sys.argv[0])
 
-    pcb_file = os.path.abspath(args[0])
+    pcb_file = logical_abspath(args[0])
     board = pcbnew.LoadBoard(pcb_file)
 
     if refill:

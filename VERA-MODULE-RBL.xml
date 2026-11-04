@@ -616,11 +616,11 @@
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
     </comp>
     <comp ref="J1">
-      <value>CONN_SMD_HEADER_BOX_02x08_Odd_Even_2.54mm</value>
-      <footprint>RetroBitLab:PinHeader_BOX_2x08_P2.54mm_Vertical_SMD</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2685064.pdf</datasheet>
+      <value>CONN_SMD_HEADER_BOX_02x08_HX-JN2.54</value>
+      <footprint>RetroBitLab:IDC-Header_2x08_P2.54mm_Vertical_SMD</footprint>
+      <datasheet>https://www.lcsc.com/datasheet/C41376031.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2685064</field>
+        <field name="LCSC">C41376031</field>
       </fields>
     </comp>
     <comp ref="J2">
