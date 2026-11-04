@@ -45,7 +45,7 @@ def scope_end(s, i):
 
 D = collections.Counter()
 WD = collections.defaultdict(list)
-for m in re.finditer(r'\(wire \(path (\S+) (\S+)\s+([-\d.\s]+?)\)\(net ("[^"]*"|[^)\s]+)\)', dsn):
+for m in re.finditer(r'\(wire \(path (\S+) (\S+)\s+([-\d.\s]+?)\)\(net ("[^"]*"|[^)\s]+)\)\s*\(type protect\)', dsn):
     p = list(map(float, m.group(3).split()))
     pts = [(round(p[q] * K), round(p[q + 1] * K)) for q in range(0, len(p), 2)]
     for a, b in zip(pts, pts[1:]):
@@ -53,7 +53,7 @@ for m in re.finditer(r'\(wire \(path (\S+) (\S+)\s+([-\d.\s]+?)\)\(net ("[^"]*"|
         D[key] += 1
         WD[key].append(round(float(m.group(2)) * K))
 VD = collections.Counter((nn(m.group(3)), round(float(m.group(1)) * K), round(float(m.group(2)) * K))
-                         for m in re.finditer(r'\(via "[^"]*"\s+([-\d.]+) ([-\d.]+) \(net ("[^"]*"|[^)\s]+)\)', dsn))
+                         for m in re.finditer(r'\(via "[^"]*"\s+([-\d.]+) ([-\d.]+) \(net ("[^"]*"|[^)\s]+)\)\s*\(type protect\)', dsn))
 
 used = collections.Counter()
 usedv = collections.Counter()

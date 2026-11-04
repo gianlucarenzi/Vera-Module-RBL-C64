@@ -262,6 +262,13 @@ risultato è \file{VERA-MODULE-RBL.ses}. Due cose da sapere:
     manca qualcosa.
 \end{itemize}
 
+Per far ottimizzare a fastroute (lunghezza delle piste, numero di via) solo lo
+sbroglio aggiunto dopo un commit, lasciando fisso quello già validato, si usa
+\file{tools/optimize\_new.sh COMMIT WORKDIR}. Prima dell'import della sessione
+si tolgono le teardrop, dopo si rimettono. Il report di fastroute è più severo
+del DRC di KiCad (controlla anche il rame della stessa net e vede via ed
+estremità delle piste come ottagoni): il riferimento resta il DRC.
+
 % ---------------------------------------------------------------------------
 \section{Riempimento delle aree e DRC}
 

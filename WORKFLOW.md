@@ -129,6 +129,13 @@ salvata con le aree riempite): le piste esistenti restano fisse e il risultato
   larghezza originale, aggiunge il nuovo solo sulle net incomplete
   (`tools/unrouted_nets.py`) e rifiuta una sessione a cui manca qualcosa.
 
+Per far ottimizzare a fastroute (lunghezza delle piste, numero di via) solo
+lo sbroglio aggiunto dopo un commit, lasciando fisso quello già validato, si
+usa `tools/optimize_new.sh COMMIT WORKDIR`. Prima dell'import della sessione
+si tolgono le teardrop, dopo si rimettono. Il report di fastroute è più severo
+del DRC di KiCad (controlla anche il rame della stessa net e vede via ed
+estremità delle piste come ottagoni): il riferimento resta il DRC.
+
 ## 8. Riempimento delle aree e DRC
 
 1. Al termine dello sbroglio si riempiono tutte le aree (tasto `B`).
