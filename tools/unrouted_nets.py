@@ -7,7 +7,9 @@ group of pads has missing connections. Fill the zones (B) and save before.
 
 usage: unrouted_nets.py board.kicad_pcb [-v]
   prints the nets comma-separated (for tools/filter_ses.py); -v also prints
-  the groups of pads of each net on stderr
+  the groups of pads of each net on stderr. The per-net check is geometric
+  (pad centre and thermal spoke points against the fill): KiCad's total from
+  its ratsnest is printed too, and when it is 0 no net is printed.
 """
 import collections
 import sys
@@ -37,6 +39,20 @@ def points(x):
     return [x.GetStart(), x.GetEnd()]
 
 
+def zone_points(x):
+    """points to test against a zone fill: for a pad also the middle of each
+    side pushed out past the thermal gap, where the thermal spokes are (the
+    pad centre sits in the hole that the fill leaves around the pad)"""
+    if not isinstance(x, pcbnew.D_PAD):
+        return points(x)
+    c = x.GetPosition()
+    bb = x.GetBoundingBox()
+    out = pcbnew.FromMM(0.7)
+    return [c,
+            pcbnew.wxPoint(bb.GetLeft() - out, c.y), pcbnew.wxPoint(bb.GetRight() + out, c.y),
+            pcbnew.wxPoint(c.x, bb.GetTop() - out), pcbnew.wxPoint(c.x, bb.GetBottom() + out)]
+
+
 def share_layer(a, c):
     return any(c.IsOnLayer(layer) for layer in a.GetLayerSet().CuStack())
 
@@ -63,7 +79,7 @@ for net, (P, T, Z) in sorted(by_net.items()):
             if any(c.HitTest(q) for q in points(a)) or any(a.HitTest(q) for q in points(c)):
                 par[f(i)] = f(j)
         for k, z in enumerate(Z):
-            if a.IsOnLayer(z.GetLayer()) and any(z.HitTestFilledArea(q) for q in points(a)):
+            if a.IsOnLayer(z.GetLayer()) and any(z.HitTestFilledArea(q) for q in zone_points(a)):
                 par[f(i)] = f(len(items) + k)
     groups = collections.defaultdict(list)
     for i, a in enumerate(P):
@@ -74,4 +90,17 @@ for net, (P, T, Z) in sorted(by_net.items()):
         if verbose:
             sys.stderr.write('%-20s %s\n' % (net, ' | '.join(','.join(sorted(g)) for g in groups.values())))
 sys.stderr.write('%d nets, %d missing connections\n' % (len(nets), total))
+
+# KiCad's own count is the reference (the per-net ratsnest is not reachable
+# from Python in KiCad 5.1): the geometric check above can miss a thermal
+# spoke or a track crossing a pad off its centre
+b.BuildConnectivity()
+conn = b.GetConnectivity()
+conn.RecalculateRatsnest()
+kicad = conn.GetUnconnectedCount()
+sys.stderr.write('KiCad ratsnest: %d missing connections\n' % kicad)
+if kicad == 0:
+    nets = []
+elif kicad != total:
+    sys.stderr.write('WARNING: the per-net list may be incomplete or include false positives\n')
 print(','.join(nets))
