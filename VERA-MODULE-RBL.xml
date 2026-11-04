@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <export version="D">
   <design>
-    <source>/home/debian/Progetti/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.sch</source>
+    <source>/home/gianluca/Progetti-CVS/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.sch</source>
     <tool>sch2bomxml.py</tool>
   </design>
   <components>

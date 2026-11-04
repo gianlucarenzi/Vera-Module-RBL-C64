@@ -60,7 +60,7 @@ Comment,Designator,Footprint,LCSC
 "TestPoint","TP2,TP3,TP4,TP5,TP6,TP7","TestPoint:TestPoint_Pad_D2.0mm",""
 "W25Q16JVSNIQ","U10","Package_SO:SOIC-8_3.9x4.9mm_P1.27mm","C2456211"
 "WM8524CGEDT","U11","Package_SO:TSSOP-16_4.4x5mm_P0.65mm","C146242"
-"USBCH340T","U12","Package_SO:SSOP-20_5.3x7.2mm_P0.65mm","C8689"
+"USBCH340T","U12","RetroBitLab:SSOP-20_5.3x7.2mm_P0.65mm_Pad0.45","C8689"
 "AMS1117-3.3","U13","Package_TO_SOT_SMD:SOT-223-3_TabPin2","C6186"
 "AMS1117-1.2","U14","Package_TO_SOT_SMD:SOT-223-3_TabPin2","C347218"
 "L7805","U15","Package_TO_SOT_SMD:TO-252-2","C110908"

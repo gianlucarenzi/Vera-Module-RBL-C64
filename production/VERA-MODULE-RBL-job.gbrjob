@@ -7,7 +7,7 @@
       "Application": "Pcbnew",
       "Version":     "5.1.9+dfsg1-1+deb11u1"
     },
-    "CreationDate":  "2025-10-27T09:59:13+01:00"
+    "CreationDate":  "2026-11-04T15:44:58+01:00"
   },
   "GeneralSpecs":
   {
@@ -20,7 +20,7 @@
     "Size":
     {
       "X": 143.150,
-      "Y": 162.650
+      "Y": 120.650
     },
     "LayerNumber": 4,
     "BoardThickness":  1.600
@@ -29,21 +29,21 @@
   [
     {
       "Layers": "Outer",
-      "PadToPad":  0.200,
-      "PadToTrack":  0.200,
-      "TrackToTrack":  0.200,
+      "PadToPad":  0.150,
+      "PadToTrack":  0.150,
+      "TrackToTrack":  0.150,
       "MinLineWidth":  0.200,
-      "TrackToRegion":  0.200,
-      "RegionToRegion":  0.200
+      "TrackToRegion":  0.150,
+      "RegionToRegion":  0.150
     },
     {
       "Layers": "Inner",
-      "PadToPad":  0.200,
-      "PadToTrack":  0.200,
-      "TrackToTrack":  0.200,
+      "PadToPad":  0.150,
+      "PadToTrack":  0.150,
+      "TrackToTrack":  0.150,
       "MinLineWidth":  0.200,
-      "TrackToRegion":  0.200,
-      "RegionToRegion":  0.200
+      "TrackToRegion":  0.150,
+      "RegionToRegion":  0.150
     }
   ],
   "FilesAttributes":
@@ -69,18 +69,13 @@
       "FilePolarity":  "Positive"
     },
     {
-      "Path":  "VERA-MODULE-RBL-F_Paste.gtp",
-      "FileFunction":  "SolderPaste,Top",
-      "FilePolarity":  "Positive"
-    },
-    {
       "Path":  "VERA-MODULE-RBL-B_Paste.gbp",
       "FileFunction":  "SolderPaste,Bot",
       "FilePolarity":  "Positive"
     },
     {
-      "Path":  "VERA-MODULE-RBL-F_SilkS.gto",
-      "FileFunction":  "Legend,Top",
+      "Path":  "VERA-MODULE-RBL-F_Paste.gtp",
+      "FileFunction":  "SolderPaste,Top",
       "FilePolarity":  "Positive"
     },
     {
@@ -89,13 +84,18 @@
       "FilePolarity":  "Positive"
     },
     {
-      "Path":  "VERA-MODULE-RBL-F_Mask.gts",
-      "FileFunction":  "SolderMask,Top",
-      "FilePolarity":  "Negative"
+      "Path":  "VERA-MODULE-RBL-F_SilkS.gto",
+      "FileFunction":  "Legend,Top",
+      "FilePolarity":  "Positive"
     },
     {
       "Path":  "VERA-MODULE-RBL-B_Mask.gbs",
       "FileFunction":  "SolderMask,Bot",
+      "FilePolarity":  "Negative"
+    },
+    {
+      "Path":  "VERA-MODULE-RBL-F_Mask.gts",
+      "FileFunction":  "SolderMask,Top",
       "FilePolarity":  "Negative"
     },
     {
