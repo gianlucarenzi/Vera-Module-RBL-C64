@@ -5,19 +5,20 @@
 #
 # Usage: tools/make_enclosure.sh CUT_Y [--no-anim]
 #   CUT_Y   KiCad y (mm) where the case ends and the card edge fingers come
-#           out: 189 for RBL-XE, 151 for RBL-C64
+#           out: 151 for this board
 #
 # Needs: KiCad 5 (system, otherwise the KiCad 5 AppImage as "kicad5"),
 # FreeCAD 0.19 or later (freecadcmd, freecad), xvfb-run and ffmpeg (or
 # ImageMagick) for the animation. The STEP is images/VERA-MODULE-RBL.step (output_job.sh);
-# the HDMI board is ../Vera-HDMI-Expansion (or HDMI_DIR=...), optional.
+# the HDMI board is looked for in ../Vera-HDMI-Expansion and ~/Progetti/*/
+# (or HDMI_DIR=...), optional.
 set -e
 cd "$(dirname "$0")/.."
 CUT=${1:?usage: tools/make_enclosure.sh CUT_Y [--no-anim]}
 PCB=VERA-MODULE-RBL
 NAME=${ENC_NAME:-VERA-$(basename "$(pwd)" | sed 's/^Vera-Module-//')-enclosure}
 OUT=enclosure
-HDMI_DIR=${HDMI_DIR:-$HOME/Progetti/ATARI/Vera-HDMI-Expansion}
+HDMI_DIR=${HDMI_DIR:-$(ls -d ../Vera-HDMI-Expansion "$HOME"/Progetti/*/Vera-HDMI-Expansion 2>/dev/null | head -1)}
 
 command -v freecadcmd >/dev/null || { echo "freecadcmd not found: install FreeCAD (apt install freecad)"; exit 1; }
 [ -f images/${PCB}.step ] || { echo "images/${PCB}.step missing: run ./output_job.sh first"; exit 1; }

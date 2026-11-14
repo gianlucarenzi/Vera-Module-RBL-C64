@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Two-shell enclosure for the VERA module (RBL-XE / RBL-C64), with room for
+"""Two-shell enclosure for the VERA module, with room for
 the VERA-HDMI-Expansion stacked on top. Runs in FreeCAD without GUI:
 
   freecadcmd tools/make_enclosure.py      (settings from the environment)

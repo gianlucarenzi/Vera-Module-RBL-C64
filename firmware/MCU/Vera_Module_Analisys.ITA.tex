@@ -94,7 +94,7 @@
 \section{Introduzione}
 Questo documento presenta un'analisi tecnica del firmware ESP32 per il progetto \textit{Vera-Module-RBL-C64}. Il firmware, eseguito su un ESP32-S3, si interfaccia con il bus del processore 6510 attraverso la \textbf{porta di espansione del Commodore 64}. Espone i registri della scheda video VERA (FPGA) e una \textbf{GeoRAM da 256\,KB} emulata nella RAM interna dell'ESP32.
 
-Il progetto deriva dalla versione Atari (\textit{Vera-Module-RBL-XE}). Lo schema è quello di RBL-XE nella revisione del 2026-10-26, con il foglio del connettore adattato alla porta di espansione del C64; la piedinatura dell'ESP32-S3 è la stessa di RBL-XE, tranne GPIO\,41/42 che diventano gli ingressi \texttt{/IO1}/\texttt{/IO2} (\texttt{PIN-MAPPING.md}~\S9). Il PCB è ancora quello Atari. Anche il firmware riprende l'architettura di RBL-XE (loop del bus sul Core\,1 a interruzioni mascherate, percorso critico in assembly, tabelle di decodifica, log senza lock), adattata al bus del C64. L'analisi si concentra sulla fattibilità temporale dell'interazione fra la MCU e la CPU e sulla struttura del loop del bus. \textbf{Nulla è stato provato su hardware.}
+La scheda si collega alla porta di espansione del C64; GPIO\,41/42 sono gli ingressi \texttt{/IO1}/\texttt{/IO2} (\texttt{PIN-MAPPING.md}~\S9). Il PCB v1.0 è in pre-produzione. Il firmware ha il loop del bus sul Core\,1 a interruzioni mascherate, il percorso critico in assembly, tabelle di decodifica e un log senza lock. L'analisi si concentra sulla fattibilità temporale dell'interazione fra la MCU e la CPU e sulla struttura del loop del bus. \textbf{Nulla è stato provato su hardware.}
 
 % --- SEZIONE 2: ARCHITETTURA DEL SISTEMA ---
 \section{Architettura del Sistema}
@@ -158,7 +158,7 @@ L'adattamento di livello 5\,V\,$\leftrightarrow$\,3.3\,V è affidato a cinque \t
 \begin{itemize}
     \item {\bfseries U19 --- Bus dati D0--D7 (GPIO\,4--11):} bidirezionale, \texttt{DIR} = NOT R/W\_ da \texttt{U23}. \texttt{\textasciitilde OE\_} = \texttt{NAND(PHI2, NAND(R/W, DEV\_SEL\_N, /IO1))}: acceso in scrittura, nelle letture VERA e nelle letture GeoRAM, spento in tutte le altre letture. L'ESP32 abilita le proprie uscite con \texttt{GPIO.enable\_w1ts} solo nelle letture della finestra GeoRAM.
     \item {\bfseries U4 --- A0--A7 (GPIO\,12--19)} e {\bfseries U3 --- A8--A15:} ingressi C64$\rightarrow$ESP32, con \texttt{\textasciitilde OE\_} sulla rete \texttt{\textasciitilde ABUS\_OE} (GPIO\,47, sezione~\ref{sec:strapping}). A8--A15 sono cablati ma non usati dalla decodifica. GPIO\,19/20 condividono i pad USB; USB CDC è disabilitato.
-    \item {\bfseries U6 --- PHI2, R/W\_, /IO1, /IO2 (GPIO\,1, 2, 41, 42):} ingressi C64$\rightarrow$scheda; altri tre canali portano \texttt{BA}, \texttt{/DMA} e \texttt{/RESET} a punti di test. GPIO\,41 e 42 erano \texttt{EXTSEL\_N} e \texttt{MPD} su RBL-XE.
+    \item {\bfseries U6 --- PHI2, R/W\_, /IO1, /IO2 (GPIO\,1, 2, 41, 42):} ingressi C64$\rightarrow$scheda; altri tre canali portano \texttt{BA}, \texttt{/DMA} e \texttt{/RESET} a punti di test.
     \item {\bfseries U26, U27 --- IRQ della VERA e ARESET (GPIO\,37):} uscite scheda$\rightarrow$C64 verso le linee condivise \texttt{/IRQ} e \texttt{/RESET}, attraverso due buffer open-drain SN74LVC1G07; \texttt{U16} non pilota più nessuna linea del C64. Una pull-down da 10\,k$\Omega$ (\texttt{R70}) tiene il C64 in reset mentre l'ESP32 si avvia.
     \item {\bfseries Connessioni dirette (3.3\,V):} \texttt{DEV\_SEL\_N} (GPIO\,40) $\rightarrow$ /CS della VERA e gating di \texttt{U19}; \texttt{CRESET} (GPIO\,38) $\rightarrow$ reset VERA; \texttt{CDONE} (GPIO\,39) $\leftarrow$ VERA; \texttt{ABUS\_OE\_N} (GPIO\,47) $\rightarrow$ \texttt{U3}/\texttt{U4}.
 \end{itemize}
@@ -213,8 +213,8 @@ A14, A15 & 45, 46 & 51, 52 & GPIO45, 46 & IN & pin di strapping (sezione~\ref{se
 \multicolumn{6}{l}{\textit{Controllo --- U6 (ingressi) e U27 (uscita open-drain)}} \\
 PHI2  &  1 &  6 & GPIO1  & IN  & Dedicated GPIO input ch\,0; 0.985/1.023\,MHz \\
 R/W\_ &  2 &  7 & GPIO2  & IN  & Dedicated GPIO input ch\,1; HIGH = lettura \\
-/IO1  & 41 & 47 & MTDI   & IN  & Dedicated GPIO input ch\,2; ex \texttt{EXTSEL\_N}, ex-JTAG \\
-/IO2  & 42 & 48 & MTMS   & IN  & Dedicated GPIO input ch\,3; ex \texttt{MPD}, ex-JTAG \\
+/IO1  & 41 & 47 & MTDI   & IN  & Dedicated GPIO input ch\,2; ex-JTAG \\
+/IO2  & 42 & 48 & MTMS   & IN  & Dedicated GPIO input ch\,3; ex-JTAG \\
 ARESET & 37 & 42 & GPIO37 & OUT & \texttt{/RESET} del C64 via open-drain \texttt{U27} (LOW asserito) \\
 \midrule
 \multicolumn{6}{l}{\textit{Segnali diretti (senza level shifter, 3.3\,V)}} \\
@@ -282,7 +282,7 @@ Rs -- resistenza serie & 0--33\,$\Omega$ (opzionale) & Limita il drive dell'osci
 
 \begin{itemize}
     \item {\bfseries Ciclo 6510:} $T_{6510} \approx 1015\,\text{ns}$ (PAL, 0.985\,MHz) o $\approx 978\,\text{ns}$ (NTSC, 1.023\,MHz).
-    \item {\bfseries Finestra PHI2 alto:} $T_{PHI2\uparrow} \approx 490\,\text{ns}$. Nella fase PHI1 il bus appartiene al VIC-II: sul C64, a differenza dell'Atari, l'indirizzo della CPU non è disponibile in anticipo e la decodifica può partire solo dopo la salita di PHI2.
+    \item {\bfseries Finestra PHI2 alto:} $T_{PHI2\uparrow} \approx 490\,\text{ns}$. Nella fase PHI1 il bus appartiene al VIC-II: sul C64 l'indirizzo della CPU non è disponibile in anticipo e la decodifica può partire solo dopo la salita di PHI2.
     \item {\bfseries Vincoli del 6510 a 1\,MHz:} dato in lettura richiesto $t_{DSU} = 100$\,ns prima della discesa di PHI2; dato in scrittura valido al più $t_{MDS} = 200$\,ns dopo la salita e tenuto $t_{HW} = 10$\,ns dopo la discesa.
     \item {\bfseries Ciclo ESP32 (240\,MHz):} $T_{ESP32} \approx 4.17\,\text{ns}$, quindi
     \[
@@ -316,9 +316,9 @@ campionamento di \texttt{/IOx} & chiamate C, $\approx$10 istruzioni & 5 istruzio
 \end{tabular}
 \end{center}
 
-La versione precedente teneva la GeoRAM in \texttt{.iram0.bss}: una sezione fuori dal layout IRAM di ESP-IDF, che non viene riservata sul bus dati e si sovrappone a \texttt{.data}, \texttt{.bss} e heap; inoltre la IRAM non è accessibile a byte. Ora la GeoRAM è \texttt{.bss} ordinaria in DRAM, come la RAMbo di RBL-XE, e il pilotaggio del bus non usa più la tabella \texttt{lut\_drive[]}. Con $\approx$117 cicli disponibili il margine è ampio anche considerando l'attesa di \texttt{/IOx}; i tempi reali (latenza delle letture APB, sincronizzatori GPIO, ritardo di \texttt{/IOx}) vanno confermati con un analizzatore logico.
+La versione precedente teneva la GeoRAM in \texttt{.iram0.bss}: una sezione fuori dal layout IRAM di ESP-IDF, che non viene riservata sul bus dati e si sovrappone a \texttt{.data}, \texttt{.bss} e heap; inoltre la IRAM non è accessibile a byte. Ora la GeoRAM è \texttt{.bss} ordinaria in DRAM e il pilotaggio del bus non usa più la tabella \texttt{lut\_drive[]}. Con $\approx$117 cicli disponibili il margine è ampio anche considerando l'attesa di \texttt{/IOx}; i tempi reali (latenza delle letture APB, sincronizzatori GPIO, ritardo di \texttt{/IOx}) vanno confermati con un analizzatore logico.
 
-La previsione del fronte di discesa usata su RBL-XE non serve: gli effetti delle scritture durano poche decine di cicli e dopo la discesa di PHI2 resta tutto PHI1 ($\approx$490\,ns) prima del ciclo successivo.
+Non serve una previsione del fronte di discesa: gli effetti delle scritture durano poche decine di cicli e dopo la discesa di PHI2 resta tutto PHI1 ($\approx$490\,ns) prima del ciclo successivo.
 
 \subsection{Accesso diretto ai registri GPIO}
 \begin{itemize}
@@ -460,11 +460,11 @@ I punti seguenti derivano dallo schema e dalla netlist (2026-10-26); vanno confe
 
 \begin{itemize}
   \item \textbf{Ritardo di \texttt{/IO1}/\texttt{/IO2}.} \texttt{IO\_QUALIFY\_NS} e \texttt{BUS\_WR\_SAMPLE\_NS} vanno tarati misurando il ritardo di \texttt{/IOx} rispetto a PHI2 (PLA + 74LS139, qualche decina di ns) e il momento in cui il dato in scrittura è stabile.
-  \item \textbf{Gating di \texttt{U19}} (nello schema). \texttt{U24}/\texttt{U25} realizzano \texttt{NAND(PHI2, NAND(R/W, DEV\_SEL\_N, /IO1))}: rispetto a RBL-XE l'ingresso \texttt{\textasciitilde mEXSEL} è diventato \texttt{\textasciitilde mIO1} e \texttt{\textasciitilde mMPD} è fisso a 3V3. La GeoRAM è sempre attiva: ogni lettura a \$DExx abilita \texttt{U19}.
+  \item \textbf{Gating di \texttt{U19}} (nello schema). \texttt{U24}/\texttt{U25} realizzano \texttt{NAND(PHI2, NAND(R/W, DEV\_SEL\_N, /IO1))}: il quarto ingresso di \texttt{U24} è fisso a 3V3. La GeoRAM è sempre attiva: ogni lettura a \$DExx abilita \texttt{U19}.
   \item \textbf{Hold del dato in scrittura verso la VERA.} Lo stesso fronte di discesa di PHI2 chiude WR\_n e \texttt{U19}: verificare che il dato resti stabile dopo la salita di WR\_n.
   \item \textbf{\texttt{/IRQ} e \texttt{/RESET}} passano dai buffer open-drain \texttt{U26} e \texttt{U27} (nello schema): la scheda tira solo in basso le linee condivise.
   \item \textbf{Linee non usate.} \texttt{/GAME}, \texttt{/EXROM}, \texttt{/ROML}, \texttt{/ROMH}, \texttt{/NMI} e Dot Clock restano scollegate; \texttt{BA} e \texttt{/DMA} arrivano solo a punti di test.
-  \item \textbf{PCB} ancora Atari: da rifare con il connettore a pettine della porta di espansione.
+  \item \textbf{PCB} v1.0 in pre-produzione: tempi e livelli da verificare sulle prime schede.
 \end{itemize}
 
 \subsection*{Sequenza di reset e configurazione}
@@ -472,7 +472,7 @@ I punti seguenti derivano dallo schema e dalla netlist (2026-10-26); vanno confe
 
 % --- SEZIONE 8: CONCLUSIONE ---
 \section{Conclusione}
-Con PHI2 alto per $\approx$490\,ns l'ESP32-S3 a 240\,MHz dispone di circa 117 cicli per ciclo di bus, contro i 67 della versione Atari. La qualificazione tramite \texttt{/IO1} e \texttt{/IO2} riduce la decodifica alla sola lettura di A0--A7; con il percorso critico in assembly, visto \texttt{/IOx} servono 5 istruzioni e una lettura APB per \texttt{DEV\_SEL\_N} e circa 10 istruzioni per il dato GeoRAM sul bus.
+Con PHI2 alto per $\approx$490\,ns l'ESP32-S3 a 240\,MHz dispone di circa 117 cicli per ciclo di bus. La qualificazione tramite \texttt{/IO1} e \texttt{/IO2} riduce la decodifica alla sola lettura di A0--A7; con il percorso critico in assembly, visto \texttt{/IOx} servono 5 istruzioni e una lettura APB per \texttt{DEV\_SEL\_N} e circa 10 istruzioni per il dato GeoRAM sul bus.
 
 Il Core\,1 è dedicato al bus a interruzioni mascherate e il log passa al Core\,0 tramite un ring buffer senza lock. Restano da misurare sulla scheda il ritardo di \texttt{/IOx}, il tempo dal fronte di PHI2 al dato GeoRAM, la latenza degli accessi APB e il comportamento di \texttt{U19}; prima serve il PCB adattato al C64.
 

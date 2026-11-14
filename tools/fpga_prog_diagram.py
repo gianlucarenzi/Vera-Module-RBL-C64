@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """FPGA programming with iceprog, drawn in the style of the Fritzing
-breadboard view (as ESP32-BOBOARD-5V/firmware/6502_monitor/docs/breadboard.py):
-an FTDI FT232H breakout wired to J6 of the VERA module, with JP2, the BOOT0
-and RESET buttons, the VERA READY LED and the four steps.
+breadboard view: an FTDI FT232H breakout wired to J6 of the VERA module, with
+JP2, the BOOT0 and RESET buttons, the VERA READY LED and the four steps.
 
-The J6 pinout, JP2, U9/U8 and the buttons come from the schematic (the VERA
-sheets are the same on RBL-A2, RBL-XE and RBL-C64); the FT232H pins are the
-iceprog defaults (ADBUS0 SCK, 1 MOSI, 2 MISO, 4 CS, 6 CDONE, 7 CRESET).
+The J6 pinout, JP2, U9/U8 and the buttons come from the schematic; the FT232H
+pins are the iceprog defaults (ADBUS0 SCK, 1 MOSI, 2 MISO, 4 CS, 6 CDONE,
+7 CRESET).
 
 usage: fpga_prog_diagram.py OUTDIR BOARD_NAME
   writes OUTDIR/fpga_programming_en.svg and OUTDIR/fpga_programming_it.svg

@@ -4,7 +4,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![KiCad](https://img.shields.io/badge/KiCad-5.1.9-blue.svg)](https://www.kicad.org/)
-[![Status: Work in progress](https://img.shields.io/badge/status-WORK_IN_PROGRESS_%E2%80%94_NOT_WORKING-red.svg)](#)
+[![Version](https://img.shields.io/badge/version-1.0_pre--production-orange.svg)](#)
 [![Commodore 64](https://img.shields.io/badge/Commodore-64-brown.svg)](https://en.wikipedia.org/wiki/Commodore_64)
 [![ESP32](https://img.shields.io/badge/ESP32--S3-FN8-yellow.svg)](https://www.espressif.com/)
 
@@ -13,10 +13,10 @@
 </div>
 
 > [!WARNING]
-> **WORK IN PROGRESS — NOT WORKING.**
-> This project is under development and does **not** work yet. The board has not been built or
-> tested; firmware (ESP32, FPGA) and documentation have only been checked in simulation or on
-> paper and may contain errors. Do not manufacture the PCB or rely on this design yet.
+> **v1.0 — PRE-PRODUCTION.**
+> The PCB is routed and passes KiCad's DRC; the first boards are being made and are **not tested
+> yet**. Firmware (ESP32, FPGA) and documentation have only been checked in simulation or on
+> paper and may contain errors.
 
 <div align="center">
 
@@ -39,14 +39,13 @@ of two original demo games, not captures from the board**; `tools/make_demo_shot
 *IRONHOLD (side-scrolling action) and CIRCUIT RUNNER (maze chase)*
 </div>
 
-## 🆕 What's new in v1.1
+## 📦 v1.0 — pre-production
 
-- **USB: CH340C instead of CH340T** (the CH340T is out of stock at JLCPCB). Same signals and
-  ESP32 auto-reset, internal clock: the 12 MHz crystal Y1 and its capacitors C39, C41 are gone.
+- **USB:** CH340C USB-serial (internal clock, no crystal) on USB-C, with ESP32 auto-reset.
 - **U11 WM8524** (C146242) is short at JLCPCB: it is in `jlcpcb-global-sourcing.txt`; choose
   **Global Sourcing** for that row when ordering.
 - The BOM XML comes straight from the KiCad 5 schematic (`utilities/kicadcli`), which stops on
-  parts without annotation; `./output_job.sh 1.1` makes the JLCPCB files.
+  parts without annotation; `./output_job.sh 1.0` makes the JLCPCB files.
 
 ---
 
@@ -80,12 +79,6 @@ of two original demo games, not captures from the board**; `tools/make_demo_shot
 The **VERA Module RBL-C64** is an FPGA-based audio and video expansion card for the
 **Commodore 64**. It plugs into the **expansion (cartridge) port** and adds, in the I/O
 areas `IO1`/`IO2`, the VERA registers and a **256 KB GeoRAM** emulated by the ESP32.
-
-> **Origin:** the project is derived from the ATARI version (VERA Module RBL-XE). The
-> schematic is the RBL-XE one (2026-10-26 revision) with the connector sheet adapted to the
-> C64 expansion port, and the ESP32-S3 pin mapping is the same as RBL-XE wherever possible;
-> the netlist matches the schematic. **The PCB is still the ATARI one.** Changes are listed in
-> [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari).
 
 ### What is VERA?
 
@@ -221,15 +214,11 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 
 #### Top View
 ![VERA Module Top](images/VERA-MODULE-RBL-TOP.png)
-*Top side showing main components and connectors (ATARI board, the C64 layout is not drawn yet)*
+*Top side showing main components and connectors*
 
 #### Bottom View  
 ![VERA Module Bottom](images/VERA-MODULE-RBL-BOTTOM.png)
 *Bottom side with additional components*
-
-#### Cartridge Adapter
-![VERA Cartridge Adapter](images/VERA-ADAPTER-CARTRIDGE.png)
-*Cartridge interface adapter of the ATARI version*
 
 ### Board Dimensions
 
@@ -485,7 +474,7 @@ The VERA bitstream lives in the SPI flash U10 (W25Q16); the FPGA loads it at pow
 
 #### ESP32 Firmware
 The ESP32-S3FN8 handles:
-- **Core split**: the bus loop (`MonitorTask`) runs alone on **Core 1** with interrupts masked and never yields; **Core 0** runs `LogTask`, which prints on Serial the events passed through a lock-free ring buffer (same architecture as RBL-XE)
+- **Core split**: the bus loop (`MonitorTask`) runs alone on **Core 1** with interrupts masked and never yields; **Core 0** runs `LogTask`, which prints on Serial the events passed through a lock-free ring buffer
 - **Startup sync**: ARESET and CRESET asserted LOW immediately in `setup()`. `setup()` enables the address translators (`ABUS_OE_N`, GPIO 47, after the strapping pins are latched), releases CRESET, polls CDONE until the ICE40UP5K bitstream is loaded (< 100 ms typical, 5 s timeout) and waits for the VERA power-on reset; `MonitorTask` then releases ARESET — the C64 starts with bus and FPGA already ready
 - **Cycle qualification**: after the PHI2 rising edge the loop waits, for at most `IO_QUALIFY_NS` (200 ns), for `/IO1` or `/IO2`; other cycles, including VIC-II fetches, are skipped untouched
 - **Critical path in inline assembly**: once `/IOx` is seen, 5 instructions + 1 APB read to `DEV_SEL_N`, ~10 instructions to the GeoRAM byte on the bus (two posted stores); IO2 decoded by a table in `include/bus_decode.h`, checked by a host test
@@ -553,8 +542,8 @@ The design workflow, from the schematic to the JLCPCB order (stock check, librar
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # This documentation
 ├── 📄 WORKFLOW.md                  # Design workflow, schematic to JLCPCB order
-├── 📄 PIN-MAPPING.md               # ESP32-S3 / level-shifter pin mapping, C64 port, changes vs. ATARI (§ 9)
-├── 📄 VERA-C64-HW-REQUIREMENTS.md # VERA bus requirements & bring-up plan (from the ATARI version)
+├── 📄 PIN-MAPPING.md               # ESP32-S3 / level-shifter pin mapping, C64 port (§ 9)
+├── 📄 VERA-C64-HW-REQUIREMENTS.md # VERA bus requirements & bring-up plan
 ├── 📄 LICENSE                      # GPL v3 license
 ├── 📁 firmware/
 │   ├── 📁 MCU/                     # ESP32-S3 firmware (PlatformIO), analysis document
@@ -587,13 +576,12 @@ Vera-Module-RBL-C64/
 
 ### Hardware notes (read before bring-up)
 
-- [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari) —
-  changes from the ATARI board, now in schematic and netlist: expansion port connector,
-  `/IO1`/`/IO2` inputs on GPIO 41/42 through `U6`, `U19` output-enable gating with
-  `DEV_SEL_N` and `/IO1`, open-drain `/IRQ` and `/RESET`; the PCB is still to be redone.
+- [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-porta-di-espansione-scelte-hardware) —
+  hardware of the expansion port: connector, `/IO1`/`/IO2` inputs on GPIO 41/42 through
+  `U6`, `U19` output-enable gating with `DEV_SEL_N` and `/IO1`, open-drain `/IRQ` and `/RESET`.
 - [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md) — what the VERA FPGA
   requires from the bus (separate RD/WR, write data hold, read side effects, reconfiguration),
-  adapted to the C64 from the RBL-XE document, plus the bring-up test plan.
+  plus the bring-up test plan.
 
 ### Design Files
 
@@ -705,10 +693,10 @@ If you find this project useful, please consider:
 </div>
 
 > [!WARNING]
-> **LAVORO IN CORSO — NON FUNZIONANTE.**
-> Il progetto è in fase di sviluppo e **non** funziona ancora. La scheda non è stata realizzata né
-> provata; firmware (ESP32, FPGA) e documentazione sono stati verificati solo in simulazione o sulla
-> carta e possono contenere errori. Non produrre il PCB e non fare affidamento su questo progetto.
+> **v1.0 — PRE-PRODUZIONE.**
+> Il PCB è sbrogliato e passa il DRC di KiCad; le prime schede sono in produzione e **non sono
+> ancora collaudate**. Firmware (ESP32, FPGA) e documentazione sono stati verificati solo in
+> simulazione o sulla carta e possono contenere errori.
 
 <div align="center">
 
@@ -727,14 +715,13 @@ giochi originali, non catture dalla scheda**; le disegna `tools/make_demo_shots.
 <img src="images/demo/demo-circuit-runner-c64.png" alt="CIRCUIT RUNNER" width="32%">
 </div>
 
-## 🆕 Novità della v1.1
+## 📦 v1.0 — pre-produzione
 
-- **USB: CH340C al posto del CH340T** (il CH340T è esaurito da JLCPCB). Stessi segnali e reset
-  automatico dell'ESP32, clock interno: spariscono il quarzo da 12 MHz Y1 e i condensatori C39, C41.
+- **USB:** CH340C USB-seriale (clock interno, senza quarzo) su USB-C, con reset automatico dell'ESP32.
 - **U11 WM8524** (C146242) scarseggia da JLCPCB: è in `jlcpcb-global-sourcing.txt`; nell'ordine si
   sceglie **Global Sourcing** per quella riga.
 - L'XML della BOM viene direttamente dallo schema KiCad 5 (`utilities/kicadcli`), che si ferma sui
-  componenti non annotati; `./output_job.sh 1.1` produce i file per JLCPCB.
+  componenti non annotati; `./output_job.sh 1.0` produce i file per JLCPCB.
 
 ---
 
@@ -768,12 +755,6 @@ giochi originali, non catture dalla scheda**; le disegna `tools/make_demo_shots.
 Il **VERA Module RBL-C64** è una scheda di espansione audio e video basata su FPGA per il
 **Commodore 64**. Si collega alla **porta di espansione (cartuccia)** e aggiunge, nelle aree
 I/O `IO1`/`IO2`, i registri VERA e una **GeoRAM da 256 KB** emulata dall'ESP32.
-
-> **Origine:** il progetto deriva dalla versione ATARI (VERA Module RBL-XE). Lo schema è
-> quello di RBL-XE (revisione del 2026-10-26) con il foglio del connettore adattato alla porta
-> di espansione del C64, e la piedinatura dell'ESP32-S3 è la stessa di RBL-XE dove possibile;
-> la netlist è allineata allo schema. **Il PCB è ancora quello ATARI.** Le modifiche sono in
-> [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari).
 
 ### Cos'è VERA?
 
@@ -909,15 +890,11 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 
 #### Vista Superiore
 ![VERA Module Top](images/VERA-MODULE-RBL-TOP.png)
-*Lato superiore con componenti principali e connettori (scheda ATARI, il layout C64 non è ancora disegnato)*
+*Lato superiore con componenti principali e connettori*
 
 #### Vista Inferiore
 ![VERA Module Bottom](images/VERA-MODULE-RBL-BOTTOM.png)
 *Lato inferiore con componenti aggiuntivi*
-
-#### Adattatore Cartuccia
-![VERA Cartridge Adapter](images/VERA-ADAPTER-CARTRIDGE.png)
-*Adattatore cartuccia della versione ATARI*
 
 ### Dimensioni Scheda
 
@@ -1173,7 +1150,7 @@ Il bitstream della VERA sta nella flash SPI U10 (W25Q16); l'FPGA lo carica all'a
 
 #### Firmware ESP32
 L'ESP32-S3FN8 gestisce:
-- **Divisione dei core**: il loop del bus (`MonitorTask`) gira da solo sul **Core 1** a interruzioni mascherate e non cede mai la CPU; il **Core 0** esegue `LogTask`, che stampa su Serial gli eventi ricevuti tramite un ring buffer senza lock (stessa architettura di RBL-XE)
+- **Divisione dei core**: il loop del bus (`MonitorTask`) gira da solo sul **Core 1** a interruzioni mascherate e non cede mai la CPU; il **Core 0** esegue `LogTask`, che stampa su Serial gli eventi ricevuti tramite un ring buffer senza lock
 - **Avvio sincronizzato**: ARESET e CRESET bassi subito in `setup()`. `setup()` abilita i traslatori degli indirizzi (`ABUS_OE_N`, GPIO 47, dopo il campionamento degli strapping), rilascia CRESET, attende CDONE (< 100 ms tipici, timeout 5 s) e il power-on reset della VERA; poi `MonitorTask` rilascia ARESET — il C64 parte con bus e FPGA già pronti
 - **Qualificazione dei cicli**: dopo il fronte di salita di PHI2 il loop attende, per al massimo `IO_QUALIFY_NS` (200 ns), `/IO1` o `/IO2`; gli altri cicli, compresi i fetch del VIC-II, vengono saltati senza toccare nulla
 - **Percorso critico in assembly inline**: visto `/IOx`, 5 istruzioni + 1 lettura APB fino a `DEV_SEL_N`, ~10 istruzioni fino al byte GeoRAM sul bus (due store "posted"); IO2 decodificato con una tabella in `include/bus_decode.h`, verificata da un test sul PC
@@ -1241,8 +1218,8 @@ Il workflow di progetto, dallo schematico all'ordine JLCPCB (disponibilità dei 
 Vera-Module-RBL-C64/
 ├── 📄 README.md                    # Questa documentazione
 ├── 📄 WORKFLOW.md                  # Workflow di progetto, dallo schema all'ordine JLCPCB
-├── 📄 PIN-MAPPING.md               # Pin ESP32-S3 / level shifter, porta C64, modifiche rispetto all'ATARI (§ 9)
-├── 📄 VERA-C64-HW-REQUIREMENTS.md # Requisiti VERA sul bus e piano di bring-up (dalla versione ATARI)
+├── 📄 PIN-MAPPING.md               # Pin ESP32-S3 / level shifter, porta C64 (§ 9)
+├── 📄 VERA-C64-HW-REQUIREMENTS.md # Requisiti VERA sul bus e piano di bring-up
 ├── 📄 LICENSE                      # Licenza GPL v3
 ├── 📁 firmware/
 │   ├── 📁 MCU/                     # Firmware ESP32-S3 (PlatformIO), documento di analisi
@@ -1275,13 +1252,12 @@ Vera-Module-RBL-C64/
 
 ### Note hardware (da leggere prima del bring-up)
 
-- [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-modifiche-hardware-rispetto-alla-versione-atari) —
-  modifiche rispetto alla scheda ATARI, ora in schema e netlist: connettore della porta di
-  espansione, ingressi `/IO1`/`/IO2` su GPIO 41/42 attraverso `U6`, gating di `~OE_` di `U19` con
-  `DEV_SEL_N` e `/IO1`, `/IRQ` e `/RESET` open-drain; il PCB è ancora da rifare.
+- [`PIN-MAPPING.md` § 9](PIN-MAPPING.md#9-porta-di-espansione-scelte-hardware) —
+  hardware della porta di espansione: connettore, ingressi `/IO1`/`/IO2` su GPIO 41/42 attraverso
+  `U6`, gating di `~OE_` di `U19` con `DEV_SEL_N` e `/IO1`, `/IRQ` e `/RESET` open-drain.
 - [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md) — cosa richiede la FPGA VERA
   dal bus (RD/WR distinti, hold del dato in scrittura, effetti collaterali in lettura,
-  riconfigurazione), adattato al C64 dal documento di RBL-XE, più il piano di bring-up.
+  riconfigurazione), più il piano di bring-up.
 
 ### File Design
 

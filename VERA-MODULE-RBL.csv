@@ -29,6 +29,7 @@ Comment,Designator,Footprint,LCSC
 "VERA X16 LOGO","LOGO1","RetroBitLab:x16logo",""
 "C64 READY","LOGO2","RetroBitLab:c64_ready_8mm_REV",""
 "KiCAD DESIGN","LOGO3","Symbol:KiCad-Logo2_6mm_SilkScreen",""
+"RETROCAMPUS","LOGO4","RetroBitLab:retrocampus_silkscreen_16.9mm_8.3mm",""
 "ESP32_BOBOARD","LOGO5","RetroBitLab:ESP32_BOBOARD_5V_21.7mmx21.7mm",""
 "MOSFET-BSS138-SOT-23","Q1","Package_TO_SOT_SMD:SOT-23","C82045"
 "BC817,SOT-23","Q3,Q4","Package_TO_SOT_SMD:SOT-23","C20069154"

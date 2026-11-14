@@ -1,23 +1,19 @@
 # VERA RBL-C64 — Requisiti e verifiche hardware
 
-Documento derivato da `VERA-ATARI-HW-REQUIREMENTS.md` di VERA Module RBL-XE. La scheda C64 usa lo schema di RBL-XE della revisione del 2026-10-26, con il foglio
-del connettore riadattato alla porta di espansione del Commodore 64 (`PIN-MAPPING.md` § 9). Qui
-sono riportati i requisiti che valgono anche per il C64, con i riferimenti alla netlist C64, e quelli
-propri del C64.
-Data: 2026-10-26.
+Requisiti che la VERA e il bus della porta di espansione del Commodore 64 impongono alla scheda, con i
+riferimenti alla netlist, e piano di bring-up. Il foglio del connettore è descritto in
+`PIN-MAPPING.md` § 9.
 
 ## 0. Fonti e limiti
 
 | Fonte | Cosa ho usato |
 |---|---|
-| HDL VERA 48.0.1 (`top.v`, da `VERA_ATARI_PBI/fpga-vera/`) | protocollo del bus, reset, IRQ, mappa registri |
-| VERA Module RBL-XE, `VERA-ATARI-HW-REQUIREMENTS.md` (2026-10-26) | verifiche sulla parte di scheda in comune |
+| HDL VERA 48.0.1 (`top.v`, repository `vera-module` del Commander X16) | protocollo del bus, reset, IRQ, mappa registri |
 | Questo repo: `PIN-MAPPING.md`, `firmware/MCU/README.md`, schemi e netlist `VERA-MODULE-RBL.net` (2026-10-26) | stato della scheda C64 |
 
 **Limiti.** I punti della sezione 2 sono ricavati dagli schemi e dalla netlist: nessuna simulazione
-elettrica e nessuna misura. Nessuna scheda è stata costruita e **il PCB è ancora quello Atari**. Non
-esiste ancora un driver C64 provato: le regole software della sezione 5 vengono dall'HDL e dal lavoro
-sulla versione Atari. Ogni punto marcato **VERIFICA** va controllato sui datasheet e con l'oscilloscopio.
+elettrica e nessuna misura. Il PCB v1.0 è in pre-produzione e nessuna scheda è stata ancora collaudata.
+Non esiste ancora un driver C64 provato: le regole software della sezione 5 vengono dall'HDL. Ogni punto marcato **VERIFICA** va controllato sui datasheet e con l'oscilloscopio.
 
 ---
 
@@ -45,7 +41,7 @@ rilascio, **C** = da decidere.
 ### 2.1 [A] Il bus dati non deve fare contesa sulle letture non destinate alla scheda — **nello schema**
 
 `U19` (74LVC4245, bus dati) ha `DIR` = `NOT(R/W)` (`U23` pin 1→2) e `~OE_` (pin 22) dal gating di
-`U24`/`U25` (due SN74LVC00A), ereditato da RBL-XE. `U19` deve essere acceso solo quando la scheda
+`U24`/`U25` (due SN74LVC00A). `U19` deve essere acceso solo quando la scheda
 risponde in lettura oppure in scrittura (C64→scheda, dove pilota solo il lato scheda); in ogni altra
 lettura (RAM, ROM, I/O della scheda madre, altre cartucce) deve restare spento.
 
@@ -56,7 +52,7 @@ e finestra GeoRAM (`/IO1`, asserito dal PLA del C64). Quindi:
 ~OE_ = NOT( PHI2 AND ( NOT R/W   OR   ~DEV_SEL_N OR ~/IO1 ) )
 ```
 
-Stessa rete di RBL-XE, con l'ingresso `~mEXSEL` sostituito da `~mIO1` e `~mMPD` fisso a 3V3:
+Il quarto ingresso della porta (pin 5 di `U24`) è fisso a 3V3:
 
 ```
 n1  = NAND(mR~W,  ~mVCS0)        U24 pin 1, 2  → 3
@@ -109,7 +105,7 @@ Note:
   può diventare non valido più o meno nello stesso istante in cui WR_n sale. Il 6510 tiene il dato
   almeno `t_HW` = 10 ns dopo la discesa di PHI2.
 
-Richieste (come su RBL-XE): porta più veloce di 74HC00 a 3,3 V per `U5`, oppure rilascio di `U19` più
+Richieste: porta più veloce di 74HC00 a 3,3 V per `U5`, oppure rilascio di `U19` più
 lento della salita di WR_n; verificare con l'oscilloscopio che il dato resti stabile ≥ 5 ns dopo la
 salita di `~mWE` e `~mVCS0` al pin FPGA.
 
@@ -119,8 +115,7 @@ L'uscita VERA è push-pull (§1). La linea `/IRQ` del C64 è un OR cablato condi
 VIC-II e le altre cartucce, con un solo pull-up sulla scheda madre: ogni device la può solo tirare in
 basso.
 
-`U26` SN74LVC1G07DBVR (TI, buffer non invertente open-drain, SOT-23-5, LCSC C7829), alimentato a 3,3 V,
-come su RBL-XE:
+`U26` SN74LVC1G07DBVR (TI, buffer non invertente open-drain, SOT-23-5, LCSC C7829), alimentato a 3,3 V:
 
 ```
  3V3 ──┬── VCC (pin 5)              C69 100 nF fra 3V3 e GND, vicino al chip
@@ -135,13 +130,13 @@ come su RBL-XE:
 
 ### 2.4 [A] Gestione dell'IRQ della VERA: via software
 
-Il C64 non ha un meccanismo di identificazione dei device come il PBI Atari: chi usa gli IRQ della VERA
+Il C64 non ha un meccanismo di identificazione dei device: chi usa gli IRQ della VERA
 aggancia il vettore IRQ del KERNAL (`CINV`, `$0314/$0315`). Il gestore seleziona la VERA (`$DFFD`, §2.5),
 legge `ISR` e `IEN`: se `ISR & IEN` ha bit attivi conferma VSYNC/LINE/SPRCOL scrivendo 1 in `ISR` (e
 maschera AFLOW in `IEN`), altrimenti passa il controllo al gestore precedente. Deve ripristinare lo stato
 del latch `$DFFD` trovato all'ingresso. Non serve nessun collegamento dell'IRQ all'ESP32.
 
-Stato: **da scrivere**; il gancio per l'Atari (`VERA_ATARI_PBI/vera-tests/vera_irq.s`) è il modello.
+Stato: **da scrivere**.
 
 ### 2.5 [A] Latch `$DFFD`: i registri VERA rispondono solo con la VERA selezionata — **nel firmware**
 
@@ -159,18 +154,17 @@ all'accensione e sopravvivono al reset del C64. In lettura la scheda non pilota 
 
 ### 2.7 [A] VCCB (pin 23) dei 74LVC4245 — **nello schema**
 
-Il pin 23 di `U3`, `U4`, `U6`, `U16` e `U19` è collegato al pin 24 (3V3), come su RBL-XE.
+Il pin 23 di `U3`, `U4`, `U6`, `U16` e `U19` è collegato al pin 24 (3V3).
 
 ### 2.8 [B] Ingressi liberi — **nello schema**
 
 - `U23` pin 3, 5, 9, 11, 13 a GND (uscite 4, 6, 8, 10, 12 libere).
 - Canali di riserva dei 74LVC4245, ciascuno con una propria 0 Ω (CREZ0805, LCSC C328378) verso GND:
   `U6` pin 10 → `R74`; `U16` pin 14 → `R72`, 15 → `R75`, 16 → `R80`, 17 → `R79`, 18 → `R78`, 19 → `R73`,
-  20 → `R76`, 21 → `R77`. `R78`/`R79` sono nuove: `U16` pin 18 e 17 erano `~mEXSEL`/`~mMPD`, che sul
-  C64 non hanno una linea; `R80` è nuova perché il reset passa ora da `U27` (§2.12). Le uscite corrispondenti (`U6` pin 14, `U16` pin 3, 4, 5, 6, 7, 9, 10) restano
-  libere (anche il pin 8, ex reset).
-- I canali di `U6` che su RBL-XE portavano `S4`, `S5`, `REFRESH` ora portano `BA`, `/DMA`, `/RESET`
-  ai test point `TP3`, `TP2`, `TP4`: ingressi sempre pilotati dal C64.
+  20 → `R76`, 21 → `R77`. `U16` non pilota nessuna linea del C64 (il reset passa da `U27`, §2.12). Le uscite corrispondenti (`U6` pin 14, `U16` pin 3, 4, 5, 6, 7, 9, 10) restano
+  libere.
+- Tre canali di `U6` portano `BA`, `/DMA`, `/RESET` ai test point `TP3`, `TP2`, `TP4`: ingressi
+  sempre pilotati dal C64.
 
 ### 2.9 [A] Strapping dell'ESP32-S3 — **nello schema e nel firmware**
 
@@ -191,13 +185,12 @@ pull-down interni danno GPIO 45 = GPIO 46 = LOW a ogni reset, qualunque cosa fac
 avviare il loop del bus. Spegnere anche `U4` evita la contesa con i glitch di uscita di GPIO 12–19
 all'accensione.
 
-Resta aperto, come su RBL-XE: anche GPIO 1, 2 (PHI2, R/W da `U6`), GPIO 41, 42 (`/IO1`, `/IO2` da `U6`)
+Resta aperto: anche GPIO 1, 2 (PHI2, R/W da `U6`), GPIO 41, 42 (`/IO1`, `/IO2` da `U6`)
 e GPIO 4–11 (dati) hanno glitch di uscita all'accensione; `U6` resta sempre abilitato.
 
-### 2.10 [—] `~HALT`, `RD4`, `RD5` — **non applicabile**
+### 2.10 [—] Test point `TP5`, `TP6`
 
-Su RBL-XE `U16` portava questi segnali Atari. Sul C64 non esistono: i test point `RD4` è stato tolto,
-`RD5` e `~HALT1` sono stati riusati (`TP6` = `~mIO2`, `TP5` = `AUDIO`).
+`TP6` porta `~mIO2`, `TP5` il mix audio `AUDIO` della VERA (la porta di espansione non ha audio).
 
 ### 2.11 [A] Il 5 V della scheda è collegato al 5 V del C64 senza diodo — **regola d'uso**
 
@@ -205,7 +198,7 @@ La rete `5V` della scheda unisce `CART1` pin 2 e 3 (+5 V del C64, collegato dire
 (MAX40200) da VBUS dell'USB (`J4`) e `U17` (MAX40200) dal 7805 `U15` alimentato dal jack `J5`. I due
 MAX40200 proteggono USB e 7805, ma niente impedisce alla scheda di alimentare il C64.
 
-Decisione (come su RBL-XE): nessun diodo sul ramo del computer. **Programmazione e USB solo a scheda
+Decisione: nessun diodo sul ramo del computer. **Programmazione e USB solo a scheda
 scollegata dal C64.** Vale anche per il monitor seriale: con la scheda nel C64 usare un adattatore senza
 VBUS. Il jack e l'USB servono per programmare l'ESP32 e la flash della VERA e per le prove a banco.
 
@@ -217,8 +210,7 @@ originale.
 
 Sul C64 `/RESET` è una linea condivisa (circuito di reset della scheda madre, porta utente, bus seriale,
 cartucce con pulsante di reset) con il pull-up sulla scheda madre: ogni device la può solo tirare in
-basso. Su RBL-XE `ARESET` passava da `U16` (pin 16 → 8) in push-pull: una cartuccia o un pulsante che
-tirano in basso mentre `U16` tiene la linea alta creano contesa.
+basso: un'uscita push-pull creerebbe contesa con una cartuccia o un pulsante che la tirano in basso.
 
 **Realizzazione:** `U27` SN74LVC1G07DBVR, identico a `U26` (§2.3), alimentato a 3,3 V:
 
@@ -238,12 +230,11 @@ tirano in basso mentre `U16` tiene la linea alta creano contesa.
   dal C64 o da un'altra cartuccia.
 - Firmware invariato: `PIN_ARESET` resta GPIO 37, attivo basso.
 
-### 2.13 [A] PCB — DA FARE
+### 2.13 [A] PCB — **v1.0, pre-produzione**
 
-Il PCB è ancora quello Atari. Vanno rifatti il contorno (la scheda è una cartuccia che si inserisce
-nella porta di espansione), la posizione del connettore a pettine `C64-EXPANSION-CARTRIDGE` e lo
-sbroglio dei collegamenti nuovi, partendo da "Update PCB from netlist". Verificare sul footprint la
-lunghezza dei contatti e lo spessore della scheda (1,6 mm) con una cartuccia reale.
+Contorno a cartuccia con il connettore a pettine `C64-EXPANSION-CARTRIDGE`, 4 layer, sbrogliato; PCB e
+schema allineati. **VERIFICA** sulle prime schede: lunghezza dei contatti e spessore (1,6 mm) con una
+cartuccia reale.
 
 ---
 
@@ -256,7 +247,7 @@ lunghezza dei contatti e lo spessore della scheda (1,6 mm) con una cartuccia rea
 | 3 | Ritardo dopo `CDONE` prima di rilasciare `ARESET` (~1 ms) | **fatto**: `VERA_POST_CDONE_DELAY_US`, default 1000 µs |
 | 4 | `ARESET` open-drain | **nello schema**: `U27` SN74LVC1G07, §2.12 |
 | 5 | Timeout se `CDONE` non arriva (oggi 5 s, solo log) | decidere: oggi il C64 viene rilasciato comunque |
-| 6 | Scrittura di `$80` in CTRL (`$DF05`) | il software non deve mai scriverlo (§5); il firmware non lo filtra, per gli stessi motivi di RBL-XE |
+| 6 | Scrittura di `$80` in CTRL (`$DF05`) | il software non deve mai scriverlo (§5); il firmware non lo filtra |
 
 ---
 
@@ -270,8 +261,7 @@ lunghezza dei contatti e lo spessore della scheda (1,6 mm) con una cartuccia rea
 - **Tempo di risposta in lettura.** PHI2 alto dura ~490 ns e il 6510 vuole il dato 100 ns prima della
   discesa. L'indirizzo della CPU è valido solo con `AEC` alto: `/IOx` arriva qualche decina di ns dopo
   la salita di PHI2, poi il firmware asserisce `DEV_SEL_N` o pilota il byte GeoRAM in poche decine di
-  cicli CPU (`firmware/MCU/README.md`). Da misurare, ma il margine è molto più ampio dei ~229 ns
-  disponibili sull'Atari.
+  cicli CPU (`firmware/MCU/README.md`). Da misurare.
 - **Frequenza di quadro.** La VERA gira a 59,94 Hz fisso, asincrona rispetto al raster del VIC-II.
 
 ---
@@ -313,6 +303,4 @@ lunghezza dei contatti e lo spessore della scheda (1,6 mm) con una cartuccia rea
 - Architettura: `firmware/FPGA` descrive una variante con GeoRAM su SRAM esterna e registri nell'FPGA
   di interfaccia (`C6502_Interface.vhd`); lo schema attuale serve la GeoRAM dall'ESP32. Va stabilita
   quale è quella di riferimento.
-- `addressdecoder.sch` (74LVC138, decodifica `$D1xx`/`$D6xx`/`$D8xx` Atari) era fuori dalla gerarchia
-  e non serve al C64: tolto dal repository il 2026-11-02 (resta nella storia git).
-- PCB (§2.13).
+- Collaudo delle prime schede v1.0 (§2.13).

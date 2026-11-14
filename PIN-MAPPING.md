@@ -16,12 +16,9 @@ VERA e una GeoRAM 256 KB emulata nelle aree I/O `IO1`/`IO2`:
 > **Documenti collegati:** requisiti e verifiche hardware in
 > [`VERA-C64-HW-REQUIREMENTS.md`](VERA-C64-HW-REQUIREMENTS.md).
 >
-> **Origine e allineamento con RBL-XE.** Lo schema è quello di VERA Module RBL-XE (revisione del
-> 2026-10-26: gating di `~OE` di `U19`, strapping dell'ESP32, IRQ open-drain, canali di riserva) con il
-> foglio `cartridgeInterface.sch` riadattato alla porta di espansione del C64 (§ 9). I GPIO
-> dell'ESP32-S3 sono gli stessi di RBL-XE, tranne GPIO 41/42, che qui sono gli **ingressi** `/IO1`/`/IO2`
-> invece delle uscite `EXTSEL_N`/`MPD`. `U6` è il transceiver C64→scheda, `U16` quello scheda→C64.
-> La netlist `VERA-MODULE-RBL.net` è allineata allo schema; **il PCB è ancora quello Atari** (§ 9).
+> **Schema.** Il foglio `cartridgeInterface.sch` contiene la porta di espansione del C64 (§ 9).
+> GPIO 41/42 sono gli **ingressi** `/IO1`/`/IO2`. `U6` è il transceiver C64→scheda, `U16` quello
+> scheda→C64 (canali di riserva). Netlist `VERA-MODULE-RBL.net`, schema e PCB sono allineati.
 
 ---
 
@@ -75,7 +72,7 @@ del C64, 22/Z sono a sinistra e 1/A a destra.
 | J, K, L, M, N, P | A13…A8 | `A13`…`A8` | `U3` → GPIO 36, 35, 34, 33, 21, 20 |
 | R…Y | A7…A0 | `A7`…`A0` | `U4` → GPIO 19…12 |
 
-> **Audio.** La porta di espansione non ha un ingresso audio (sull'Atari c'era `AUDIO`, ECI pin 5).
+> **Audio.** La porta di espansione non ha un ingresso audio.
 > Il mix L+R della VERA (`R2`, `R6`, `C66`) resta sul test point **`TP5`** (rete `AUDIO`): se si vuole
 > mixarlo col SID va portato a mano all'ingresso audio della presa A/V (DIN pin 5, EXT IN del SID).
 
@@ -194,16 +191,16 @@ all'oscilloscopio sulla scheda reale.
 |---|---|---|---|---|---|---|---|---|
 | PHI2 | E | 1 | 6 | GPIO1 | Input | HIGH | via U6 | Clock fase 2 CPU 6510 — 0,985 MHz PAL / 1,023 MHz NTSC |
 | R/W\_ | 5 | 2 | 7 | GPIO2 | Input | HIGH=read | via U6 | Read / Not-Write |
-| /IO1 | 7 | 41 | 47 | MTDI | Input | LOW | via U6 | Accesso CPU a `$DE00–$DEFF`; abilita anche `U19` nelle letture GeoRAM (§ 6). Rete `~mIO1` (era `~mEXSEL` su RBL-XE). Ex-JTAG, reclaimed. |
-| /IO2 | 10 | 42 | 48 | MTMS | Input | LOW | via U6 | Accesso CPU a `$DF00–$DFFF`. Rete `~mIO2` (era `~mMPD` su RBL-XE). Ex-JTAG, reclaimed. |
+| /IO1 | 7 | 41 | 47 | MTDI | Input | LOW | via U6 | Accesso CPU a `$DE00–$DEFF`; abilita anche `U19` nelle letture GeoRAM (§ 6). Rete `~mIO1`. Ex-JTAG, reclaimed. |
+| /IO2 | 10 | 42 | 48 | MTMS | Input | LOW | via U6 | Accesso CPU a `$DF00–$DFFF`. Rete `~mIO2`. Ex-JTAG, reclaimed. |
 | DEV\_SEL\_N | — | 40 | 45 | MTDO | **Output** | LOW | **direct** | VERA chip select (3.3 V, rete `~mVCS0`) per `$DF00–$DF1F` con la VERA selezionata (`$DFFD`); pull-up `R36`. Ex-JTAG, reclaimed. |
 | ARESET | C | 37 | 42 | GPIO37 | **Output** | LOW | via U27 | `/RESET` del C64 (rete `~C64_RESET` → `~RST`) attraverso il buffer **open-drain** `U27` SN74LVC1G07: la scheda tira solo in basso, la linea resta condivisa con la scheda madre e le altre cartucce. Pull-down `R70` 10 kΩ: C64 in reset anche mentre l'ESP32 si avvia; basso finché la FPGA non è configurata. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.12. |
 | CRESET | — | 38 | 43 | GPIO38 | **Output** | LOW | **direct** | VERA FPGA Reset — 3.3 V, diretto al chip FPGA. |
 | CDONE | — | 39 | 44 | MTCK | Input | HIGH | **direct** | VERA FPGA configured status — HIGH = configurazione completata. Ex-JTAG, reclaimed. |
 | ABUS\_OE\_N | — | 47 | 37 | SPICLK\_P | **Output** | LOW | **direct** | Rete `~ABUS_OE`: `~OE` di `U3` (A8–A15) e `U4` (A0–A7), pull-up `R7`/`R34` 10 kΩ → 3V3. Alto (traslatori spenti) durante il reset dell'ESP32, così GPIO 45/46 leggono LOW; il firmware lo porta basso in `setup()`. Dominio VDD\_SPI = 3,3 V. |
 
-Le pull-up 10 kΩ `R53` e `R65`, che su RBL-XE tenevano alti `EXTSEL_N`/`MPD`, restano su `~mIO1` e
-`~mIO2`: sono innocue, perché le due reti sono pilotate da `U6`.
+Le pull-up 10 kΩ `R53` e `R65` su `~mIO1` e `~mIO2` sono innocue, perché le due reti sono pilotate
+da `U6`.
 
 ### Dedicated GPIO — canali usati
 
@@ -335,8 +332,7 @@ GPIO 47 è in alta impedenza (nessuna pull interna, nessun glitch), `R7` spegne 
 
 ### U6 — Control signals, C64 → MCU (fisso, input)
 
-Su RBL-XE i canali 0, 1, 2, 5, 6 portavano `D1XX`, `S4`, `S5`, `CCTL`, `REFRESH` a LED e test point;
-qui portano i segnali C64 corrispondenti per funzione o per misura.
+I canali 0, 1, 2, 5, 6 portano i segnali del C64 che servono alla scheda o alle misure.
 
 | Canale (pin A → B) | Lato A (5 V, C64) | Lato B (3,3 V) | Note |
 |---|---|---|---|
@@ -353,7 +349,7 @@ qui portano i segnali C64 corrispondenti per funzione o per misura.
 
 | Canale | Lato B (3,3 V, ESP32-S3) | Lato A (5 V, C64) | Note |
 |---|---|---|---|
-| — | GND con una 0 Ω ciascuno (pin 16 `R80`, 18 `R78`, 17 `R79`, 19 `R73`, 20 `R76`, 21 `R77`, 14 `R72`, 15 `R75`) | non collegati (pin 8, 6, 7, 5, 4, 3, 10, 9) | Canali di riserva: `U16` non pilota più nessuna linea del C64. I pin 18/17 erano `EXTSEL`/`MPD` su RBL-XE, il pin 16 → 8 il reset push-pull (ora `U27`) |
+| — | GND con una 0 Ω ciascuno (pin 16 `R80`, 18 `R78`, 17 `R79`, 19 `R73`, 20 `R76`, 21 `R77`, 14 `R72`, 15 `R75`) | non collegati (pin 8, 6, 7, 5, 4, 3, 10, 9) | Canali di riserva: `U16` non pilota nessuna linea del C64; il reset passa da `U27` |
 | — | GPIO 37 (pin 42) — `~C64_RESET` | `/RESET` (C) | **Non passa da `U16`**: buffer open-drain `U27` SN74LVC1G07DBVR (A pin 2 ← `~C64_RESET`, Y pin 4 → `~RST`), 3V3 con `C70` 100 nF. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.12 |
 | — | `~mVIRQ` (FPGA `U2` pin 32) | `/IRQ` (4) | **Non passa da `U16`**: buffer open-drain `U26` SN74LVC1G07DBVR (A pin 2 ← `~mVIRQ`, Y pin 4 → `~IRQ`), 3V3 con `C69` 100 nF. Vedere `VERA-C64-HW-REQUIREMENTS.md` §2.3 |
 
@@ -362,11 +358,10 @@ qui portano i segnali C64 corrispondenti per funzione o per misura.
 DIR è pilotato da un invertitore **SN74HCT04DR U23** (pin 1→2) a partire da R/W\_ (direzione verso
 il C64 durante i cicli di lettura del 6510, verso l'ESP32 durante i cicli di scrittura).
 
-> **`~OE_` (pin 22) = `NAND(PHI2, NAND(R/W, DEV_SEL_N, /IO1))`**, realizzato con le due SN74LVC00A di
-> RBL-XE (`U24`, `U25`): `U19` è acceso in scrittura, nelle letture VERA (`DEV_SEL_N`) e nelle letture
+> **`~OE_` (pin 22) = `NAND(PHI2, NAND(R/W, DEV_SEL_N, /IO1))`**, realizzato con le due SN74LVC00A
+> `U24`, `U25`: `U19` è acceso in scrittura, nelle letture VERA (`DEV_SEL_N`) e nelle letture
 > della finestra GeoRAM (`/IO1`), spento in φ1 e in tutte le altre letture (RAM, ROM e I/O della scheda
-> madre). Rispetto a RBL-XE l'ingresso `~mEXSEL` di `U24` (pin 4) è diventato `~mIO1` e `~mMPD` (pin 5)
-> è fisso a 3V3. Dettaglio, piedinatura e tempi in `VERA-C64-HW-REQUIREMENTS.md` §2.1.
+> madre). L'ingresso pin 4 di `U24` è `~mIO1`, il pin 5 è fisso a 3V3. Dettaglio, piedinatura e tempi in `VERA-C64-HW-REQUIREMENTS.md` §2.1.
 >
 > **GeoRAM sempre attiva:** ogni lettura a `$DExx` abilita `U19` e l'ESP32 pilota D0–D7 con il
 > byte della pagina GeoRAM corrente, indipendentemente dal latch `$DFFD`.
@@ -402,7 +397,7 @@ Pin non assegnati al progetto, esclusi strapping e flash in-package.
 | 48 | 36 | SPICLK\_N | Libero. Dominio VDD\_SPI (3.3 V sulla FN8, datasheet Table 1-1); usato dalla memoria solo in Octal SPI |
 | 22–25 | — | — | Non esistono su ESP32-S3 |
 
-> Resta libero solo GPIO 48 (pin 36), come su RBL-XE; GPIO 47 (pin 37) è `ABUS_OE_N`. GPIO 41 =
+> Resta libero solo GPIO 48 (pin 36); GPIO 47 (pin 37) è `ABUS_OE_N`. GPIO 41 =
 > /IO1, GPIO 42 = /IO2; GPIO 33–36 = A10–A13, GPIO 45, 46 = A14–A15. GPIO 3 non è usato ma è un pin di strapping:
 > lo fissa `R71` (10 kΩ → 3V3). A8–A15 non servono alla decodifica: se occorressero altri ingressi
 > (per esempio `BA` o `/DMA`, oggi solo su test point), A8–A13 (GPIO 20, 21, 33, 34, 35, 36) sono i
@@ -486,21 +481,20 @@ memoria da Table 2-14 "Pin Mapping Between Chip and Flash or PSRAM" (pag. 31).
 
 ---
 
-## 9. Modifiche hardware rispetto alla versione Atari
+## 9. Porta di espansione: scelte hardware
 
-Lo schema è stato copiato da RBL-XE (revisione del 2026-10-26) e adattato nel foglio
-`cartridgeInterface.sch`. La netlist è stata aggiornata e confrontata con gli schemi da uno
-script che ne ricava la connettività (246 reti, nessuna differenza).
+Il foglio `cartridgeInterface.sch` collega la scheda alla porta di espansione. Netlist, schema e PCB
+sono allineati (verificati con `kicadcli pcb check`).
 
-| # | Modifica | Stato |
-|---|---|---|
-| 1 | `CART1` (cartuccia Atari) ed `ECI1` → **`CART1` porta di espansione C64**, 2 × 22 a pettine, passo 2,54 mm (simbolo e footprint nuovi in RetroBitLab-Library) | schema, netlist |
-| 2 | `U6` canale 0: `/IO1` → `~mIO1` → GPIO 41 (era `~D1XX` → LED); canale 5: `/IO2` → `~mIO2` → GPIO 42 (era `~CCTL` → LED) | schema, netlist |
-| 3 | `U6` canali 1, 2, 6: `BA`, `/DMA`, `/RESET` verso i test point `TP3`, `TP2`, `TP4` (erano `S4`, `S5`, `REFRESH`) | schema, netlist |
-| 4 | Gating di `U19`: `U24` pin 4 = `~mIO1` (era `~mEXSEL`), pin 5 = 3V3 (era `~mMPD`) | schema, netlist |
-| 5 | `U16` pin 18 e 17 (ex `EXTSEL`/`MPD`) a GND con `R78`/`R79` 0 Ω; uscite pin 6 e 7 non collegate | schema, netlist |
-| 6 | `/RESET` C64 open-drain: `U27` SN74LVC1G07 (+ `C70`) fra `~C64_RESET` e `~RST`, come `U26` per l'IRQ; `U16` pin 16 a GND con `R80`, pin 8 non collegato; rete `~ATARI_RESET` rinominata `~C64_RESET` | schema, netlist |
-| 7 | Test point `RD4`, `RD5`, `~HALT1` (segnali Atari): `RD4` eliminato, gli altri riusati (`TP6` = `~mIO2`, `TP5` = `AUDIO`); `TP2`–`TP7` rinumerati | schema, netlist |
-| 8 | `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `/NMI`, Dot Clock: non collegati (flag NC) | schema, netlist |
-| 9 | **PCB**: contorno scheda, posizione del connettore a pettine e sbroglio dei nuovi collegamenti vanno rifatti partendo dal PCB Atari con "Update PCB from netlist" | **da fare** |
-| 10 | Loghi: `LOGO2` diventa `C64 READY` (footprint `c64_ready_8mm_REV`), `LOGO4` (logo del bus DUOCart Atari) eliminato; BOM `VERA-MODULE-RBL.csv` rigenerata dalla netlist | schema, netlist |
+| # | Scelta |
+|---|---|
+| 1 | **`CART1` porta di espansione C64**, 2 × 22 contatti a pettine, passo 2,54 mm (simbolo e footprint in RetroBitLab-Library) |
+| 2 | `U6` canale 0: `/IO1` → `~mIO1` → GPIO 41 e LED `LD5`; canale 5: `/IO2` → `~mIO2` → GPIO 42 e LED `LD1` |
+| 3 | `U6` canali 1, 2, 6: `BA`, `/DMA`, `/RESET` verso i test point `TP3`, `TP2`, `TP4`, solo per misura |
+| 4 | Gating di `U19`: `U24` pin 4 = `~mIO1`, pin 5 = 3V3 |
+| 5 | `U16`: tutti i canali di riserva, ingressi a GND con resistenze da 0 Ω, uscite non collegate |
+| 6 | `/RESET` open-drain: `U27` SN74LVC1G07 (+ `C70`) fra `~C64_RESET` e `~RST`, come `U26` per `/IRQ` |
+| 7 | Test point `TP2`–`TP7` (`TP5` = `AUDIO`, mix L+R della VERA; `TP6` = `~mIO2`) |
+| 8 | `/GAME`, `/EXROM`, `/ROML`, `/ROMH`, `/NMI`, Dot Clock: non collegati (flag NC) |
+| 9 | **PCB**: contorno a cartuccia con il connettore a pettine, 4 layer, sbrogliato (v1.0) |
+| 10 | Logo `LOGO2` `C64 READY` (footprint `c64_ready_8mm_REV`) |

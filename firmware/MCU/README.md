@@ -19,11 +19,10 @@ Ogni ciclo è qualificato dalle linee `/IO1` (GPIO 41) e `/IO2` (GPIO 42) della
 porta di espansione, che il PLA asserisce solo per accessi CPU: i fetch del VIC-II
 vengono ignorati. La pagina è data dalla linea `/IOx` attiva, A0–A7 danno l'offset.
 
-L'architettura è quella del firmware di VERA Module RBL-XE (loop del bus sul Core 1 a
-interruzioni mascherate, percorso critico in assembly, tabelle di decodifica in
-`bus_decode.h`, log senza lock), adattata al bus del C64: sull'Atari l'indirizzo è
-valido già in φ1 e il loop decodifica in anticipo, sul C64 la porta porta l'indirizzo
-del 6510 solo con φ2 alto (`AEC` alto), quindi il loop decodifica all'arrivo di `/IOx`.
+Il loop del bus gira sul Core 1 a interruzioni mascherate, con il percorso critico in
+assembly, le tabelle di decodifica in `bus_decode.h` e un log senza lock. La porta di
+espansione porta l'indirizzo del 6510 solo con φ2 alto (`AEC` alto), quindi il loop
+decodifica all'arrivo di `/IOx`.
 
 ---
 
@@ -106,7 +105,7 @@ caricate prima dell'attesa. Dal disassemblato, dopo che `/IOx` è visto basso:
 5 istruzioni. I dati del loop (`bus_io2`, `georam_256k`, `log_ring`, stato della
 scheda) sono in DRAM, il codice in IRAM.
 
-Non serve la previsione del fronte di discesa usata su RBL-XE: gli effetti delle
+Non serve una previsione del fronte di discesa: gli effetti delle
 scritture durano poche decine di cicli e dopo la discesa di PHI2 resta tutto φ1
 (~490 ns) prima del ciclo successivo.
 
@@ -159,8 +158,8 @@ I pin GPIO 39–42 erano originariamente riservati a JTAG; vengono liberati in
 | CDONE        | 39          | 44         | VERA programmata (input)          |
 | —            | 3           | 8          | Non usato; strapping (JTAG source), pull-up R71 10 kΩ |
 | DEV\_SEL\_N  | 40          | 45         | Chip-select VERA (output, dedicated) |
-| /IO1         | 41          | 47         | Input dedicated (su RBL-XE: `EXTSEL_N`) |
-| /IO2         | 42          | 48         | Input dedicated (su RBL-XE: `MPD`) |
+| /IO1         | 41          | 47         | Input dedicated |
+| /IO2         | 42          | 48         | Input dedicated |
 | ABUS\_OE\_N  | 47          | 37         | `~OE` di U3/U4 (output): alto durante il reset (pull-up R7/R34) per gli strapping di GPIO 45/46, basso da `setup()` |
 | Debug TX     | 43          | 49         | UART0 TX (Serial)                 |
 | Debug RX     | 44          | 50         | UART0 RX (Serial)                 |
@@ -169,8 +168,8 @@ Fino a quando `setup()` porta basso `PIN_ABUS_OE_N`, U3 e U4 sono spenti: GPIO 4
 (A14/A15) leggono LOW dai pull-down interni a ogni reset del chip, quindi VDD\_SPI = 3,3 V
 e il download boot funziona anche con il C64 acceso (`VERA-C64-HW-REQUIREMENTS.md` §2.9).
 
-Per la mappatura completa GPIO→QFN-56, i level shifter e le modifiche rispetto alla
-versione Atari vedere `PIN-MAPPING.md` nella root.
+Per la mappatura completa GPIO→QFN-56, i level shifter e la porta di espansione vedere
+`PIN-MAPPING.md` nella root.
 
 ---
 
@@ -257,10 +256,9 @@ nella struttura `card` in DRAM.
   `/IO1`/`/IO2` rispetto a PHI2 (PLA + 74LS139, qualche decina di ns) e l'istante
   di campionamento delle scritture vanno misurati all'oscilloscopio. Se la finestra
   di `/IOx` è troppo corta la scheda perde cicli; la latenza di un accesso APB ai
-  registri GPIO non è mai stata misurata (sull'Atari è il limite; sul C64, con
-  ~490 ns di φ2, il margine è molto più ampio).
-- **PCB ancora Atari.** Schema e netlist sono adattati alla porta di espansione
-  (`PIN-MAPPING.md` § 9), il PCB va rifatto.
+  registri GPIO non è mai stata misurata (con ~490 ns di φ2 il margine è ampio).
+- **Scheda non ancora collaudata.** PCB v1.0 in pre-produzione: tutti i tempi vanno
+  verificati sull'hardware.
 
 ## 5. Compilazione e Flashing
 

@@ -2,14 +2,14 @@
 <export version="D">
   <design>
     <source>/home/debian/Progetti/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.sch</source>
-    <date>Sat 14 Nov 2026 12:02:50 PM CET</date>
-    <tool>kicadcli 1.1 (KiCad 5 legacy schematic, pcbnew 5)</tool>
+    <date>Sat 14 Nov 2026 07:04:56 PM CET</date>
+    <tool>kicadcli 1.2 (KiCad 5 legacy schematic, pcbnew 5)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
         <title>VERA FPGA Audio &amp; Video Board</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>VERA-MODULE-RBL.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -22,7 +22,7 @@
         <title>VERA MODULE AND PROGRAMMING CONNECTOR</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>vera-fpga.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -35,7 +35,7 @@
         <title>BUS DECODER</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>busdecoder.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -48,7 +48,7 @@
         <title>C64 EXPANSION PORT INTERFACE AND BUS LEVEL SHIFTERS</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>cartridgeInterface.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -61,7 +61,7 @@
         <title>uSD Card, FPGA FLASH and AUDIO SECTION</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>vera-fpga-flash.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -87,7 +87,7 @@
         <title>VGA ANALOG AND EXTERNAL VIDEO CONNECTOR</title>
         <company>RetroBit Lab</company>
         <rev>1.0</rev>
-        <date>2026-10-26</date>
+        <date>2026-11-14</date>
         <source>vga-analog.sch</source>
         <comment number="1" value="Gianluca Renzi"/>
         <comment number="2" value=""/>
@@ -101,7 +101,7 @@
       <value>Fiducial</value>
       <footprint>Fiducial:Fiducial_0.5mm_Mask1mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="Fiducial" description=""/>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68BFDCEA</tstamp>
     </comp>
@@ -109,7 +109,7 @@
       <value>Fiducial</value>
       <footprint>Fiducial:Fiducial_0.5mm_Mask1mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="Fiducial" description=""/>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68BFDF14</tstamp>
     </comp>
@@ -117,7 +117,7 @@
       <value>Fiducial</value>
       <footprint>Fiducial:Fiducial_0.5mm_Mask1mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="Fiducial" description=""/>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68BFE1CD</tstamp>
     </comp>
@@ -125,7 +125,7 @@
       <value>Fiducial</value>
       <footprint>Fiducial:Fiducial_0.5mm_Mask1mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="Fiducial" description=""/>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68BFE3AF</tstamp>
     </comp>
@@ -168,7 +168,7 @@
       <value>MountingHole</value>
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="MountingHole" description=""/>
+      <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68F52DE4</tstamp>
     </comp>
@@ -176,7 +176,7 @@
       <value>MountingHole</value>
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="MountingHole" description=""/>
+      <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68FB49D3</tstamp>
     </comp>
@@ -184,7 +184,7 @@
       <value>MountingHole</value>
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="MountingHole" description=""/>
+      <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68FB4BE9</tstamp>
     </comp>
@@ -192,9 +192,16 @@
       <value>MountingHole</value>
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Mechanical" part="MountingHole" description=""/>
+      <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>68FB4D44</tstamp>
+    </comp>
+    <comp ref="LOGO4">
+      <value>RETROCAMPUS</value>
+      <footprint>RetroBitLab:retrocampus_silkscreen_16.9mm_8.3mm</footprint>
+      <libsource lib="RetroBitLab" part="LOGO" description="Any valid LOGO Images can be placed here"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>6AFB190A</tstamp>
     </comp>
     <comp ref="R5">
       <value>10K</value>
@@ -412,7 +419,7 @@
       <value>SolderJumper_2_Open</value>
       <footprint>Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Jumper" part="SolderJumper_2_Open" description=""/>
+      <libsource lib="Jumper" part="SolderJumper_2_Open" description="Solder Jumper, 2-pole, open"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>6A3662B0</tstamp>
     </comp>
@@ -420,7 +427,7 @@
       <value>SolderJumper_2_Open</value>
       <footprint>Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Jumper" part="SolderJumper_2_Open" description=""/>
+      <libsource lib="Jumper" part="SolderJumper_2_Open" description="Solder Jumper, 2-pole, open"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>6A375357</tstamp>
     </comp>
@@ -894,7 +901,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>68D60D77</tstamp>
     </comp>
@@ -902,7 +909,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>68D60D89</tstamp>
     </comp>
@@ -910,7 +917,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>68D60D8F</tstamp>
     </comp>
@@ -918,7 +925,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>68D60D95</tstamp>
     </comp>
@@ -926,7 +933,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>68D60D9B</tstamp>
     </comp>
@@ -934,7 +941,7 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6A29D7B8</tstamp>
     </comp>
@@ -1406,7 +1413,7 @@
       <value>Jumper_2_Open</value>
       <footprint>Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Jumper" part="Jumper_2_Open" description=""/>
+      <libsource lib="Jumper" part="Jumper_2_Open" description="Jumper, 2-pole, open"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68D0E271</tstamp>
     </comp>
@@ -1766,7 +1773,7 @@
       <value>DNP</value>
       <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Device" part="R_Small" description=""/>
+      <libsource lib="Device" part="R_Small" description="Resistor, small symbol"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68E329A6</tstamp>
     </comp>
@@ -2168,7 +2175,7 @@
       <value>TP5V</value>
       <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
       <datasheet>~</datasheet>
-      <libsource lib="Connector" part="TestPoint" description=""/>
+      <libsource lib="Connector" part="TestPoint" description="test point"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68E1F6E9</tstamp>
     </comp>
@@ -2931,33 +2938,39 @@
         <pin num="2" name="~" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Connector" part="Connector_TestPoint">
+    <libpart lib="Connector" part="TestPoint">
+      <description>test point</description>
+      <docs>~</docs>
       <footprints>
         <fp>Pin*</fp>
         <fp>Test*</fp>
       </footprints>
       <fields>
         <field name="Reference">TP</field>
-        <field name="Value">Connector_TestPoint</field>
+        <field name="Value">TestPoint</field>
       </fields>
       <pins>
         <pin num="1" name="1" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Device" part="Device_R_Small">
+    <libpart lib="Device" part="R_Small">
+      <description>Resistor, small symbol</description>
+      <docs>~</docs>
       <footprints>
         <fp>R_*</fp>
       </footprints>
       <fields>
         <field name="Reference">R</field>
-        <field name="Value">Device_R_Small</field>
+        <field name="Value">R_Small</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
         <pin num="2" name="~" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Jumper" part="Jumper_Jumper_2_Open">
+    <libpart lib="Jumper" part="Jumper_2_Open">
+      <description>Jumper, 2-pole, open</description>
+      <docs>~</docs>
       <footprints>
         <fp>Jumper*</fp>
         <fp>TestPoint*2Pads*</fp>
@@ -2965,42 +2978,48 @@
       </footprints>
       <fields>
         <field name="Reference">JP</field>
-        <field name="Value">Jumper_Jumper_2_Open</field>
+        <field name="Value">Jumper_2_Open</field>
       </fields>
       <pins>
         <pin num="1" name="A" type="passive"/>
         <pin num="2" name="B" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Jumper" part="Jumper_SolderJumper_2_Open">
+    <libpart lib="Jumper" part="SolderJumper_2_Open">
+      <description>Solder Jumper, 2-pole, open</description>
+      <docs>~</docs>
       <footprints>
         <fp>SolderJumper*Open*</fp>
       </footprints>
       <fields>
         <field name="Reference">JP</field>
-        <field name="Value">Jumper_SolderJumper_2_Open</field>
+        <field name="Value">SolderJumper_2_Open</field>
       </fields>
       <pins>
         <pin num="1" name="A" type="passive"/>
         <pin num="2" name="B" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Mechanical" part="Mechanical_Fiducial">
+    <libpart lib="Mechanical" part="Fiducial">
+      <description>Fiducial Marker</description>
+      <docs>~</docs>
       <footprints>
         <fp>Fiducial*</fp>
       </footprints>
       <fields>
         <field name="Reference">FID</field>
-        <field name="Value">Mechanical_Fiducial</field>
+        <field name="Value">Fiducial</field>
       </fields>
     </libpart>
-    <libpart lib="Mechanical" part="Mechanical_MountingHole">
+    <libpart lib="Mechanical" part="MountingHole">
+      <description>Mounting Hole without connection</description>
+      <docs>~</docs>
       <footprints>
         <fp>MountingHole*</fp>
       </footprints>
       <fields>
         <field name="Reference">H</field>
-        <field name="Value">Mechanical_MountingHole</field>
+        <field name="Value">MountingHole</field>
       </fields>
     </libpart>
     <libpart lib="RetroBitLab" part="40.000Mhz">
@@ -4045,16 +4064,16 @@
       <uri>/home/debian/Progetti/RetroBitLab-Library/CRES0805.lib</uri>
     </library>
     <library logical="Connector">
-      <uri>/usr/share/kicad/library/Connector.lib</uri>
+      <uri>/home/debian/.cache/kicad5/library/Connector.lib</uri>
     </library>
     <library logical="Device">
-      <uri>/usr/share/kicad/library/Device.lib</uri>
+      <uri>/home/debian/.cache/kicad5/library/Device.lib</uri>
     </library>
     <library logical="Jumper">
-      <uri>/usr/share/kicad/library/Jumper.lib</uri>
+      <uri>/home/debian/.cache/kicad5/library/Jumper.lib</uri>
     </library>
     <library logical="Mechanical">
-      <uri>/usr/share/kicad/library/Mechanical.lib</uri>
+      <uri>/home/debian/.cache/kicad5/library/Mechanical.lib</uri>
     </library>
     <library logical="RetroBitLab">
       <uri>/home/debian/Progetti/RetroBitLab-Library/RetroBitLab.lib</uri>

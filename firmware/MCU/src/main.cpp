@@ -119,7 +119,7 @@
  *
  * On the C64 the expansion port carries the 6510 address only while AEC is
  * high, i.e. during PHI2 high (PHI1 belongs to the VIC-II), so the card
- * cannot decode in advance during PHI1 as the Atari version does.  The PLA
+ * cannot decode in advance during PHI1.  The PLA
  * qualifies CPU accesses to $DExx/$DFxx with /IO1 or /IO2 (PLA + 74LS139, a
  * few tens of ns after PHI2 rises), and the address is stable by then.
  *

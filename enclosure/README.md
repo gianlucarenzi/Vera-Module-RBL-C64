@@ -17,13 +17,12 @@ cambia la scheda.
 
 ```bash
 ./output_job.sh <versione>          # se manca images/VERA-MODULE-RBL.step
-tools/make_enclosure.sh 151         # RBL-C64 (189 per RBL-XE)
+tools/make_enclosure.sh 151         # taglio a y = 151 mm
 tools/make_enclosure.sh 151 --no-anim   # solo i gusci, senza animazione
 ```
 
 L'argomento è la **y KiCad (mm) dove finisce l'involucro** e inizia il pettine da
-inserire nel computer: **189** per RBL-XE (pettini cartuccia ed ECI da y 190),
-**151** per RBL-C64 (pettine della porta di espansione da y 152).
+inserire nel computer: **151** per questa scheda (pettine della porta di espansione da y 152).
 
 I passi, che si possono anche lanciare a mano:
 
