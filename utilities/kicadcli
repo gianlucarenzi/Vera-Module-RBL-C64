@@ -1,0 +1,941 @@
+#!/usr/bin/env python3
+"""kicadcli - command line tool for KiCad 5 projects (legacy .sch / .lib,
+.kicad_pcb).  Named kicadcli so it does not clash with the KiCad 9
+kicad-cli.
+
+Schematic commands parse the legacy files directly (eeschema 5 has no
+Python API); PCB commands use the pcbnew module of KiCad 5.
+
+  kicadcli version
+  kicadcli sch list    FILE.sch [--json]
+  kicadcli sch netlist FILE.sch [--json] [-o OUT]
+  kicadcli sch pins    FILE.sch REF [REF ...]
+  kicadcli sch erc     FILE.sch
+  kicadcli sch export-xml FILE.sch [-o OUT.xml]   (eeschema 5 'Generate BOM' XML)
+  kicadcli pcb pads    FILE.kicad_pcb [REF ...]
+  kicadcli pcb check   FILE.kicad_pcb FILE.sch
+  kicadcli pcb gerbers FILE.kicad_pcb -o DIR
+  kicadcli pcb drill   FILE.kicad_pcb -o DIR
+
+Common options: --cache-first (take symbols from PROJECT-cache.lib before the
+libraries), --lib-table FILE (extra sym-lib-table).
+
+Symbols are resolved like eeschema 5: project sym-lib-table, then the global
+one (~/.config/kicad/sym-lib-table), environment variables from
+~/.config/kicad/kicad_common, then PROJECT-cache.lib as fallback.
+
+Connectivity rules: wires connect at shared end points; a junction, a label,
+a pin or a wire end lying inside another wire connects to it (eeschema
+splits wires there when it saves; 'sch erc' reports the cases without a
+junction).  Invisible power-input pins (power symbols and hidden IC power
+pins) join the global net named after the pin.  Buses are not followed.
+"""
+import argparse
+import json
+import os
+import re
+import shlex
+import sys
+from collections import defaultdict
+
+VERSION = "kicadcli 1.1 (KiCad 5 legacy schematic, pcbnew 5)"
+
+
+def die(msg):
+    sys.stderr.write(f"kicadcli: {msg}\n")
+    sys.exit(2)
+
+
+# ---------------------------------------------------------------- environment
+def kicad_env():
+    env = {"KICAD_SYMBOL_DIR": "/usr/share/kicad/library",
+           "KISYSMOD": "/usr/share/kicad/modules",
+           "KISYS3DMOD": "/usr/share/kicad/modules/packages3d"}
+    common = os.path.expanduser("~/.config/kicad/kicad_common")
+    if os.path.exists(common):
+        sect = None
+        for line in open(common, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if line.startswith("["):
+                sect = line
+            elif sect == "[EnvironmentVariables]" and "=" in line:
+                k, v = line.split("=", 1)
+                env[k] = v
+    for k, v in os.environ.items():
+        env[k] = v
+    return env
+
+
+def expand(path, env, projdir):
+    env = dict(env, KIPRJMOD=projdir)
+    path = re.sub(r"\$\{(\w+)\}", lambda m: env.get(m.group(1), m.group(0)), path)
+    return os.path.expanduser(path)
+
+
+def read_lib_table(fname, env, projdir):
+    libs = {}
+    if not os.path.exists(fname):
+        return libs
+    txt = open(fname, encoding="utf-8").read()
+    for m in re.finditer(r'\(lib\s+\(name\s+"?([^)"]+)"?\)\s*\(type\s+"?(\w+)"?\)\s*\(uri\s+"?([^)"]+)"?\)', txt):
+        name, typ, uri = m.groups()
+        if typ.lower() == "legacy":
+            libs[name] = expand(uri, env, projdir)
+    return libs
+
+
+# ---------------------------------------------------------------- .lib files
+class Symbol:
+    def __init__(self, name, ref):
+        self.name, self.ref = name, ref
+        self.pins = []          # dicts: name num x y unit convert etype shape
+        self.power = False
+        self.fields = {}        # n -> value
+        self.fieldnames = {}    # n -> name (F4+)
+        self.fplist = []
+        self.aliases = []
+        self.libfile = None
+
+
+QSTR = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+
+def unq(t):
+    """KiCad 5 quoted string: \\\\ and \\" escapes"""
+    return re.sub(r'\\(.)', r'\1', t)
+
+
+def parse_dcm(fname):
+    docs = {}
+    cur = None
+    if not os.path.exists(fname):
+        return docs
+    for line in open(fname, encoding="utf-8", errors="replace"):
+        line = line.rstrip("\n")
+        if line.startswith("$CMP "):
+            cur = docs.setdefault(line[5:].strip(), {"D": "", "K": "", "F": ""})
+        elif line.startswith("$ENDCMP"):
+            cur = None
+        elif cur is not None and line[:2] in ("D ", "K ", "F "):
+            cur[line[0]] = line[2:]
+    return docs
+
+
+def parse_lib(fname):
+    syms = {}
+    cur = None
+    infp = False
+    for line in open(fname, encoding="utf-8", errors="replace"):
+        if line.startswith("$FPLIST"):
+            infp = True
+            continue
+        if line.startswith("$ENDFPLIST"):
+            infp = False
+            continue
+        if infp and cur is not None:
+            cur.fplist.append(line.strip())
+            continue
+        if line.startswith("DEF "):
+            p = shlex.split(line, posix=False)
+            cur = Symbol(p[1].strip('"').lstrip("~"), p[2])
+            cur.power = len(p) > 9 and p[9] == "P"
+            cur.libfile = fname
+            syms[cur.name] = cur
+        elif cur is None:
+            continue
+        elif line.startswith("ALIAS "):
+            for a in line.split()[1:]:
+                syms[a] = cur
+                cur.aliases.append(a)
+        elif re.match(r"F\d+ ", line):
+            n = int(line.split()[0][1:])
+            q = QSTR.findall(line)
+            cur.fields[n] = unq(q[0]) if q else ""
+            if n >= 4 and len(q) > 1:
+                cur.fieldnames[n] = unq(q[-1])
+        elif line.startswith("X "):
+            p = line.split()
+            cur.pins.append({"name": p[1], "num": p[2], "x": int(p[3]), "y": int(p[4]),
+                             "unit": int(p[9]), "convert": int(p[10]), "etype": p[11],
+                             "shape": p[12] if len(p) > 12 else ""})
+        elif line.startswith("ENDDEF"):
+            cur = None
+    return syms
+
+
+class Libs:
+    def __init__(self, schfile, cache_first=False, extra_table=None):
+        self.projdir = os.path.dirname(os.path.abspath(schfile))
+        env = kicad_env()
+        table = {}
+        tables = [os.path.expanduser("~/.config/kicad/sym-lib-table"),
+                  os.path.join(self.projdir, "sym-lib-table")]
+        if extra_table:
+            tables.append(extra_table)
+        for t in tables:
+            table.update(read_lib_table(t, env, self.projdir))
+        self.table = table
+        self.loaded = {}
+        self.cache = {}
+        self.cache_first = cache_first
+        base = os.path.splitext(os.path.abspath(schfile))[0]
+        for c in (base + "-cache.lib",):
+            if os.path.exists(c):
+                self.cache = parse_lib(c)
+        self.where = {}
+
+    def lib(self, nick):
+        if nick not in self.loaded:
+            path = self.table.get(nick)
+            self.loaded[nick] = parse_lib(path) if path and os.path.exists(path) else None
+        return self.loaded[nick]
+
+    def get(self, libid):
+        nick, _, name = libid.partition(":") if ":" in libid else ("", "", libid)
+        cname = f"{nick}_{name}" if nick else name
+        order = ["cache", "lib"] if self.cache_first else ["lib", "cache"]
+        for src in order:
+            if src == "cache" and cname in self.cache:
+                self.where[libid] = "cache"
+                return self.cache[cname]
+            if src == "lib" and nick:
+                lib = self.lib(nick)
+                if lib and name in lib:
+                    self.where[libid] = nick
+                    return lib[name]
+        return None
+
+
+# ---------------------------------------------------------------- .sch files
+class Comp:
+    def __init__(self):
+        self.libid = self.ref = ""
+        self.unit = self.convert = 1
+        self.ts = ""
+        self.x = self.y = 0
+        self.m = (1, 0, 0, -1)
+        self.fields = {}        # name -> value
+        self.ar = {}            # path -> ref
+        self.sheet = ""
+
+    def xform(self, px, py):
+        a, b, c, d = self.m
+        return (self.x + a * px + b * py, self.y + c * px + d * py)
+
+
+FIELD_NAMES = {0: "Reference", 1: "Value", 2: "Footprint", 3: "Datasheet"}
+
+
+def parse_sch(fname):
+    sheet = {"comps": [], "wires": [], "junctions": [], "noconns": [],
+             "labels": [], "sheets": [], "buses": 0, "file": fname}
+    lines = open(fname, encoding="utf-8", errors="replace").read().split("\n")
+    if not lines[0].startswith("EESchema Schematic File"):
+        die(f"{fname}: not a KiCad 5 (legacy) schematic")
+    i = 0
+    while i < len(lines):
+        l = lines[i]
+        if l.startswith("$Comp"):
+            c = Comp()
+            i += 1
+            while not lines[i].startswith("$EndComp"):
+                t = lines[i]
+                if t.startswith("L "):
+                    _, c.libid, c.ref = t.split()[:3]
+                elif t.startswith("U "):
+                    p = t.split()
+                    c.unit, c.convert, c.ts = int(p[1]), int(p[2]), p[3]
+                elif t.startswith("P "):
+                    p = t.split()
+                    c.x, c.y = int(p[1]), int(p[2])
+                elif t.startswith("AR "):
+                    m = re.search(r'Path="([^"]*)"\s+Ref="([^"]*)"', t)
+                    if m:
+                        c.ar[m.group(1)] = m.group(2)
+                elif t.startswith("F "):
+                    n = int(t.split()[1])
+                    q = QSTR.findall(t)
+                    val = unq(q[0]) if q else ""
+                    name = FIELD_NAMES.get(n)
+                    if name is None:
+                        name = unq(q[-1]) if len(q) > 1 else f"F{n}"
+                    c.fields[name] = val
+                elif t.startswith("\t") and len(t.split()) == 4:
+                    try:
+                        c.m = tuple(int(v) for v in t.split())
+                    except ValueError:
+                        pass
+                i += 1
+            sheet["comps"].append(c)
+        elif l.startswith("Wire Wire Line"):
+            x1, y1, x2, y2 = map(int, lines[i + 1].split())
+            sheet["wires"].append((x1, y1, x2, y2))
+            i += 1
+        elif l.startswith("Wire Bus Line") or l.startswith("Entry "):
+            sheet["buses"] += 1
+            i += 1
+        elif l.startswith("Connection "):
+            p = l.split()
+            sheet["junctions"].append((int(p[2]), int(p[3])))
+        elif l.startswith("NoConn "):
+            p = l.split()
+            sheet["noconns"].append((int(p[2]), int(p[3])))
+        elif l.startswith("Text "):
+            p = l.split()
+            kind = p[1]
+            text = lines[i + 1]
+            i += 1
+            if kind in ("Label", "GLabel", "HLabel"):
+                sheet["labels"].append((kind, int(p[2]), int(p[3]), text))
+        elif l.startswith("$Sheet"):
+            sh = {"pins": [], "ts": "", "name": "", "file": ""}
+            i += 1
+            while not lines[i].startswith("$EndSheet"):
+                t = lines[i]
+                if t.startswith("U "):
+                    sh["ts"] = t.split()[1]
+                elif t.startswith("F0 "):
+                    sh["name"] = shlex.split(t, posix=False)[1].strip('"')
+                elif t.startswith("F1 "):
+                    sh["file"] = shlex.split(t, posix=False)[1].strip('"')
+                elif re.match(r"F\d+ ", t):
+                    p = shlex.split(t, posix=False)
+                    sh["pins"].append((p[1].strip('"'), int(p[4]), int(p[5])))
+                i += 1
+            sheet["sheets"].append(sh)
+        i += 1
+    return sheet
+
+
+# ---------------------------------------------------------------- union-find
+class UF:
+    def __init__(self):
+        self.p = {}
+
+    def add(self, a):
+        self.p.setdefault(a, a)
+
+    def find(self, a):
+        self.add(a)
+        while self.p[a] != a:
+            self.p[a] = self.p[self.p[a]]
+            a = self.p[a]
+        return a
+
+    def union(self, a, b):
+        ra, rb = self.find(a), self.find(b)
+        if ra != rb:
+            self.p[ra] = rb
+
+
+def on_segment(x, y, w):
+    x1, y1, x2, y2 = w
+    if (x2 - x1) * (y - y1) != (y2 - y1) * (x - x1):
+        return False
+    return min(x1, x2) <= x <= max(x1, x2) and min(y1, y2) <= y <= max(y1, y2)
+
+
+# ---------------------------------------------------------------- the design
+class Design:
+    def __init__(self, schfile, cache_first=False, lib_table=None):
+        self.root = os.path.abspath(schfile)
+        self.libs = Libs(self.root, cache_first, lib_table)
+        self.uf = UF()
+        self.pins = []          # (ref, num, name, etype, node, sheetpath, x, y, comp)
+        self.comps = []         # (sheetpath, Comp, ref, Symbol)
+        self.labels = defaultdict(set)   # node -> {(prio, name)}
+        self.warnings = []
+        self.sheetdata = []     # (path, sheet dict, items) for erc
+        self._load(self.root, "/", "")
+        self._name_nets()
+
+    def _load(self, fname, path, tspath):
+        sh = parse_sch(fname)
+        if sh["buses"]:
+            self.warnings.append(f"{path}: {sh['buses']} bus items not followed")
+        uf = self.uf
+        wires = sh["wires"]
+        wid = [("W", path, k) for k in range(len(wires))]
+        for w in wid:
+            uf.add(w)
+        pts = defaultdict(list)          # point -> node ids sitting there
+
+        def attach(x, y, node, kind):
+            """connect node at (x, y): same point items and wires through it"""
+            uf.add(node)
+            pts[(x, y)].append(node)
+            for k, w in enumerate(wires):
+                if on_segment(x, y, w):
+                    uf.union(node, wid[k])
+
+        # wires among themselves: end points on other wires
+        for k, (x1, y1, x2, y2) in enumerate(wires):
+            for (x, y) in ((x1, y1), (x2, y2)):
+                pts[(x, y)].append(wid[k])
+                for j, w in enumerate(wires):
+                    if j != k and on_segment(x, y, w):
+                        uf.union(wid[k], wid[j])
+        for n, (x, y) in enumerate(sh["junctions"]):
+            attach(x, y, ("J", path, n), "junction")
+        for n, (x, y) in enumerate(sh["noconns"]):
+            attach(x, y, ("NC", path, n), "noconn")
+        for n, (kind, x, y, text) in enumerate(sh["labels"]):
+            node = ("L", path, n)
+            attach(x, y, node, "label")
+            if kind == "Label":
+                self.labels[node].add((3, path + text if path != "/" else "/" + text, text))
+                uf.union(node, ("LOCAL", path, text))
+            elif kind == "GLabel":
+                self.labels[node].add((1, text, text))
+                uf.union(node, ("GLOBAL", text))
+            else:
+                self.labels[node].add((2, path + text if path != "/" else "/" + text, text))
+                uf.union(node, ("HIER", path, text))
+        items = {"pins": [], "labels": sh["labels"], "noconns": sh["noconns"],
+                 "junctions": sh["junctions"], "wires": wires}
+        for c in sh["comps"]:
+            sym = self.libs.get(c.libid)
+            ref = c.ref
+            if c.ar:
+                key = tspath + "/" + c.ts
+                ref = c.ar.get(key, ref)
+            c.sheet = path
+            self.comps.append((path, c, ref, sym))
+            if sym is None:
+                self.warnings.append(f"{path}: {ref}: symbol {c.libid} not found")
+                continue
+            for p in sym.pins:
+                if p["unit"] not in (0, c.unit) or p["convert"] not in (0, c.convert):
+                    continue
+                x, y = c.xform(p["x"], p["y"])
+                node = ("P", path, ref, p["num"], c.ts)
+                attach(x, y, node, "pin")
+                if p["etype"] == "W" and p["shape"].startswith("N"):
+                    uf.union(node, ("GLOBAL", p["name"]))
+                    self.labels[node].add((0, p["name"], p["name"]))
+                self.pins.append((ref, p["num"], p["name"], p["etype"], node, path, x, y, c))
+                items["pins"].append((ref, p["num"], x, y, node))
+        # everything sitting on the same point is connected (pin on pin,
+        # label on a pin, wire end on a pin ...)
+        for nodes in pts.values():
+            for n in nodes[1:]:
+                uf.union(nodes[0], n)
+        # sheets: sheet pin <-> hierarchical label of the sub-sheet
+        for s in sh["sheets"]:
+            sub = os.path.join(os.path.dirname(fname), s["file"])
+            subpath = f"{path}{s['name']}/"
+            for n, (name, x, y) in enumerate(s["pins"]):
+                node = ("SP", path, s["ts"], n)
+                attach(x, y, node, "sheetpin")
+                uf.union(node, ("HIER", subpath, name))
+            if os.path.exists(sub):
+                self._load(sub, subpath, tspath + "/" + s["ts"])
+            else:
+                self.warnings.append(f"{path}: sheet file {s['file']} not found")
+        for nodes in pts.values():
+            for n in nodes[1:]:
+                uf.union(nodes[0], n)
+        self.sheetdata.append((path, sh, items, pts))
+
+    def _name_nets(self):
+        uf = self.uf
+        best = {}
+        for node, labs in self.labels.items():
+            r = uf.find(node)
+            for prio, full, _ in labs:
+                cand = (prio, full)
+                if r not in best or cand < best[r]:
+                    best[r] = cand
+        members = defaultdict(list)
+        for ref, num, name, et, node, path, x, y, c in self.pins:
+            members[uf.find(node)].append((ref, num, name, et))
+        self.nets = {}
+        self.pinnet = {}
+        for r, mem in members.items():
+            real = [m for m in mem if not m[0].startswith("#")]
+            if r in best:
+                net = best[r][1]
+            else:
+                if not real:
+                    continue
+                ref, num = min((m[0], m[1]) for m in real)
+                net = f"Net-({ref}-Pad{num})"
+            self.nets.setdefault(net, [])
+            self.nets[net].extend(real)
+        for ref, num, name, et, node, path, x, y, c in self.pins:
+            if ref.startswith("#"):
+                continue
+            r = uf.find(node)
+            net = best[r][1] if r in best else None
+            if net is None:
+                for n, mem in self.nets.items():
+                    if (ref, num) in [(m[0], m[1]) for m in mem]:
+                        net = n
+                        break
+            self.pinnet[(ref, num)] = net
+
+
+def natkey(s):
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", str(s))]
+
+
+# ---------------------------------------------------------------- sch commands
+def cmd_sch_list(a):
+    d = Design(a.file, a.cache_first, a.lib_table)
+    rows = []
+    for path, c, ref, sym in sorted(d.comps, key=lambda t: natkey(t[2])):
+        if ref.startswith("#"):
+            continue
+        rows.append({"ref": ref, "sheet": path, "symbol": c.libid,
+                     "from": d.libs.where.get(c.libid, "missing"),
+                     "unit": c.unit, "fields": c.fields})
+    if a.json:
+        print(json.dumps(rows, indent=1))
+        return
+    for r in rows:
+        f = dict(r["fields"])
+        extra = "  ".join(f"{k}={v}" for k, v in f.items()
+                          if k not in ("Reference", "Value", "Footprint", "Datasheet"))
+        print(f"{r['ref']:<8} {r['symbol']}  [{r['from']}]")
+        print(f"         value={f.get('Value','')}  footprint={f.get('Footprint','')}  {extra}")
+    for w in d.warnings:
+        sys.stderr.write(f"warning: {w}\n")
+
+
+def cmd_sch_netlist(a):
+    d = Design(a.file, a.cache_first, a.lib_table)
+    out = open(a.output, "w") if a.output else sys.stdout
+    nets = {n: sorted({(m[0], m[1]) for m in mem}, key=lambda t: (natkey(t[0]), natkey(t[1])))
+            for n, mem in d.nets.items()}
+    if a.json:
+        json.dump({n: [f"{r}-{p}" for r, p in m] for n, m in sorted(nets.items(), key=lambda t: natkey(t[0]))},
+                  out, indent=1)
+        out.write("\n")
+    else:
+        for n in sorted(nets, key=natkey):
+            out.write(f"{n}: {' '.join(f'{r}-{p}' for r, p in nets[n])}\n")
+    for w in d.warnings:
+        sys.stderr.write(f"warning: {w}\n")
+
+
+def cmd_sch_pins(a):
+    d = Design(a.file, a.cache_first, a.lib_table)
+    want = set(a.refs)
+    found = set()
+    for ref, num, name, et, node, path, x, y, c in sorted(d.pins, key=lambda t: (natkey(t[0]), natkey(t[1]))):
+        if ref not in want:
+            continue
+        found.add(ref)
+        nc = (x, y) in parse_noconns(d, path)
+        net = d.pinnet.get((ref, num))
+        others = [f"{r}-{p}" for r, p, *_ in d.nets.get(net, []) if (r, p) != (ref, num)]
+        tag = " (no-connect flag)" if nc else ""
+        print(f"{ref}-{num:<4} {name:<10} {net}{tag}" + (f"   -> {' '.join(sorted(set(others), key=natkey))}" if others else ""))
+    for r in want - found:
+        sys.stderr.write(f"kicadcli: {r} not found\n")
+
+
+def parse_noconns(d, path):
+    for p, sh, items, pts in d.sheetdata:
+        if p == path:
+            return items["noconns"]
+    return []
+
+
+def cmd_sch_erc(a):
+    d = Design(a.file, a.cache_first, a.lib_table)
+    errs = list(f"warning: {w}" for w in d.warnings)
+    uf = d.uf
+    for path, sh, items, pts in d.sheetdata:
+        wires = items["wires"]
+        pinpos = {(x, y) for _, _, x, y, _ in items["pins"]}
+        # wire ends
+        for k, (x1, y1, x2, y2) in enumerate(wires):
+            for (x, y) in ((x1, y1), (x2, y2)):
+                others = [n for n in pts[(x, y)] if n != ("W", path, k)]
+                inner = [j for j, w in enumerate(wires) if j != k and on_segment(x, y, w)
+                         and (x, y) not in ((w[0], w[1]), (w[2], w[3]))]
+                if not others and not inner:
+                    errs.append(f"{path}: dangling wire end at ({x}, {y})")
+                if inner and (x, y) not in items["junctions"]:
+                    errs.append(f"{path}: wire end on another wire without junction at ({x}, {y})")
+        for kind, x, y, text in items["labels"]:
+            if not any(on_segment(x, y, w) for w in wires) and (x, y) not in pinpos:
+                errs.append(f"{path}: label '{text}' at ({x}, {y}) not on a wire or pin")
+        for x, y in items["noconns"]:
+            if (x, y) not in pinpos and not any(on_segment(x, y, w) for w in wires):
+                errs.append(f"{path}: no-connect flag at ({x}, {y}) on nothing")
+    # pins: unconnected and not flagged
+    ncset = {(p, x, y) for p, sh, items, pts in d.sheetdata for x, y in items["noconns"]}
+    groups = defaultdict(list)
+    for ref, num, name, et, node, path, x, y, c in d.pins:
+        groups[uf.find(node)].append((ref, num, name, et, path, x, y))
+    for r, mem in groups.items():
+        real = [m for m in mem if not m[0].startswith("#")]
+        if len(mem) == 1 and real:
+            ref, num, name, et, path, x, y = real[0]
+            group = [k for k in uf.p if uf.find(k) == r]
+            has_wire_or_label = any(n[0] in ("W", "L", "SP") for n in group)
+            if (path, x, y) in ncset or any(n[0] == "NC" for n in group):
+                continue
+            if et == "N":
+                continue
+            errs.append(f"{path}: {ref} pin {num} ({name}) unconnected"
+                        + (" (wire/label leads nowhere)" if has_wire_or_label else ""))
+        for ref, num, name, et, path, x, y in real:
+            if (path, x, y) in ncset and len(mem) > 1:
+                errs.append(f"{path}: {ref} pin {num} has a no-connect flag but is connected")
+    # nets with a single label name only once (local label alone)
+    names = defaultdict(int)
+    for node, labs in d.labels.items():
+        for prio, full, txt in labs:
+            if prio == 3:
+                names[full] += 1
+    for n, cnt in names.items():
+        if cnt == 1:
+            errs.append(f"label {n} used only once")
+    for e in errs:
+        print(e)
+    print(f"{len(errs)} message(s)")
+    sys.exit(1 if any(not e.startswith("warning") and "used only once" not in e for e in errs) else 0)
+
+
+PIN_TYPES = {"I": "input", "O": "output", "B": "BiDi", "T": "3state", "P": "passive",
+             "U": "unspc", "W": "power_in", "w": "power_out", "C": "openCol",
+             "E": "openEm", "N": "NotConnected"}
+
+
+def xesc(t):
+    return (t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+             .replace('"', "&quot;"))
+
+
+def title_block(fname):
+    tb = {}
+    for line in open(fname, encoding="utf-8", errors="replace"):
+        m = re.match(r'(Title|Date|Rev|Comp|Comment\d) "(.*)"$', line.strip())
+        if m:
+            tb[m.group(1)] = m.group(2)
+        if line.startswith("$EndDescr"):
+            break
+    return tb
+
+
+def cmd_sch_export_xml(a):
+    import time
+    d = Design(a.file, a.cache_first, a.lib_table)
+    dcm = {}
+
+    def doc(sym, name):
+        if sym is None or sym.libfile is None:
+            return {"D": "", "K": "", "F": ""}
+        f = os.path.splitext(sym.libfile)[0] + ".dcm"
+        if f not in dcm:
+            dcm[f] = parse_dcm(f)
+        return dcm[f].get(name, {"D": "", "K": "", "F": ""})
+
+    tb = title_block(d.root)
+    o = ['<?xml version="1.0" encoding="UTF-8"?>', '<export version="D">', '  <design>',
+         f'    <source>{xesc(d.root)}</source>',
+         f'    <date>{time.strftime("%a %d %b %Y %I:%M:%S %p %Z")}</date>',
+         f'    <tool>{xesc(VERSION)}</tool>']
+    for path, sh, items, pts in sorted(d.sheetdata, key=lambda t: t[0] != "/"):
+        tbs = title_block(sh["file"])
+        num = 1 + sorted(p for p, *_ in d.sheetdata).index(path) if path != "/" else 1
+        o += [f'    <sheet number="{num}" name="{xesc(path)}" tstamps="/">', '      <title_block>',
+              f'        <title>{xesc(tbs.get("Title", ""))}</title>',
+              f'        <company>{xesc(tbs.get("Comp", ""))}</company>',
+              f'        <rev>{xesc(tbs.get("Rev", ""))}</rev>',
+              f'        <date>{xesc(tbs.get("Date", ""))}</date>',
+              f'        <source>{xesc(os.path.basename(sh["file"]))}</source>']
+        for n in range(1, 5):
+            o.append(f'        <comment number="{n}" value="{xesc(tbs.get(f"Comment{n}", ""))}"/>')
+        o += ['      </title_block>', '    </sheet>']
+    o += ['  </design>', '  <components>']
+    # a part without annotation or two parts with the same reference would
+    # give a wrong BOM without any error: stop (multi-unit parts appear once
+    # per unit with the same value and footprint, that is fine)
+    first = {}
+    for path, c, ref, sym in d.comps:
+        if ref.startswith("#"):
+            continue
+        if "?" in ref:
+            sys.exit(f"Error: component '{ref}' in sheet {path} is not annotated")
+        vf = (c.fields.get("Value", ""), c.fields.get("Footprint", ""))
+        if first.setdefault(ref, (path, vf))[1] != vf:
+            sys.exit(f"Error: reference {ref} is used twice ({first[ref][0]}: {first[ref][1][0]}, "
+                     f"{path}: {vf[0]})")
+    seen, parts, libs = set(), {}, set()
+    for path, c, ref, sym in d.comps:
+        if ref.startswith("#") or ref in seen:
+            continue
+        seen.add(ref)
+        nick, _, name = c.libid.partition(":")
+        f = c.fields
+        o.append(f'    <comp ref="{xesc(ref)}">')
+        o.append(f'      <value>{xesc(f.get("Value", ""))}</value>')
+        if f.get("Footprint"):
+            o.append(f'      <footprint>{xesc(f["Footprint"])}</footprint>')
+        if f.get("Datasheet"):
+            o.append(f'      <datasheet>{xesc(f["Datasheet"])}</datasheet>')
+        user = sorted((k, v) for k, v in f.items() if k not in FIELD_NAMES.values() and v)
+        if user:
+            o.append('      <fields>')
+            o += [f'        <field name="{xesc(k)}">{xesc(v)}</field>' for k, v in user]
+            o.append('      </fields>')
+        o.append(f'      <libsource lib="{xesc(nick)}" part="{xesc(name)}" '
+                 f'description="{xesc(doc(sym, name)["D"])}"/>')
+        o.append(f'      <sheetpath names="{xesc(path)}" tstamps="/"/>')
+        o.append(f'      <tstamp>{c.ts}</tstamp>')
+        o.append('    </comp>')
+        if sym is not None:
+            parts[(nick, sym.name)] = sym
+            libs.add(nick)
+    o += ['  </components>', '  <libparts>']
+    for (nick, pname), sym in sorted(parts.items()):
+        dd = doc(sym, pname)
+        o.append(f'    <libpart lib="{xesc(nick)}" part="{xesc(pname)}">')
+        if sym.aliases:
+            o.append('      <aliases>')
+            o += [f'        <alias>{xesc(al)}</alias>' for al in sym.aliases]
+            o.append('      </aliases>')
+        if dd["D"]:
+            o.append(f'      <description>{xesc(dd["D"])}</description>')
+        if dd["F"]:
+            o.append(f'      <docs>{xesc(dd["F"])}</docs>')
+        elif sym.fields.get(3):
+            o.append(f'      <docs>{xesc(sym.fields[3])}</docs>')
+        if sym.fplist:
+            o.append('      <footprints>')
+            o += [f'        <fp>{xesc(fp)}</fp>' for fp in sym.fplist]
+            o.append('      </footprints>')
+        o.append('      <fields>')
+        for n in sorted(sym.fields):
+            v = sym.fields[n]
+            if n == 1:
+                v = pname
+            if not v:
+                continue
+            fname = FIELD_NAMES.get(n) or sym.fieldnames.get(n, f"Field{n}")
+            o.append(f'        <field name="{xesc(fname)}">{xesc(v)}</field>')
+        o.append('      </fields>')
+        pins = {}
+        for p in sym.pins:
+            pins.setdefault(p["num"], p)
+        if pins:
+            o.append('      <pins>')
+            for num in sorted(pins, key=natkey):
+                p = pins[num]
+                o.append(f'        <pin num="{xesc(num)}" name="{xesc(p["name"])}" '
+                         f'type="{PIN_TYPES.get(p["etype"], "unspc")}"/>')
+            o.append('      </pins>')
+        o.append('    </libpart>')
+    o += ['  </libparts>', '  <libraries>']
+    for nick in sorted(libs):
+        uri = d.libs.table.get(nick)
+        if uri:
+            o += [f'    <library logical="{xesc(nick)}">', f'      <uri>{xesc(uri)}</uri>', '    </library>']
+    o += ['  </libraries>', '  <nets>']
+    for code, n in enumerate(sorted(d.nets, key=natkey), 1):
+        nodes = sorted({(m[0], m[1]) for m in d.nets[n]}, key=lambda t: (natkey(t[0]), natkey(t[1])))
+        o.append(f'    <net code="{code}" name="{xesc(n)}">')
+        o += [f'      <node ref="{xesc(r)}" pin="{xesc(p)}"/>' for r, p in nodes]
+        o.append('    </net>')
+    o += ['  </nets>', '</export>']
+    out = a.output or os.path.splitext(d.root)[0] + ".xml"
+    open(out, "w", encoding="utf-8").write("\n".join(o) + "\n")
+    print(out)
+    for w in d.warnings:
+        sys.stderr.write(f"warning: {w}\n")
+
+
+# ---------------------------------------------------------------- pcb commands
+def load_board(f):
+    try:
+        import pcbnew
+    except ImportError:
+        die("pcbnew Python module of KiCad 5 not found")
+    return pcbnew, pcbnew.LoadBoard(f)
+
+
+def board_pads(board):
+    out = []
+    for m in board.GetModules():
+        ref = m.GetReference()
+        for p in m.Pads():
+            out.append((ref, p.GetName(), p.GetNetname(), m))
+    return out
+
+
+def cmd_pcb_pads(a):
+    pcbnew, b = load_board(a.file)
+    want = set(a.refs)
+    for ref, pad, net, m in sorted(board_pads(b), key=lambda t: (natkey(t[0]), natkey(t[1]))):
+        if want and ref not in want:
+            continue
+        print(f"{ref}-{pad:<4} {net}")
+
+
+def cmd_pcb_check(a):
+    pcbnew, b = load_board(a.pcb)
+    d = Design(a.sch, a.cache_first, a.lib_table)
+    errs = []
+    scomp = {ref: c for path, c, ref, sym in d.comps if not ref.startswith("#")}
+    mods = {m.GetReference(): m for m in b.GetModules()}
+    for ref in sorted(set(scomp) - set(mods), key=natkey):
+        errs.append(f"{ref}: in the schematic, not on the PCB")
+    for ref in sorted(set(mods) - set(scomp), key=natkey):
+        if not ref.startswith("#") and ref not in ("REF**", "G***"):
+            errs.append(f"{ref}: on the PCB, not in the schematic")
+    for ref in sorted(set(mods) & set(scomp), key=natkey):
+        m, c = mods[ref], scomp[ref]
+        fp = m.GetFPID().GetLibItemName()
+        lib = m.GetFPID().GetLibNickname()
+        pcbfp = f"{lib}:{fp}"
+        if c.fields.get("Footprint", "") and c.fields["Footprint"] != pcbfp:
+            errs.append(f"{ref}: footprint sch {c.fields['Footprint']} / pcb {pcbfp}")
+        if c.fields.get("Value", "") != m.GetValue():
+            errs.append(f"{ref}: value sch '{c.fields.get('Value','')}' / pcb '{m.GetValue()}'")
+    # connectivity: compare the partitions of pins into nets
+    pcbnet = {(r, p): n for r, p, n, m in board_pads(b)}
+    schnet = {k: v for k, v in d.pinnet.items()}
+    group_s, group_p = defaultdict(set), defaultdict(set)
+    for k, n in schnet.items():
+        if k in pcbnet:
+            group_s[n].add(k)
+    for k, n in pcbnet.items():
+        if k in schnet and n:
+            group_p[n].add(k)
+    for k in sorted(set(schnet) - set(pcbnet), key=lambda t: (natkey(t[0]), natkey(t[1]))):
+        if k[0] in mods:
+            errs.append(f"{k[0]} pin {k[1]}: no pad on the PCB footprint")
+    seen = set()
+    for k in sorted(schnet, key=lambda t: (natkey(t[0]), natkey(t[1]))):
+        if k not in pcbnet:
+            continue
+        s = group_s[schnet[k]]
+        pn = pcbnet[k]
+        p = group_p[pn] if pn else {k}
+        if s != p:
+            key = (schnet[k], pn)
+            if key in seen:
+                continue
+            seen.add(key)
+            fmt = lambda g: " ".join(sorted((f"{r}-{q}" for r, q in g), key=natkey))
+            only_s, only_p = s - p, p - s
+            errs.append(f"sch net {schnet[k]} / pcb net {pn or '(none)'}:"
+                        + (f" only in sch [{fmt(only_s)}]" if only_s else "")
+                        + (f" only on pcb [{fmt(only_p)}]" if only_p else ""))
+        elif pn and pn != schnet[k] and not (pn.startswith("Net-(") and schnet[k].startswith("Net-(")):
+            errs.append(f"{k[0]}-{k[1]}: same pins, net name sch {schnet[k]} / pcb {pn}")
+    for w in d.warnings:
+        print(f"warning: {w}")
+    for e in errs:
+        print(e)
+    print(f"{len(errs)} difference(s)")
+    sys.exit(1 if errs else 0)
+
+
+def cmd_pcb_gerbers(a):
+    pcbnew, b = load_board(a.file)
+    os.makedirs(a.output, exist_ok=True)
+    pc = pcbnew.PLOT_CONTROLLER(b)
+    po = pc.GetPlotOptions()
+    po.SetOutputDirectory(os.path.abspath(a.output))
+    po.SetPlotFrameRef(False)
+    po.SetUseGerberProtelExtensions(a.protel)
+    po.SetCreateGerberJobFile(True)
+    po.SetSubtractMaskFromSilk(True)
+    po.SetUseGerberX2format(True)
+    layers = []
+    enabled = b.GetEnabledLayers()
+    for lid in range(pcbnew.PCB_LAYER_ID_COUNT):
+        if not enabled.Contains(lid):
+            continue
+        name = b.GetLayerName(lid)
+        std = pcbnew.LSET.AllCuMask().Contains(lid) or lid in (
+            pcbnew.F_SilkS, pcbnew.B_SilkS, pcbnew.F_Mask, pcbnew.B_Mask,
+            pcbnew.F_Paste, pcbnew.B_Paste, pcbnew.Edge_Cuts)
+        if a.layers:
+            if name not in a.layers:
+                continue
+        elif not std:
+            continue
+        layers.append((lid, name))
+    for lid, name in layers:
+        pc.SetLayer(lid)
+        pc.OpenPlotfile(name.replace(".", "_"), pcbnew.PLOT_FORMAT_GERBER, name)
+        pc.PlotLayer()
+        print(pc.GetPlotFileName())
+    pc.ClosePlot()
+
+
+def cmd_pcb_drill(a):
+    pcbnew, b = load_board(a.file)
+    os.makedirs(a.output, exist_ok=True)
+    w = pcbnew.EXCELLON_WRITER(b)
+    w.SetMapFileFormat(pcbnew.PLOT_FORMAT_PDF)
+    w.SetOptions(False, False, b.GetDesignSettings().m_AuxOrigin if a.aux_origin else pcbnew.wxPoint(0, 0), a.merge)
+    w.SetFormat(True)
+    w.CreateDrillandMapFilesSet(os.path.abspath(a.output), True, a.map)
+    for f in sorted(os.listdir(a.output)):
+        if f.endswith((".drl", ".pdf")):
+            print(os.path.join(a.output, f))
+
+
+# ---------------------------------------------------------------- main
+def main():
+    ap = argparse.ArgumentParser(prog="kicadcli", description="Command line tool for KiCad 5 projects.")
+    sub = ap.add_subparsers(dest="group")
+    sub.add_parser("version")
+
+    def common(p):
+        p.add_argument("--cache-first", action="store_true", help="symbols from PROJECT-cache.lib first")
+        p.add_argument("--lib-table", help="extra sym-lib-table file")
+
+    sch = sub.add_parser("sch", help="schematic (.sch, KiCad 5)").add_subparsers(dest="cmd")
+    p = sch.add_parser("list", help="components and their fields")
+    p.add_argument("file"); p.add_argument("--json", action="store_true"); common(p)
+    p.set_defaults(fn=cmd_sch_list)
+    p = sch.add_parser("netlist", help="nets and their pins")
+    p.add_argument("file"); p.add_argument("--json", action="store_true"); p.add_argument("-o", "--output")
+    common(p); p.set_defaults(fn=cmd_sch_netlist)
+    p = sch.add_parser("pins", help="the net of every pin of the given components")
+    p.add_argument("file"); p.add_argument("refs", nargs="+"); common(p); p.set_defaults(fn=cmd_sch_pins)
+    p = sch.add_parser("erc", help="basic electrical checks")
+    p.add_argument("file"); common(p); p.set_defaults(fn=cmd_sch_erc)
+    p = sch.add_parser("export-xml", help="intermediate XML netlist (what eeschema 5 'Generate BOM' writes)")
+    p.add_argument("file"); p.add_argument("-o", "--output", help="default: PROJECT.xml next to the schematic")
+    common(p); p.set_defaults(fn=cmd_sch_export_xml)
+
+    pcb = sub.add_parser("pcb", help="board (.kicad_pcb, pcbnew 5)").add_subparsers(dest="cmd")
+    p = pcb.add_parser("pads", help="pads and nets")
+    p.add_argument("file"); p.add_argument("refs", nargs="*"); p.set_defaults(fn=cmd_pcb_pads)
+    p = pcb.add_parser("check", help="compare the board with the schematic")
+    p.add_argument("pcb"); p.add_argument("sch"); common(p); p.set_defaults(fn=cmd_pcb_check)
+    p = pcb.add_parser("gerbers", help="plot Gerber files")
+    p.add_argument("file"); p.add_argument("-o", "--output", required=True)
+    p.add_argument("--layers", nargs="*", help="layer names (default: copper, mask, paste, silk, edge)")
+    p.add_argument("--protel", action="store_true", help="Protel extensions (.GTL ...)")
+    p.set_defaults(fn=cmd_pcb_gerbers)
+    p = pcb.add_parser("drill", help="Excellon drill files")
+    p.add_argument("file"); p.add_argument("-o", "--output", required=True)
+    p.add_argument("--merge", action="store_true", help="PTH and NPTH in one file")
+    p.add_argument("--map", action="store_true", help="also a PDF drill map")
+    p.add_argument("--aux-origin", action="store_true", help="use the auxiliary axis origin")
+    p.set_defaults(fn=cmd_pcb_drill)
+
+    a = ap.parse_args()
+    if a.group == "version":
+        print(VERSION)
+        return
+    if not getattr(a, "fn", None):
+        ap.print_help()
+        sys.exit(2)
+    a.cache_first = getattr(a, "cache_first", False)
+    a.lib_table = getattr(a, "lib_table", None)
+    a.fn(a)
+
+
+if __name__ == "__main__":
+    main()

@@ -33,7 +33,7 @@ li genera tutti `output_job.sh` al punto 10, sempre dai sorgenti.
   (es. `C17713`). La BOM raggruppa per valore, footprint e LCSC; un componente
   senza LCSC non viene montato da JLCPCB e viene tolto anche dalla CPL.
 - Si annota tutto (Strumenti → Annota schematico). Nessun riferimento deve
-  restare con `?`: `sch2bomxml.py` si ferma se ne trova uno, o se due parti
+  restare con `?`: `kicadcli sch export-xml` si ferma se ne trova uno, o se due parti
   diverse hanno lo stesso riferimento.
 
 ## 2. Disponibilità dei componenti
@@ -159,7 +159,7 @@ memoria, senza modificare il file: è un ripiego, non sostituisce il punto 8.)
 
 `output_job.sh`, in ordine:
 
-1. XML della BOM dallo schematico (`sch2bomxml.py`) → `VERA-MODULE-RBL.xml`;
+1. XML della BOM dallo schematico (`kicadcli sch export-xml`, copia in `utilities/kicadcli`, installata in `~/bin` se manca o è diversa) → `VERA-MODULE-RBL.xml`;
 2. BOM raggruppata (`generate_bom.py`) → `VERA-MODULE-RBL.csv`;
 3. **BOM JLCPCB** (`jlcpcb-check-bom.py`) → `<NOME>-v<versione>-JLCPCB-BOM.csv`;
 4. **CPL JLCPCB** dal PCB (`run_generate_cpl.sh`, `clean_virtual.sh`) →

@@ -209,8 +209,22 @@ PCBNAMEOUT=${PCBNAMEOUT}-v${PCBVER}
 
 # L'XML della BOM viene rigenerato ogni volta dagli schematici, cosi' non
 # e' mai vecchio (prima andava esportato a mano da Eeschema)
+# kicadcli (utilities/kicadcli): command line tool for the KiCad 5 schematic
+# (eeschema 5 has no CLI), it makes the XML from the schematic. Installed into
+# $HOME/bin when missing or different from the copy of this project (that
+# one stops on parts without annotation), with $HOME/bin added to the PATH
+if ! cmp -s "${LOCAL_UTILS_DIR}/kicadcli" "${HOME}/bin/kicadcli"; then
+	echo "kicadcli: installing the copy of this project into ${HOME}/bin"
+	mkdir -p "${HOME}/bin"
+	install -m 755 "${LOCAL_UTILS_DIR}/kicadcli" "${HOME}/bin/kicadcli" || { echo "ERROR: kicadcli install failed."; exit 1; }
+fi
+case ":${PATH}:" in
+	*":${HOME}/bin:"*) ;;
+	*) export PATH="${HOME}/bin:${PATH}" ;;
+esac
+
 echo "Creating BOM XML from the schematic"
-${PYTHON3} sch2bomxml.py ${PCBNAME}.sch ${PCBNAME}.xml || { echo "Error on creating the BOM XML."; exit 1; }
+kicadcli sch export-xml ${PCBNAME}.sch -o ${PCBNAME}.xml || { echo "Error on creating the BOM XML."; exit 1; }
 
 # Creiamo la BOM per JLCPCB
 ${PYTHON3} generate_bom.py ${PCBNAME}.xml ${PCBNAME}.csv || { echo "Error on creating the BOM."; exit 1; }

@@ -135,7 +135,7 @@ KiCad: li genera tutti \file{output\_job.sh} al passo~10, sempre dai sorgenti.
         footprint e LCSC; un componente senza LCSC non viene montato da
         JLCPCB e viene tolto anche dalla CPL.
   \item Si annota tutto (\emph{Strumenti $\rightarrow$ Annota schematico}).
-        Nessun riferimento deve restare con \file{?}: \file{sch2bomxml.py} si
+        Nessun riferimento deve restare con \file{?}: \file{kicadcli sch export-xml} si
         ferma se ne trova uno, o se due parti diverse hanno lo stesso
         riferimento.
 \end{itemize}
@@ -300,7 +300,7 @@ in memoria, senza modificare il file: è un ripiego, non sostituisce il passo~8.
 \file{output\_job.sh}, in ordine:
 
 \begin{enumerate}[leftmargin=*]
-  \item XML della BOM dallo schematico (\file{sch2bomxml.py})
+  \item XML della BOM dallo schematico (\file{kicadcli sch export-xml})
         $\rightarrow$ \file{VERA-MODULE-RBL.xml};
   \item BOM raggruppata (\file{generate\_bom.py})
         $\rightarrow$ \file{VERA-MODULE-RBL.csv};
