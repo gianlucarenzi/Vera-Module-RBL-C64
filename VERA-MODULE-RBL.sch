@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 7
 Title "VERA FPGA Audio & Video Board"
-Date "2026-10-26"
+Date "2026-11-14"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -224,6 +224,17 @@ F 1 "MountingHole" H 1290 7385 50  0000 L CNN
 F 2 "MountingHole:MountingHole_3.2mm_M3" H 1170 7420 50  0001 C CNN
 F 3 "~" H 1170 7420 50  0001 C CNN
 	1    1170 7420
+	1    0    0    -1  
+$EndComp
+$Comp
+L RetroBitLab:LOGO LOGO4
+U 1 1 6AFB190A
+P 4785 6300
+F 0 "LOGO4" H 4810 6353 59  0000 L CNN
+F 1 "RETROCAMPUS" H 4810 6248 59  0000 L CNN
+F 2 "RetroBitLab:retrocampus_silkscreen_16.9mm_8.3mm" H 4785 6300 59  0001 C CNN
+F 3 "" H 4785 6300 59  0001 C CNN
+	1    4785 6300
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC

@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 5 7
 Title "uSD Card, FPGA FLASH and AUDIO SECTION"
-Date "2026-10-26"
+Date "2026-11-14"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
