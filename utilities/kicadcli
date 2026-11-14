@@ -23,6 +23,11 @@ libraries), --lib-table FILE (extra sym-lib-table).
 Symbols are resolved like eeschema 5: project sym-lib-table, then the global
 one (~/.config/kicad/sym-lib-table), environment variables from
 ~/.config/kicad/kicad_common, then PROJECT-cache.lib as fallback.
+KiCad 5 is taken from the system when it is there, otherwise from the KiCad 5
+AppImage (kicad5): KICAD_SYMBOL_DIR is /usr/share/kicad/library if it holds
+the KiCad 5 libraries, otherwise ~/.cache/kicad5/library (copied once from the
+AppImage); pcbnew is the system one if it is version 5, otherwise kicadcli
+runs again with "kicad5 --python".
 
 Connectivity rules: wires connect at shared end points; a junction, a label,
 a pin or a wire end lying inside another wire connects to it (eeschema
@@ -35,10 +40,12 @@ import json
 import os
 import re
 import shlex
+import shutil
+import subprocess
 import sys
 from collections import defaultdict
 
-VERSION = "kicadcli 1.1 (KiCad 5 legacy schematic, pcbnew 5)"
+VERSION = "kicadcli 1.2 (KiCad 5 legacy schematic, pcbnew 5)"
 
 
 def die(msg):
@@ -47,9 +54,33 @@ def die(msg):
 
 
 # ---------------------------------------------------------------- environment
+SYSTEM_KICAD5_SYMBOLS = "/usr/share/kicad/library"
+APPIMAGE_KICAD5_SYMBOLS = os.path.expanduser("~/.cache/kicad5/library")
+
+
+def kicad5_symbol_dir():
+    """The KiCad 5 symbol libraries, as eeschema 5 would use them: the system
+    ones when they are KiCad 5 libraries (legacy power.lib), otherwise those
+    of the KiCad 5 AppImage, copied once into ~/.cache/kicad5/library (the
+    AppImage is mounted only while it runs)."""
+    if os.path.exists(os.path.join(SYSTEM_KICAD5_SYMBOLS, "power.lib")):
+        return SYSTEM_KICAD5_SYMBOLS
+    if not os.path.exists(os.path.join(APPIMAGE_KICAD5_SYMBOLS, "power.lib")) and shutil.which("kicad5"):
+        sys.stderr.write("kicadcli: copying the KiCad 5 symbol libraries from the AppImage...\n")
+        part = APPIMAGE_KICAD5_SYMBOLS + ".partial"
+        subprocess.run(["kicad5", "--python", "-c",
+                        "import os, shutil, sys; shutil.rmtree(sys.argv[1], True); "
+                        "shutil.copytree(os.environ['KICAD_SYMBOL_DIR'], sys.argv[1])", part],
+                       check=False, stdout=subprocess.DEVNULL)
+        if os.path.exists(os.path.join(part, "power.lib")):
+            os.rename(part, APPIMAGE_KICAD5_SYMBOLS)
+    if os.path.exists(os.path.join(APPIMAGE_KICAD5_SYMBOLS, "power.lib")):
+        return APPIMAGE_KICAD5_SYMBOLS
+    return SYSTEM_KICAD5_SYMBOLS        # not found: symbols come from the cache
+
+
 def kicad_env():
-    env = {"KICAD_SYMBOL_DIR": "/usr/share/kicad/library",
-           "KISYSMOD": "/usr/share/kicad/modules",
+    env = {"KISYSMOD": "/usr/share/kicad/modules",
            "KISYS3DMOD": "/usr/share/kicad/modules/packages3d"}
     common = os.path.expanduser("~/.config/kicad/kicad_common")
     if os.path.exists(common):
@@ -63,6 +94,8 @@ def kicad_env():
                 env[k] = v
     for k, v in os.environ.items():
         env[k] = v
+    if "KICAD_SYMBOL_DIR" not in env:   # set by kicad_common or the user wins
+        env["KICAD_SYMBOL_DIR"] = kicad5_symbol_dir()
     return env
 
 
@@ -750,11 +783,30 @@ def cmd_sch_export_xml(a):
 
 
 # ---------------------------------------------------------------- pcb commands
+def import_pcbnew5():
+    """pcbnew of KiCad 5: the system one (e.g. Debian 11) when it is version 5,
+    otherwise kicadcli runs again inside the KiCad 5 AppImage ("kicad5
+    --python", v2.2.0 or later), which has its own."""
+    for extra in (None, "/usr/lib/python3/dist-packages"):
+        if extra and extra not in sys.path:
+            sys.path.append(extra)
+        try:
+            import pcbnew
+        except ImportError:
+            continue
+        if pcbnew.GetBuildVersion().lstrip("(").startswith("5"):
+            return pcbnew
+        sys.modules.pop("pcbnew", None)
+        break                           # a pcbnew of another KiCad version
+    if os.environ.get("KICADCLI_IN_APPIMAGE") != "1" and shutil.which("kicad5"):
+        os.environ["KICADCLI_IN_APPIMAGE"] = "1"
+        os.execvp("kicad5", ["kicad5", "--python", os.path.abspath(sys.argv[0])] + sys.argv[1:])
+    die("pcbnew of KiCad 5 not found: install KiCad 5 or put the KiCad 5 AppImage "
+        "(v2.2.0 or later) in the PATH as 'kicad5'")
+
+
 def load_board(f):
-    try:
-        import pcbnew
-    except ImportError:
-        die("pcbnew Python module of KiCad 5 not found")
+    pcbnew = import_pcbnew5()
     return pcbnew, pcbnew.LoadBoard(f)
 
 

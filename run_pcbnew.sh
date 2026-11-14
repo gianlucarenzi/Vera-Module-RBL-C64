@@ -2,7 +2,7 @@
 # Runs a Python script that needs the KiCad 5 pcbnew module.
 #
 # The pcbnew module comes from a system KiCad 5 (e.g. Debian 11) when there
-# is one, otherwise from the KiCad 5 AppImage ("kicad5 --python", v2.2.0+),
+# is one (version 5), otherwise from the KiCad 5 AppImage ("kicad5 --python", v2.2.0+),
 # as in run_generate_cpl.sh.
 #
 # Usage: run_pcbnew.sh <script.py> [arguments...]
@@ -15,7 +15,8 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if PYTHONPATH=$PYTHON_MODULE_PATH ${PYTHON3} -c "import pcbnew" >/dev/null 2>&1; then
+# only a pcbnew of KiCad 5: a system KiCad 6 or later has another API
+if PYTHONPATH=$PYTHON_MODULE_PATH ${PYTHON3} -c "import pcbnew, sys; sys.exit(0 if pcbnew.GetBuildVersion().lstrip('(').startswith('5') else 1)" >/dev/null 2>&1; then
     exec env PYTHONPATH="$PYTHON_MODULE_PATH" "${PYTHON3}" "$@"
 elif command -v kicad5 >/dev/null 2>&1; then
     exec kicad5 --python "$@"

@@ -25,8 +25,9 @@ fi
 KICAD_PCB_FILE="$1"
 
 # The pcbnew module comes from a system KiCad 5 (e.g. Debian 11) when there
-# is one, otherwise from the KiCad 5 AppImage ("kicad5 --python", v2.2.0+)
-if PYTHONPATH=$PYTHON_MODULE_PATH ${PYTHON3} -c "import pcbnew" >/dev/null 2>&1; then
+# is one (version 5), otherwise from the KiCad 5 AppImage ("kicad5 --python", v2.2.0+)
+# only a pcbnew of KiCad 5: a system KiCad 6 or later has another API
+if PYTHONPATH=$PYTHON_MODULE_PATH ${PYTHON3} -c "import pcbnew, sys; sys.exit(0 if pcbnew.GetBuildVersion().lstrip('(').startswith('5') else 1)" >/dev/null 2>&1; then
     echo "► Using system pcbnew, PYTHONPATH: $PYTHON_MODULE_PATH"
     RUN_PYTHON=(env PYTHONPATH="$PYTHON_MODULE_PATH" "${PYTHON3}")
 elif command -v kicad5 >/dev/null 2>&1; then

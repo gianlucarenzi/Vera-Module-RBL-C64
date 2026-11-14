@@ -165,9 +165,9 @@ PYTHON3=$(which python3)
 # Official KiCad 5 symbol libraries for eeplot: the system ones (e.g. Debian
 # 11), otherwise a copy taken once from the KiCad 5 AppImage
 KICAD5_SYMBOLS=/usr/share/kicad/library
-if [ ! -d "${KICAD5_SYMBOLS}" ]; then
+if [ ! -f "${KICAD5_SYMBOLS}/power.lib" ]; then
 	KICAD5_SYMBOLS=${HOME}/.cache/kicad5/library
-	if [ ! -d "${KICAD5_SYMBOLS}" ] && command -v kicad5 >/dev/null 2>&1; then
+	if [ ! -f "${KICAD5_SYMBOLS}/power.lib" ] && command -v kicad5 >/dev/null 2>&1; then
 		echo "Copying the KiCad 5 symbol libraries from the AppImage..."
 		kicad5 --python -c 'import os, shutil, sys; shutil.copytree(os.environ["KICAD_SYMBOL_DIR"], sys.argv[1] + ".partial"); os.rename(sys.argv[1] + ".partial", sys.argv[1])' "${KICAD5_SYMBOLS}"
 	fi
@@ -317,12 +317,13 @@ if ! eeplot -o ${PDFOUTPUT} "${EEPLOT_FILES[@]}"; then
 fi
 
 echo "Creating STEP 3D object..."
-# kicad2step of KiCad 5 runs outside the flatpak, so it sees the 3D models in
+# kicad2step of KiCad 5 (the system one, otherwise the AppImage one through
+# run_kicad5.sh) runs outside the flatpak, so it sees the 3D models in
 # /usr/share/kicad and ${KILIBPATH} (it takes the .step next to each .wrl by
 # itself). Its board is the KiCad 5 green (69,170,69): recoloured to the
 # solder mask green of the KiCad 7+ export (80,124,105)
-if command -v kicad2step >/dev/null 2>&1; then
-	KISYS3DMOD=${KICAD5_3DMODELS} kicad2step -f --grid-origin -o images/${PCBNAME}.step ${PCBNAME}.kicad_pcb || { echo "Error on creating the STEP file."; exit 1; }
+if ./run_kicad5.sh --check; then
+	KISYS3DMOD=${KICAD5_3DMODELS} ./run_kicad5.sh kicad2step -f --grid-origin -o images/${PCBNAME}.step ${PCBNAME}.kicad_pcb || { echo "Error on creating the STEP file."; exit 1; }
 	sed -i -E "s/COLOUR_RGB\('([^']*)',0\.27169[0-9]*,0\.66518[0-9]*,0\.27169[0-9]*\)/COLOUR_RGB('\1',0.313304153717,0.484529207832,0.410020903123)/" images/${PCBNAME}.step
 else
 	KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export step -o images/${PCBNAME}.step --force --grid-origin --no-dnp --subst-models ${PCBNAME}.kicad_pcb
