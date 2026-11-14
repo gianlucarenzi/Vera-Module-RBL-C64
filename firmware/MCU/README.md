@@ -281,4 +281,5 @@ pio device monitor
 
 > **Nota:** USB CDC è disabilitato (`ARDUINO_USB_CDC_ON_BOOT=0`) perché
 > GPIO 19 (USB D−) e GPIO 20 (USB D+) sono riutilizzati come linee indirizzo
-> A7 e A8. Usare un adattatore UART esterno collegato ai pin GPIO 43/44.
+> A7 e A8. Si usa il CH340C sulla scheda (porta USB-C), collegato a UART0 (GPIO 43/44):
+> con DTR/RTS porta da solo l'ESP32 nel bootloader, senza adattatori esterni.

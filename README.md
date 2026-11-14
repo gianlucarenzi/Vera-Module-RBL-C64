@@ -18,6 +18,36 @@
 > tested; firmware (ESP32, FPGA) and documentation have only been checked in simulation or on
 > paper and may contain errors. Do not manufacture the PCB or rely on this design yet.
 
+<div align="center">
+
+**Commander X16 graphics and sound for the Commodore 64, through the expansion port.**
+
+<img src="images/VERA-MODULE-RBL.png" alt="VERA Module RBL-C64, 3D render" width="90%">
+
+</div>
+
+## 🎮 What it can look like
+
+What a game can look like on the VERA (320×240, 256 colours). These are **illustrative mock-ups
+of two original demo games, not captures from the board**; `tools/make_demo_shots.py` draws them.
+
+<div align="center">
+<img src="images/demo/demo-ironhold-title-c64.png" alt="IRONHOLD title screen (mock-up)" width="32%">
+<img src="images/demo/demo-ironhold-c64.png" alt="IRONHOLD in game (mock-up)" width="32%">
+<img src="images/demo/demo-circuit-runner-c64.png" alt="CIRCUIT RUNNER (mock-up)" width="32%">
+
+*IRONHOLD (side-scrolling action) and CIRCUIT RUNNER (maze chase)*
+</div>
+
+## 🆕 What's new in v1.1
+
+- **USB: CH340C instead of CH340T** (the CH340T is out of stock at JLCPCB). Same signals and
+  ESP32 auto-reset, internal clock: the 12 MHz crystal Y1 and its capacitors C39, C41 are gone.
+- **U11 WM8524** (C146242) is short at JLCPCB: it is in `jlcpcb-global-sourcing.txt`; choose
+  **Global Sourcing** for that row when ordering.
+- The BOM XML comes straight from the KiCad 5 schematic (`utilities/kicadcli`), which stops on
+  parts without annotation; `./output_job.sh 1.1` makes the JLCPCB files.
+
 ---
 
 <div style="background: #ffffff; border-radius: 16px; padding: 24px; margin: 24px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0;">
@@ -102,7 +132,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 #### Storage & Programming
 - **SD Card Slot**: Micro SD for data storage and ROM loading
 - **SPI Flash**: 16Mbit W25Q16 for FPGA configuration
-- **USB Programming**: CH340 USB-to-serial for easy updates
+- **USB Programming**: CH340C USB-to-serial on USB-C, with ESP32 auto-reset
 - **SPI**: Direct FPGA programming interface
 
 </div>
@@ -121,7 +151,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 | **Microcontroller** | ESP32-S3FN8 |
 | **Flash Memory** | W25Q16JVSNIQ (16Mbit) |
 | **Audio Codec** | WM8524CGEDT |
-| **USB Interface** | CH340T |
+| **USB Interface** | CH340C (internal clock, no crystal) |
 | **Power Regulators** | AMS1117-3.3V, AMS1117-1.2V, L7805 |
 | **Crystal (VERA board)** | 25 MHz ECS-2033-250-BN (ICE40UP5K reference clock) |
 | **Crystal (ESP32-S3)** | 40 MHz external — required; XTAL\_P (QFN56 pin 54) / XTAL\_N (pin 53) |
@@ -365,7 +395,7 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 - **1x** ESP32-S3FN8 Microcontroller  
 - **1x** W25Q16JVSNIQ SPI Flash
 - **1x** WM8524CGEDT Audio Codec
-- **1x** CH340T USB Interface
+- **1x** CH340C USB Interface
 
 #### Passive Components
 - **23x** 1µF Capacitors (1206)
@@ -406,20 +436,44 @@ Commander X16 computer, whose 65C02 bus is close to the 6510 one. It provides:
 ### FPGA Programming
 
 #### Programming Methods
-1. **USB/Serial**: Using FTDI 232H adapter interface with iceprog
-2. **SPI Direct**: Direct SPI flash programming
+1. **iceprog** with an FTDI FT232H / FT2232H adapter on J6 (steps below)
+2. **openFPGALoader**, same wiring
 
-#### Programming Steps
-```bash
-# Install icestorm toolchain
-sudo apt install fpga-icestorm
+#### Programming Steps (iceprog, through J6)
 
-# Program FPGA via USB (The FPGA bitstream is not provided!)
-iceprog vera_module.bin
+<div align="center">
+<img src="images/fpga_programming_en.svg" alt="FPGA programming with iceprog: FT232H wired to J6" width="100%">
+</div>
 
-# Verify programming
-iceprog -c
-```
+The VERA bitstream lives in the SPI flash U10 (W25Q16); the FPGA loads it at power-up.
+`iceprog` writes it through **J6** with an FTDI FT232H or FT2232H adapter (MPSSE):
+
+| J6 pin | Signal | FT232H / FT2232H (channel A) |
+|---|---|---|
+| 1 | 5 V (JP1) or 3.3 V (JP3), solder jumper | not needed: leave it unconnected |
+| 2 | CDONE | ADBUS6 |
+| 3 | CRESET | ADBUS7 |
+| 4 | MISO (flash DO) | ADBUS2 |
+| 5 | MOSI (flash DI) | ADBUS1 |
+| 6 | SCK | ADBUS0 |
+| 7 | SS (flash /CS) | ADBUS4 |
+| 8 | GND | GND |
+
+1. Power the board (in the computer) and **stop the ESP32**: hold BOOT0 (SW3), press and release
+   RESET (SW1), release BOOT0. In download mode its pins are inputs; running, the firmware drives
+   CRESET (GPIO 38) high against iceprog.
+2. **Close JP2** ("FPGA PROGRAMMING"): CDONE goes to GND, so U9 selects the flash and U8 takes
+   the microSD off the SPI bus.
+3. Write and verify the flash:
+   ```bash
+   sudo apt install fpga-icestorm      # iceprog
+   iceprog -t                          # reads the flash ID (W25Q16: ef 40 15)
+   iceprog vera_module.bin             # erase, write, verify (the bitstream is not provided)
+   iceprog -c vera_module.bin          # verify only
+   ```
+   With JP2 closed iceprog reports `cdone: low`: that is expected.
+4. **Open JP2** and press RESET (SW1): the ESP32 firmware pulses CRESET, the FPGA loads the new
+   bitstream and CDONE goes high (the "VERA READY" LED lights up).
 
 #### Development Tools
 - **IceStorm**: Open-source FPGA toolchain
@@ -475,12 +529,13 @@ The firmware is built with **PlatformIO** (install via `pip install platformio`)
 cd firmware/MCU
 pio run -e esp32s3fn8
 
-# Flash firmware — connect UART adapter to GPIO43/44
+# Flash firmware — through the USB-C port (on-board CH340C on UART0, GPIO 43/44)
 pio run -e esp32s3fn8 --target upload
 ```
 
 > **Note**: USB CDC is disabled because GPIO 19 (USB D−) and GPIO 20 (USB D+) are reused
-> as address lines A7 and A8. Use an external UART adapter on GPIO 43/44.
+> as address lines A7 and A8. The on-board CH340C (USB-C) is wired to UART0 (GPIO 43/44)
+> and resets the ESP32 into the bootloader through DTR/RTS: no external adapter is needed.
 
 </div>
 
@@ -655,6 +710,32 @@ If you find this project useful, please consider:
 > provata; firmware (ESP32, FPGA) e documentazione sono stati verificati solo in simulazione o sulla
 > carta e possono contenere errori. Non produrre il PCB e non fare affidamento su questo progetto.
 
+<div align="center">
+
+**La grafica e il suono del Commander X16 per il Commodore 64, dalla porta di espansione.**
+
+</div>
+
+## 🎮 Come potrebbe apparire
+
+Come può apparire un gioco sulla VERA (320×240, 256 colori). Sono **immagini dimostrative di due
+giochi originali, non catture dalla scheda**; le disegna `tools/make_demo_shots.py`.
+
+<div align="center">
+<img src="images/demo/demo-ironhold-title-c64.png" alt="IRONHOLD, schermata del titolo" width="32%">
+<img src="images/demo/demo-ironhold-c64.png" alt="IRONHOLD in gioco" width="32%">
+<img src="images/demo/demo-circuit-runner-c64.png" alt="CIRCUIT RUNNER" width="32%">
+</div>
+
+## 🆕 Novità della v1.1
+
+- **USB: CH340C al posto del CH340T** (il CH340T è esaurito da JLCPCB). Stessi segnali e reset
+  automatico dell'ESP32, clock interno: spariscono il quarzo da 12 MHz Y1 e i condensatori C39, C41.
+- **U11 WM8524** (C146242) scarseggia da JLCPCB: è in `jlcpcb-global-sourcing.txt`; nell'ordine si
+  sceglie **Global Sourcing** per quella riga.
+- L'XML della BOM viene direttamente dallo schema KiCad 5 (`utilities/kicadcli`), che si ferma sui
+  componenti non annotati; `./output_job.sh 1.1` produce i file per JLCPCB.
+
 ---
 
 <div style="background: #ffffff; border-radius: 16px; padding: 24px; margin: 24px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0;">
@@ -739,7 +820,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 #### Storage e Programmazione
 - **Slot Scheda SD**: Micro SD per storage dati e caricamento ROM
 - **Flash SPI**: 16Mbit W25Q16 per configurazione FPGA
-- **Programmazione USB**: CH340 USB-to-serial per aggiornamenti facili
+- **Programmazione USB**: CH340C USB-seriale su USB-C, con reset automatico dell'ESP32
 - **SPI**: Interfaccia programmazione FPGA diretta
 
 </div>
@@ -758,7 +839,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 | **Microcontrollore** | ESP32-S3FN8 |
 | **Memoria Flash** | W25Q16JVSNIQ (16Mbit) |
 | **Codec Audio** | WM8524CGEDT |
-| **Interfaccia USB** | CH340T |
+| **Interfaccia USB** | CH340C (clock interno, senza quarzo) |
 | **Regolatori Alimentazione** | AMS1117-3.3V, AMS1117-1.2V, L7805 |
 | **Cristallo (scheda VERA)** | 25 MHz ECS-2033-250-BN (clock di riferimento ICE40UP5K) |
 | **Cristallo (ESP32-S3)** | 40 MHz esterno — obbligatorio; XTAL\_P (QFN56 pin 54) / XTAL\_N (pin 53) |
@@ -1002,7 +1083,7 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 - **1x** ESP32-S3FN8 Microcontrollore
 - **1x** W25Q16JVSNIQ Flash SPI
 - **1x** WM8524CGEDT Codec Audio
-- **1x** CH340T Interfaccia USB
+- **1x** CH340C Interfaccia USB
 
 #### Componenti Passivi
 - **23x** Condensatori 1µF (1206)
@@ -1043,20 +1124,44 @@ computer Commander X16, il cui bus 65C02 è molto vicino a quello del 6510. Forn
 ### Programmazione FPGA
 
 #### Metodi Programmazione
-1. **USB/Seriale**: Usando interfaccia FTDI 232H per SPI USB con iceprog
-2. **SPI Diretto**: Programmazione flash SPI diretta
+1. **iceprog** con un adattatore FTDI FT232H / FT2232H su J6 (passi sotto)
+2. **openFPGALoader**, stessi collegamenti
 
-#### Passi Programmazione
-```bash
-# Installare toolchain icestorm
-sudo apt install fpga-icestorm
+#### Passi Programmazione (iceprog, tramite J6)
 
-# Programmare FPGA via USB (Il bitstream FPGA non e' fornito!)
-iceprog vera_module.bin
+<div align="center">
+<img src="images/fpga_programming_it.svg" alt="Programmazione dell'FPGA con iceprog: FT232H collegato a J6" width="100%">
+</div>
 
-# Verificare programmazione
-iceprog -c
-```
+Il bitstream della VERA sta nella flash SPI U10 (W25Q16); l'FPGA lo carica all'accensione.
+`iceprog` lo scrive tramite **J6** con un adattatore FTDI FT232H o FT2232H (MPSSE):
+
+| Pin J6 | Segnale | FT232H / FT2232H (canale A) |
+|---|---|---|
+| 1 | 5 V (JP1) o 3,3 V (JP3), ponticello a saldare | non serve: lasciarlo scollegato |
+| 2 | CDONE | ADBUS6 |
+| 3 | CRESET | ADBUS7 |
+| 4 | MISO (DO della flash) | ADBUS2 |
+| 5 | MOSI (DI della flash) | ADBUS1 |
+| 6 | SCK | ADBUS0 |
+| 7 | SS (/CS della flash) | ADBUS4 |
+| 8 | GND | GND |
+
+1. Alimentare la scheda (nel computer) e **fermare l'ESP32**: tenere premuto BOOT0 (SW3),
+   premere e rilasciare RESET (SW1), rilasciare BOOT0. In download mode i suoi pin sono ingressi;
+   se gira, il firmware tiene CRESET (GPIO 38) alto contro iceprog.
+2. **Chiudere JP2** ("FPGA PROGRAMMING"): CDONE va a GND, così U9 seleziona la flash e U8 stacca
+   la microSD dal bus SPI.
+3. Scrivere e verificare la flash:
+   ```bash
+   sudo apt install fpga-icestorm      # iceprog
+   iceprog -t                          # legge l'ID della flash (W25Q16: ef 40 15)
+   iceprog vera_module.bin             # cancella, scrive, verifica (il bitstream non è fornito)
+   iceprog -c vera_module.bin          # solo verifica
+   ```
+   Con JP2 chiuso iceprog segnala `cdone: low`: è normale.
+4. **Aprire JP2** e premere RESET (SW1): il firmware dell'ESP32 dà l'impulso su CRESET, l'FPGA
+   carica il nuovo bitstream e CDONE va alto (si accende il LED "VERA READY").
 
 #### Strumenti Sviluppo
 - **IceStorm**: Toolchain FPGA open-source
@@ -1112,12 +1217,13 @@ Il firmware viene compilato con **PlatformIO** (installare con `pip install plat
 cd firmware/MCU
 pio run -e esp32s3fn8
 
-# Carica firmware — adattatore UART su GPIO43/44
+# Carica firmware — dalla porta USB-C (CH340C sulla scheda, UART0, GPIO 43/44)
 pio run -e esp32s3fn8 --target upload
 ```
 
 > **Nota**: USB CDC è disabilitato perché GPIO 19 (USB D−) e GPIO 20 (USB D+) sono
-> riutilizzati come linee indirizzo A7 e A8. Usare un adattatore UART esterno su GPIO 43/44.
+> riutilizzati come linee indirizzo A7 e A8. Il CH340C sulla scheda (USB-C) è collegato a UART0
+> (GPIO 43/44) e porta l'ESP32 nel bootloader con DTR/RTS: non serve un adattatore esterno.
 
 </div>
 

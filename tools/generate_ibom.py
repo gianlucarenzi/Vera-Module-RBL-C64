@@ -18,6 +18,10 @@ import sys
 
 os.environ.setdefault('INTERACTIVE_HTML_BOM_NO_DISPLAY', '1')
 plugin = os.environ.get('IBOM_PLUGIN', os.path.expanduser('~/.kicad/scripting/plugins/InteractiveHtmlBom'))
+# a git clone holds the package in InteractiveHtmlBom/; the KiCad plugin
+# folder (~/.kicad/scripting/plugins/InteractiveHtmlBom) is the package itself
+if os.path.isfile(os.path.join(plugin, 'generate_interactive_bom.py')):
+    plugin = os.path.dirname(os.path.abspath(plugin))
 if not os.path.isdir(os.path.join(plugin, 'InteractiveHtmlBom')):
     sys.exit('InteractiveHtmlBom plugin not found in %s (set IBOM_PLUGIN)' % plugin)
 sys.path.insert(0, plugin)
