@@ -158,6 +158,54 @@ for h in data["holes"]:
     upper = upper.cut(Part.makeCylinder(SCREW_D / 2, 100, V(c.x, c.y, top_of_stack - 50)))
 
 
+# ---------------------------------------------------------------- supports near the fingers
+# The M3 holes are all near the port side: near the card edge fingers the
+# board is held by a column under it (lower shell) and a peg pressing on it
+# from the roof (upper shell), where no part is under / over the board.
+SUP_N = 3           # support points across the board width
+SUP_COL_D = 6.0     # column under the board
+SUP_PEG_D = 5.0     # peg from the roof
+SUP_CLEAR = 1.0     # free ring around them
+SUP_EDGE = 5.0      # distance from the board edge
+SUP_BAND = (3.0, 35.0)   # KiCad y band before ENC_CUT
+small = [s.BoundBox for s in parts if s.BoundBox.XLength < 60]   # parts, not boards
+below = [b for b in small if b.ZMin < -0.01]
+above = [b for b in small if b.ZMax > T + 0.01]
+safe = plan.makeOffset2D(-SUP_EDGE, 0)
+
+
+def free(x, y):
+    if not safe.isInside(V(x, y, 0), 0.01, True):
+        return False
+    r = max(SUP_COL_D, SUP_PEG_D) / 2 + SUP_CLEAR
+    for b in below + above:
+        if b.XMin - r < x < b.XMax + r and b.YMin - r < y < b.YMax + r:
+            return False
+    return True
+
+
+cand = []
+for yk in range(int(ycut - SUP_BAND[1]), int(ycut - SUP_BAND[0]) + 1):
+    for xk in range(int(bb.XMin), int(bb.XMax) + 1):
+        if free(xk, -yk):
+            cand.append((xk, -yk))
+supports = []
+if cand:
+    x0 = min(c[0] for c in cand)
+    x1 = max(c[0] for c in cand)
+    for k in range(SUP_N):
+        tx = x0 + (x1 - x0) * (k + 0.5) / SUP_N
+        best = min(cand, key=lambda c: (c[0] - tx) ** 2 + (c[1] + ycut) ** 2 * 0.25)
+        if all((best[0] - s[0]) ** 2 + (best[1] - s[1]) ** 2 > 15 ** 2 for s in supports):
+            supports.append(best)
+for x, y in supports:
+    col = Part.makeCylinder(SUP_COL_D / 2, 0 - (z_floor + WALL) + 0.01, V(x, y, z_floor + WALL - 0.01))
+    lower = lower.fuse(col)
+    peg = Part.makeCylinder(SUP_PEG_D / 2, z_roof - WALL - T + 0.01, V(x, y, T))
+    upper = upper.fuse(peg)
+print("supports near the fingers (KiCad x, y): %s" % ", ".join("(%.0f, %.0f)" % (x, -y) for x, y in supports)
+      if supports else "supports near the fingers: no free spot found")
+
 # ---------------------------------------------------------------- vents (45 degrees)
 def vent(ref):
     p = data["parts"][ref]

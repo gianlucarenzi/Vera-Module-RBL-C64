@@ -86,10 +86,18 @@ usano Placement, ViewObject e `saveImage`. Sono tutte funzioni presenti dalla 0.
     sopra di circa 14 mm, avvitate nei distanziali.
 
   Senza HDMI, al posto della scheda HDMI si mette una rondella da 1,6 mm.
+- **Appoggi vicino ai pettini:** i fori M3 sono tutti dal lato porte, quindi
+  vicino ai pettini, cioè dove si fa forza inserendo la scheda nel computer, la
+  scheda è stretta tra una **colonnina** del guscio inferiore (Ø 6 mm, fino alla
+  faccia inferiore del PCB) e un **piolo** del coperchio (Ø 5 mm, fino alla faccia
+  superiore). Lo script cerca da solo fino a 3 punti, distribuiti sulla larghezza
+  nella fascia tra 3 e 35 mm prima di `ENC_CUT`, ad almeno 5 mm dal bordo. Sceglie
+  punti dove sotto e sopra la scheda non c'è alcun componente (ingombri dello STEP
+  più 1 mm) e stampa le coordinate KiCad dei punti scelti.
 
 Per cambiare le misure si modificano le costanti in testa a
 `tools/make_enclosure.py`: `WALL`, `GAP`, `LIP`, `CLEAR`, `STANDOFF`, `VENT_*`,
-`PIN_HOLE`.
+`PIN_HOLE`, `SUP_*` (appoggi).
 
 ## Per un'altra scheda
 
