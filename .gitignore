@@ -24,3 +24,5 @@ _autosave-*
 /VERA-MODULE-RBL.ses
 /report.drc.rpt
 /bom/
+# Python caches (FreeCAD macros, tools)
+__pycache__/
