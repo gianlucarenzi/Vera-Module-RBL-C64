@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 6 7
 Title "POWERSUPPLY and USB"
-Date "2026-10-26"
+Date "2026-11-14"
 Rev "1.0"
 Comp "RetroBit Lab"
 Comment1 "Gianluca Renzi"
@@ -75,37 +75,6 @@ Connection ~ 7980 5285
 Wire Wire Line
 	8355 4985 8355 4910
 Connection ~ 8355 4910
-Wire Wire Line
-	5895 2320 5570 2320
-Wire Wire Line
-	5570 2320 5570 2195
-Wire Wire Line
-	5570 2195 4920 2195
-Wire Wire Line
-	4920 2195 4920 2270
-Wire Wire Line
-	4920 2570 4920 2670
-Wire Wire Line
-	4920 2670 5570 2670
-Wire Wire Line
-	5570 2670 5570 2520
-Wire Wire Line
-	5570 2520 5895 2520
-Connection ~ 4920 2195
-Connection ~ 4920 2670
-$Comp
-L power:GND #PWR?
-U 1 1 68E1EF59
-P 4495 2420
-AR Path="/68821B60/68E1EF59" Ref="#PWR?"  Part="1" 
-AR Path="/688FC286/68E1EF59" Ref="#PWR099"  Part="1" 
-F 0 "#PWR099" H 4495 2170 50  0001 C CNN
-F 1 "GND" H 4500 2247 50  0000 C CNN
-F 2 "" H 4495 2420 50  0001 C CNN
-F 3 "" H 4495 2420 50  0001 C CNN
-	1    4495 2420
-	0    1    1    0   
-$EndComp
 $Comp
 L power:GND #PWR?
 U 1 1 68E23C94
@@ -242,8 +211,6 @@ NoConn ~ 6745 2120
 NoConn ~ 6745 2320
 NoConn ~ 6745 2220
 NoConn ~ 6745 2720
-NoConn ~ 6745 2820
-NoConn ~ 6745 3020
 Wire Wire Line
 	6995 1820 6995 1945
 Wire Wire Line
@@ -325,14 +292,6 @@ Wire Wire Line
 Wire Wire Line
 	4095 2245 4095 2320
 Connection ~ 4095 2320
-Wire Wire Line
-	4795 2195 4920 2195
-Wire Wire Line
-	4795 2670 4920 2670
-Wire Wire Line
-	4495 2195 4595 2195
-Wire Wire Line
-	4495 2670 4595 2670
 NoConn ~ 3895 1670
 Wire Wire Line
 	3820 1670 3895 1670
@@ -866,24 +825,8 @@ F 14 "C22434687" H 1065 5040 50  0001 C CNN "LCSC"
 	1    0    0    -1  
 $EndComp
 NoConn ~ 1265 5040
-$Comp
-L RetroBitLab:12MHzC Y1
-U 1 1 68B9A98E
-P 4920 2420
-F 0 "Y1" V 4770 2450 50  0000 L CNN
-F 1 "12MHzC" V 5065 2475 50  0000 L CNN
-F 2 "Crystal:Crystal_SMD_EuroQuartz_MT-4Pin_3.2x2.5mm" H 4920 2420 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C9002.pdf" H 4920 2420 50  0001 C CNN
-F 4 "C9002" H 4920 2420 50  0001 C CNN "LCSC"
-	1    4920 2420
-	0    1    1    0   
-$EndComp
 Wire Wire Line
 	6695 1720 6995 1720
-Wire Wire Line
-	6695 3020 6745 3020
-Wire Wire Line
-	6695 2820 6745 2820
 Wire Wire Line
 	6695 2520 7020 2520
 Wire Wire Line
@@ -899,15 +842,15 @@ Wire Wire Line
 Wire Wire Line
 	6695 2720 6745 2720
 $Comp
-L RetroBitLab:USBCH340T U12
+L RetroBitLab:USBCH340C U12
 U 1 1 68BA8F79
 P 6295 2420
 F 0 "U12" H 6500 3280 50  0000 C CNN
-F 1 "USBCH340T" H 6570 1650 50  0000 C CNN
-F 2 "RetroBitLab:SSOP-20_5.3x7.2mm_P0.65mm_Pad0.45" H 7195 1620 50  0001 C CNN
-F 3 "https://cdn.sparkfun.com/datasheets/Dev/Arduino/Other/CH340DS1.PDF" H 6045 3270 50  0001 C CNN
-F 4 "https://www.lcsc.com/datasheet/C8689.pdf" H 6295 2420 50  0001 C CNN "Datasheet2"
-F 5 "C8689" H 6295 2420 50  0001 C CNN "LCSC"
+F 1 "USBCH340C" H 6570 1650 50  0000 C CNN
+F 2 "RetroBitLab:SOIC-16_3.9x9.9mm_P1.27mm" H 7195 1620 50  0001 C CNN
+F 3 "https://www.lcsc.com/datasheet/C84681.pdf" H 6045 3270 50  0001 C CNN
+F 4 "https://www.lcsc.com/datasheet/C84681.pdf" H 6295 2420 50  0001 C CNN "Datasheet2"
+F 5 "C84681" H 6295 2420 50  0001 C CNN "LCSC"
 	1    6295 2420
 	1    0    0    -1  
 $EndComp
@@ -1175,30 +1118,6 @@ Wire Wire Line
 	810  2170 810  2065
 Connection ~ 950  2170
 $Comp
-L CCAP0805:22pF C39
-U 1 1 68C66AAA
-P 4695 2195
-F 0 "C39" V 4815 2190 50  0000 C CNN
-F 1 "20pF" V 4575 2210 50  0000 C CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 4695 2195 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2410121315_CCTC-TCC0805COG220J500BT_C376875.pdf" H 4695 2195 50  0001 C CNN
-F 4 "C376875" H 4695 2195 50  0001 C CNN "LCSC"
-	1    4695 2195
-	0    -1   -1   0   
-$EndComp
-$Comp
-L CCAP0805:22pF C41
-U 1 1 68C6C2D4
-P 4695 2670
-F 0 "C41" V 4815 2665 50  0000 C CNN
-F 1 "20pF" V 4575 2685 50  0000 C CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 4695 2670 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2410121315_CCTC-TCC0805COG220J500BT_C376875.pdf" H 4695 2670 50  0001 C CNN
-F 4 "C376875" H 4695 2670 50  0001 C CNN "LCSC"
-	1    4695 2670
-	0    -1   -1   0   
-$EndComp
-$Comp
 L CLED0805:GREEN LD4
 U 1 1 68CF5676
 P 10580 2170
@@ -1209,30 +1128,6 @@ F 3 "https://www.lcsc.com/datasheet/C84260.pdf" H 10580 2170 50  0001 C CNN
 F 4 "C84260" H 10580 2170 50  0001 C CNN "LCSC"
 	1    10580 2170
 	0    -1   -1   0   
-$EndComp
-Wire Wire Line
-	4495 2195 4495 2420
-Wire Wire Line
-	4720 2420 4495 2420
-Connection ~ 4495 2420
-Wire Wire Line
-	4495 2420 4495 2670
-Wire Wire Line
-	5120 2420 5295 2420
-Wire Wire Line
-	5295 2420 5295 2370
-$Comp
-L power:GND #PWR?
-U 1 1 68D3993D
-P 5295 2370
-AR Path="/68821B60/68D3993D" Ref="#PWR?"  Part="1" 
-AR Path="/688FC286/68D3993D" Ref="#PWR0106"  Part="1" 
-F 0 "#PWR0106" H 5295 2120 50  0001 C CNN
-F 1 "GND" H 5195 2375 50  0000 C CNN
-F 2 "" H 5295 2370 50  0001 C CNN
-F 3 "" H 5295 2370 50  0001 C CNN
-	1    5295 2370
-	-1   0    0    1   
 $EndComp
 $Comp
 L RetroBitLab:AMS1117-1.2 U14
