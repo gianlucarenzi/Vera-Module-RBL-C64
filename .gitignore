@@ -26,3 +26,5 @@ _autosave-*
 /bom/
 # Python caches (FreeCAD macros, tools)
 __pycache__/
+# FreeCAD backups (made when a document is saved again)
+*.FCBak
