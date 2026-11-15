@@ -33,7 +33,7 @@ Il workflow `.github/workflows/enclosure.yml` fa tutto in un container
 [kicad_appimage_builder](https://github.com/gianlucarenzi/kicad_appimage_builder),
 la VERA-HDMI-Expansion dal suo repository. Parte:
 - **a mano**: Actions → Enclosure → Run workflow (con o senza animazione);
-- **a ogni push su `main`** che cambia il PCB, il suo STEP o gli script
+- **a ogni push su `master`** che cambia il PCB, il suo STEP o gli script
   dell'involucro.
 
 Il risultato va in due artifact, `…-enclosure-open` e `…-enclosure-backpanel`, e
