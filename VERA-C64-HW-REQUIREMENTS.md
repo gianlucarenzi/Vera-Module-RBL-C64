@@ -159,7 +159,7 @@ Il pin 23 di `U3`, `U4`, `U6`, `U16` e `U19` è collegato al pin 24 (3V3).
 ### 2.8 [B] Ingressi liberi — **nello schema**
 
 - `U23` pin 3, 5, 9, 11, 13 a GND (uscite 4, 6, 8, 10, 12 libere).
-- Canali di riserva dei 74LVC4245, ciascuno con una propria 0 Ω (CREZ0805, LCSC C328378) verso GND:
+- Canali di riserva dei 74LVC4245, ciascuno con una propria 0 Ω (CREZ0805, LCSC C17477) verso GND:
   `U6` pin 10 → `R74`; `U16` pin 14 → `R72`, 15 → `R75`, 16 → `R80`, 17 → `R79`, 18 → `R78`, 19 → `R73`,
   20 → `R76`, 21 → `R77`. `U16` non pilota nessuna linea del C64 (il reset passa da `U27`, §2.12). Le uscite corrispondenti (`U6` pin 14, `U16` pin 3, 4, 5, 6, 7, 9, 10) restano
   libere.

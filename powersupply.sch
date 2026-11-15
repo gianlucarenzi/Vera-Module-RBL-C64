@@ -442,8 +442,8 @@ P 3465 5140
 F 0 "C49" H 3690 5190 50  0000 R CNN
 F 1 "100nF" H 3765 5090 50  0000 R CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 3465 5140 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 3465 5140 50  0001 C CNN
-F 4 "C840116" H -285 -260 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 3465 5140 50  0001 C CNN
+F 4 "C28233" H -285 -260 50  0001 C CNN "LCSC"
 	1    3465 5140
 	1    0    0    -1  
 $EndComp
@@ -454,8 +454,8 @@ P 7130 5085
 F 0 "C44" H 7305 5160 50  0000 R CNN
 F 1 "100nF" H 7380 5010 50  0000 R CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 7130 5085 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 7130 5085 50  0001 C CNN
-F 4 "C840116" H 605 -190 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 7130 5085 50  0001 C CNN
+F 4 "C28233" H 605 -190 50  0001 C CNN "LCSC"
 	1    7130 5085
 	1    0    0    -1  
 $EndComp
@@ -466,8 +466,8 @@ P 8355 5085
 F 0 "C46" H 8580 5135 50  0000 R CNN
 F 1 "100nF" H 8605 5010 50  0000 R CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 8355 5085 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 8355 5085 50  0001 C CNN
-F 4 "C840116" H 605 -190 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 8355 5085 50  0001 C CNN
+F 4 "C28233" H 605 -190 50  0001 C CNN "LCSC"
 	1    8355 5085
 	1    0    0    -1  
 $EndComp
@@ -478,8 +478,8 @@ P 2040 5140
 F 0 "C47" H 2128 5186 50  0000 L CNN
 F 1 "10uF-35V" H 1620 5065 50  0000 L CNN
 F 2 "Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T_Pad1.50x2.35mm_HandSolder" H 2050 5490 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2410121815_VISHAY-T55B106M035C0200_C5346021.pdf" H 2040 5140 50  0001 C CNN
-F 4 "C8017" H 1845 5400 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C5346021.pdf" H 2040 5140 50  0001 C CNN
+F 4 "C5346021" H 1845 5400 50  0001 C CNN "LCSC"
 	1    2040 5140
 	1    0    0    -1  
 $EndComp
@@ -516,8 +516,8 @@ P 5320 1395
 F 0 "C37" H 5120 1495 50  0000 L CNN
 F 1 "22uF" H 5070 1345 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 5320 1395 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C86817.pdf" H 5320 1395 50  0001 C CNN
-F 4 "C86817" H 595 -180 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C45783.pdf" H 5320 1395 50  0001 C CNN
+F 4 "C45783" H 595 -180 50  0001 C CNN "LCSC"
 	1    5320 1395
 	1    0    0    -1  
 $EndComp
@@ -528,8 +528,8 @@ P 5545 1395
 F 0 "C38" H 5637 1441 50  0000 L CNN
 F 1 "100nF" H 5637 1350 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 5545 1395 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 5545 1395 50  0001 C CNN
-F 4 "C840116" H 5545 1395 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 5545 1395 50  0001 C CNN
+F 4 "C28233" H 5545 1395 50  0001 C CNN "LCSC"
 	1    5545 1395
 	1    0    0    -1  
 $EndComp
@@ -540,8 +540,8 @@ P 2195 2370
 F 0 "C40" H 2287 2416 50  0000 L CNN
 F 1 "100nF" H 2287 2325 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 2195 2370 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 2195 2370 50  0001 C CNN
-F 4 "C840116" H 595 -180 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 2195 2370 50  0001 C CNN
+F 4 "C28233" H 595 -180 50  0001 C CNN "LCSC"
 	1    2195 2370
 	1    0    0    -1  
 $EndComp
@@ -552,8 +552,8 @@ P 3870 3170
 F 0 "C42" H 3645 3220 50  0000 L CNN
 F 1 "100nF" H 3570 3095 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 3870 3170 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 3870 3170 50  0001 C CNN
-F 4 "C840116" H 595 -180 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 3870 3170 50  0001 C CNN
+F 4 "C28233" H 595 -180 50  0001 C CNN "LCSC"
 	1    3870 3170
 	1    0    0    -1  
 $EndComp
@@ -591,8 +591,8 @@ P 8125 2720
 F 0 "R54" V 8045 2720 50  0000 C CNN
 F 1 "220R" V 8205 2720 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 8125 2720 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07270RL_C137558.pdf" H 8125 2720 50  0001 C CNN
-F 4 "C5120092" H 8125 2720 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17557.pdf" H 8125 2720 50  0001 C CNN
+F 4 "C17557" H 8125 2720 50  0001 C CNN "LCSC"
 	1    8125 2720
 	0    1    1    0   
 $EndComp
@@ -659,8 +659,8 @@ P 9155 5085
 F 0 "C50" H 9355 5160 50  0000 R CNN
 F 1 "100nF" H 9405 5010 50  0000 R CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 9155 5085 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C840116.pdf" H 9155 5085 50  0001 C CNN
-F 4 "C840116" H 605 -190 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28233.pdf" H 9155 5085 50  0001 C CNN
+F 4 "C28233" H 605 -190 50  0001 C CNN "LCSC"
 	1    9155 5085
 	1    0    0    -1  
 $EndComp
@@ -685,8 +685,8 @@ P 10405 5085
 F 0 "C43" H 10497 5131 50  0000 L CNN
 F 1 "1uF" H 10497 5040 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 10405 5085 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C2798196.pdf" H 10405 5085 50  0001 C CNN
-F 4 "C2798196" H 135 -195 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C28323.pdf" H 10405 5085 50  0001 C CNN
+F 4 "C28323" H 135 -195 50  0001 C CNN "LCSC"
 	1    10405 5085
 	1    0    0    -1  
 $EndComp
@@ -727,8 +727,8 @@ P 6525 1070
 F 0 "R47" V 6450 1065 50  0000 C CNN
 F 1 "10K" V 6375 1070 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 6525 1070 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf" H 6525 1070 50  0001 C CNN
-F 4 "C84376" H 6525 1070 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17414.pdf" H 6525 1070 50  0001 C CNN
+F 4 "C17414" H 6525 1070 50  0001 C CNN "LCSC"
 	1    6525 1070
 	0    1    1    0   
 $EndComp
@@ -741,8 +741,8 @@ P 6515 1220
 F 0 "R48" V 6440 1215 50  0000 C CNN
 F 1 "10K" V 6365 1220 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 6515 1220 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf" H 6515 1220 50  0001 C CNN
-F 4 "C84376" H 6515 1220 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17414.pdf" H 6515 1220 50  0001 C CNN
+F 4 "C17414" H 6515 1220 50  0001 C CNN "LCSC"
 	1    6515 1220
 	0    -1   -1   0   
 $EndComp
@@ -921,8 +921,8 @@ P 10180 2450
 F 0 "R57" H 9980 2450 50  0000 L CNN
 F 1 "510R" H 10205 2330 50  0000 L CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 10180 2450 50  0001 C CNN
-F 3 "https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf" H 10180 2450 50  0001 C CNN
-F 4 "C114563" H 10180 2450 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17734.pdf" H 10180 2450 50  0001 C CNN
+F 4 "C17734" H 10180 2450 50  0001 C CNN "LCSC"
 	1    10180 2450
 	1    0    0    -1  
 $EndComp
@@ -933,8 +933,8 @@ P 10580 2455
 F 0 "R58" H 10395 2465 50  0000 L CNN
 F 1 "330R" H 10620 2340 50  0000 L CNN
 F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" H 10580 2455 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C105881.pdf" H 10580 2455 50  0001 C CNN
-F 4 "C105881" H 10580 2455 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C23138.pdf" H 10580 2455 50  0001 C CNN
+F 4 "C23138" H 10580 2455 50  0001 C CNN "LCSC"
 	1    10580 2455
 	1    0    0    -1  
 $EndComp
@@ -945,8 +945,8 @@ P 3720 4940
 F 0 "R56" V 3645 4940 50  0000 C CNN
 F 1 "CREZ08051%" V 3795 4935 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" H 3720 4940 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D" H 3720 4940 50  0001 C CNN
-F 4 "C328378" H 3720 4940 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C17477.pdf" H 3720 4940 50  0001 C CNN
+F 4 "C17477" H 3720 4940 50  0001 C CNN "LCSC"
 	1    3720 4940
 	0    1    1    0   
 $EndComp
@@ -1124,8 +1124,8 @@ P 10580 2170
 F 0 "LD4" V 10616 2100 50  0000 R CNN
 F 1 "GREEN" V 10525 2100 50  0000 R CNN
 F 2 "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder" H 10580 2170 50  0001 C CNN
-F 3 "https://www.lcsc.com/datasheet/C84260.pdf" H 10580 2170 50  0001 C CNN
-F 4 "C84260" H 10580 2170 50  0001 C CNN "LCSC"
+F 3 "https://www.lcsc.com/datasheet/C2297.pdf" H 10580 2170 50  0001 C CNN
+F 4 "C2297" H 10580 2170 50  0001 C CNN "LCSC"
 	1    10580 2170
 	0    -1   -1   0   
 $EndComp
