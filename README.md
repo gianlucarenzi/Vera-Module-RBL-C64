@@ -24,6 +24,10 @@
 
 <img src="images/VERA-MODULE-RBL.png" alt="VERA Module RBL-C64, 3D render" width="90%">
 
+[<img src="images/teaser-poster.jpg" alt="Watch the teaser (32 s, with sound)" width="90%">](https://gianlucarenzi.github.io/Vera-Module-RBL-C64/teaser.html)
+
+*▶ Teaser: 32 s with sound (Ctrl+click to open it in a new tab)*
+
 </div>
 
 ## 🎮 What it can look like
@@ -701,6 +705,10 @@ If you find this project useful, please consider:
 <div align="center">
 
 **La grafica e il suono del Commander X16 per il Commodore 64, dalla porta di espansione.**
+
+[<img src="images/teaser-poster.jpg" alt="Guarda il teaser (32 s, con audio)" width="90%">](https://gianlucarenzi.github.io/Vera-Module-RBL-C64/teaser.html)
+
+*▶ Teaser: 32 s con audio (Ctrl+clic per aprirlo in una nuova scheda)*
 
 </div>
 
