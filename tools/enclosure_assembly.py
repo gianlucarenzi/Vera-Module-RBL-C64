@@ -14,7 +14,8 @@ Frames for a GIF, without a screen (FreeCAD GUI on a virtual display):
       xvfb-run -a -s "-screen 0 1280x1024x24" freecad tools/enclosure_assembly.py
   convert -delay 6 -loop 0 /tmp/frames/*.png enclosure/X-assembly.gif
 
-Only FreeCAD 0.19+ GUI calls are used (Placement, ViewObject, saveImage).
+Only FreeCAD 0.19+ GUI calls are used (Placement, ViewObject, saveImage, the
+Coin camera through pivy).
 """
 import os
 import time
@@ -111,15 +112,48 @@ def place(o, d):
         o.Placement = App.Placement(h.Base + d, h.Rotation)
 
 
-# exploded start, camera fitted on it once
+# Camera set once, on the whole assembly exploded and closed: orthographic,
+# pointed at its centre and sized on it, so the frames do not depend on the
+# window size (fitAll does, and the view commands animate the camera). From
+# the card edge side like an isometric view; with a back panel from the port
+# side, to see the panel going in.
+look = V(-0.55, -0.65, -0.52) if panel is not None else V(-1, 1, -1)
+look.normalize()
+movers = [o for o, d in STEPS if o is not None]
+bb = App.BoundBox()
+for o in [bottom] + movers:
+    bb.add(o.Shape.BoundBox)                    # closed
+for o, d in STEPS:
+    if o is not None:
+        e = App.BoundBox(o.Shape.BoundBox)
+        e.move(d)
+        bb.add(e)                               # exploded
+right = look.cross(V(0, 0, 1))
+right.normalize()
+up = right.cross(look)
+corners = [V(x, y, z) for x in (bb.XMin, bb.XMax) for y in (bb.YMin, bb.YMax) for z in (bb.ZMin, bb.ZMax)]
+c = bb.Center
+w = max(abs((p - c).dot(right)) for p in corners) * 2
+h = max(abs((p - c).dot(up)) for p in corners) * 2
+IMG_W, IMG_H = 960, 720
+
+
+def camera():
+    from pivy import coin
+    view.setCameraType("Orthographic")
+    cam = view.getCameraNode()
+    pos = c - look * (bb.DiagonalLength * 2)
+    cam.position.setValue(pos.x, pos.y, pos.z)
+    cam.pointAt(coin.SbVec3f(c.x, c.y, c.z), coin.SbVec3f(0, 0, 1))
+    cam.nearDistance.setValue(1)
+    cam.farDistance.setValue(bb.DiagonalLength * 5)
+    cam.height.setValue(max(h, w * IMG_H / IMG_W) * 1.06)
+
+
 for o, d in STEPS:
     place(o, d)
-view.viewIsometric()
-if panel is not None:
-    # from the port side, to see the panel going in
-    view.setViewDirection((-0.55, -0.65, -0.52))
 Gui.updateGui()
-view.fitAll()
+camera()
 n = [0]
 
 
@@ -127,7 +161,7 @@ def shot():
     Gui.updateGui()
     if frames:
         os.makedirs(frames, exist_ok=True)
-        view.saveImage(os.path.join(frames, "f%04d.png" % n[0]), 960, 720, "White")
+        view.saveImage(os.path.join(frames, "f%04d.png" % n[0]), IMG_W, IMG_H, "White")
     else:
         time.sleep(0.04)
     n[0] += 1

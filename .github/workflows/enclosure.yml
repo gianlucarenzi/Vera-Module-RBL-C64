@@ -103,6 +103,7 @@ jobs:
             enclosure/*-enclosure-bottom.st?
             enclosure/*-enclosure-top.st?
             enclosure/*-enclosure.FCStd
+            enclosure/*-enclosure-light.FCStd
             enclosure/*-enclosure-assembly.gif
 
       - name: Artifact, back panel

@@ -16,11 +16,13 @@ Ogni build produce **due varianti**:
 | `VERA-RBL-C64-enclosure-bottom.stl` / `.step` | guscio inferiore, da stampare |
 | `VERA-RBL-C64-enclosure-top.stl` / `.step` | guscio superiore, da stampare |
 | `VERA-RBL-C64-enclosure.FCStd` | documento FreeCAD: gusci, scheda e HDMI |
+| `VERA-RBL-C64-enclosure-light.FCStd` | lo stesso, con le schede semplificate: si apre subito anche su un PC poco potente |
 | `VERA-RBL-C64-enclosure-assembly.gif` | simulazione dell'assemblaggio |
 | `VERA-RBL-C64-enclosure-backpanel-bottom.stl` / `.step` | guscio inferiore della variante con pannello |
 | `VERA-RBL-C64-enclosure-backpanel-top.stl` / `.step` | guscio superiore della variante con pannello |
 | `VERA-RBL-C64-enclosure-backpanel-panel.stl` / `.step` | pannello posteriore a scatto |
 | `VERA-RBL-C64-enclosure-backpanel.FCStd` | documento FreeCAD della variante con pannello |
+| `VERA-RBL-C64-enclosure-backpanel-light.FCStd` | lo stesso, con le schede semplificate |
 | `VERA-RBL-C64-enclosure-backpanel-assembly.gif` | assemblaggio, con il pannello che entra |
 | `board.json` | dati presi dal PCB (contorno, fori, componenti) |
 
@@ -64,9 +66,13 @@ I passi, che si possono anche lanciare a mano:
    `ENC_FRAMES`, renderizza i fotogrammi dell'assemblaggio, circa 15 minuti per
    variante. Poi ffmpeg (o ImageMagick) li unisce nella GIF.
 
-**Per vedere l'animazione in FreeCAD:** apri `enclosure/<nome>.FCStd`, poi esegui
-`tools/enclosure_assembly.py` come macro (Macro → Macro… → seleziona il file, oppure
-dalla console Python). Anima il documento aperto.
+**Per vedere l'animazione in FreeCAD:** apri `enclosure/<nome>.FCStd`, meglio la
+versione `-light`, poi esegui `tools/enclosure_assembly.py` come macro (Macro →
+Macro… → seleziona il file, oppure dalla console Python). Anima il documento aperto.
+
+**Documenti `-light`:** gusci e pannello sono quelli veri; le schede sono
+semplificate (contorno del PCB e un parallelepipedo per ogni componente). Pesano
+circa 0,5 MB contro 2,6 MB e si aprono e ruotano subito anche con 4 GB di RAM.
 
 ## Cosa serve
 

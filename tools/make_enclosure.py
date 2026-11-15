@@ -350,6 +350,24 @@ for ref in ("SW1", "SW3"):
         upper = upper.cut(Part.makeCylinder(PIN_HOLE / 2, WALL + 2, V(c.x, c.y, z_roof - WALL - 1)))
 
 # ---------------------------------------------------------------- output
+def light(shape):
+    """A light stand-in of a board, for a document that opens fast on a
+    small machine: the PCB outline without holes, a box for each part."""
+    solids = shape.Solids
+    pcb = max(solids, key=lambda s: s.BoundBox.XLength * s.BoundBox.YLength)
+    top = max((f for f in pcb.Faces if abs(f.normalAt(0, 0).z) > 0.99), key=lambda f: f.BoundBox.ZMax)
+    boxes = [Part.Face(top.OuterWire).extrude(V(0, 0, -pcb.BoundBox.ZLength))]
+    for s in solids:
+        b = s.BoundBox
+        if s is pcb or b.XLength * b.YLength < 0.5 or min(b.XLength, b.YLength, b.ZLength) < 0.05:
+            continue
+        boxes.append(box(b.XMin, b.XMax, b.YMin, b.YMax, b.ZMin, b.ZMax))
+    return Part.makeCompound(boxes)
+
+
+board_light = light(board)
+hdmi_light = light(hdmi) if hdmi_top else None
+
 # two variants: the open port window (name) and the back panel (name-backpanel)
 variants = [(name, win_open, [], None)]
 if panel is not None:
@@ -368,12 +386,15 @@ for vname, window, vhooks, vpanel in variants:
     for label, shape in pieces:
         shape.exportStep(os.path.join(out, "%s-%s.step" % (vname, label)))
         shape.exportStl(os.path.join(out, "%s-%s.stl" % (vname, label)))
-    doc = App.newDocument(vname.replace("-", "_"))
-    for label, shape in [("Bottom", lo), ("Top", up), ("Board", board)] + ([("Panel", vpanel)] if vpanel else []):
-        doc.addObject("Part::Feature", label).Shape = shape
-    if hdmi_top:
-        doc.addObject("Part::Feature", "HDMI").Shape = hdmi
-    doc.saveAs(os.path.join(out, vname + ".FCStd"))
+    # the full document, and a light one (boards as outline and part boxes)
+    for suffix, bd, hd in (("", board, hdmi if hdmi_top else None), ("-light", board_light, hdmi_light)):
+        doc = App.newDocument((vname + suffix).replace("-", "_"))
+        for label, shape in [("Bottom", lo), ("Top", up), ("Board", bd)] + ([("Panel", vpanel)] if vpanel else []):
+            doc.addObject("Part::Feature", label).Shape = shape
+        if hd is not None:
+            doc.addObject("Part::Feature", "HDMI").Shape = hd
+        doc.saveAs(os.path.join(out, vname + suffix + ".FCStd"))
+        App.closeDocument(doc.Name)
     print("variant %s: %s" % (vname, ", ".join(p[0] for p in pieces)))
 
 ob = outer.BoundBox
