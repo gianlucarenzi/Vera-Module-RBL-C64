@@ -9,7 +9,9 @@ Environment (all optional):
   RENDER_OUT      output PNG (enclosure/<name>-render.png)
   RENDER_NAME     enclosure name (VERA-<board>-enclosure, as make_enclosure.sh)
   RENDER_VARIANT  backpanel (default) or open
-  RENDER_MODE     still (default) or anim (the assembly, frames to RENDER_FRAMES_DIR)
+  RENDER_MODE     still (default), anim (the assembly, frames f*.png to
+                  RENDER_FRAMES_DIR) or desk (the computer and the monitors,
+                  frames d*.png; DESK_ASSETS, DESK_SCREENS, DESK_MACHINE)
   RENDER_POSE     still: open (top shell lifted, panel out) or closed
   RENDER_FPS, RENDER_SECONDS, RENDER_FRAMES (a-b)   anim: 24, 12, all
   RENDER_COLOR    case colour, sRGB hex (default E3D9C6, RAL 1013 Oyster white)
@@ -394,7 +396,7 @@ def wood_material(kind):
     wave.wave_type = "BANDS"
     wave.bands_direction = "Y"
     wave.inputs["Scale"].default_value = 2 * math.pi / (20 * period)
-    wave.inputs["Distortion"].default_value = 1.6
+    wave.inputs["Distortion"].default_value = 0.8
     wave.inputs["Detail"].default_value = 2.0
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     ramp.color_ramp.elements[0].position = 0.30
@@ -519,6 +521,125 @@ if env("RENDER_MODE", "still") == "still":
     print("written", OUT)
     sys.exit(0)
 
+def ease(x):
+    x = min(max(x, 0.0), 1.0)
+    return 1 - (1 - x) ** 3                 # fast in, slow at the end
+
+
+def smooth(x):
+    x = min(max(x, 0.0), 1.0)
+    return x * x * (3 - 2 * x)
+
+
+# ---------------------------------------------------------------- desk
+# The second part of the video (RENDER_MODE=desk, frames d0001.png ...): the
+# closed enclosure on the table, the computer (tools/desk_scene.py) slides in
+# behind it until its edge connector takes the module's fingers, seen from
+# behind; then a cut to the front, from above: the computer with two monitors
+# behind it, which switch on: the left one (CRT) on the computer's own video,
+# BASIC, the right one (flat, HDMI) on the VERA, its 256 colours.
+if env("RENDER_MODE", "still") == "desk":
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import desk_scene
+
+    FPS = int(env("RENDER_FPS", "24"))
+    SECONDS = float(env("RENDER_SECONDS", "10.5"))
+    TOTAL = int(round(FPS * SECONDS))
+    first, last = (int(x) for x in env("RENDER_FRAMES", "1-%d" % TOTAL).split("-"))
+    FRAMES_DIR = os.path.abspath(env("RENDER_FRAMES_DIR", "frames"))
+    os.makedirs(FRAMES_DIR, exist_ok=True)
+    SCREENS = os.path.abspath(env("DESK_SCREENS", "screens"))
+    MACHINE = env("DESK_MACHINE") or ("c64" if "C64" in NAME else "xe")
+
+    # the module's edge fingers: the outline points with the largest KiCad y,
+    # its widest segment (the cartridge / expansion port fingers)
+    ymax = max(p[1] for p in data["outline"])
+    xs_f = sorted(p[0] for p in data["outline"] if p[1] > ymax - 0.01)
+    segs = [(xs_f[i], xs_f[i + 1]) for i in range(0, len(xs_f) - 1, 2)]
+    fx0, fx1 = max(segs, key=lambda s: s[1] - s[0])
+    finger = Vector(((fx0 + fx1) / 2, -ymax, 0))
+
+    if MACHINE == "xe":
+        comp, info = desk_scene.build_xe(env("DESK_ASSETS"), SCREENS, os.path.join(ROOT, "tools", "keyboards"))
+        left_img = os.path.join(SCREENS, "atari-basic.png")
+    else:
+        comp, info = desk_scene.build_c64(SCREENS, os.path.join(ROOT, "tools", "keyboards"))
+        left_img = os.path.join(SCREENS, "c64-basic.png")
+
+    # computer coordinates (mm, rear at y 0, front +Y) to the world: turned
+    # half round (its rear faces the fingers), its slot on the fingers (the
+    # fingers INSERT mm inside), its table on the enclosure's
+    INSERT = 8.0
+    turn = Matrix.Rotation(math.pi, 4, "Z")
+    shift = Vector((finger.x + info["slot_cart_x"], finger.y + INSERT, lo.z / MM))
+    def to_world(p):
+        return (turn @ Vector(p) + shift) * MM
+
+    desk = bpy.data.objects.new("desk", None)
+    scene.collection.objects.link(desk)
+    desk.rotation_euler = (0, 0, math.pi)
+    desk.location = shift * MM
+    desk.scale = (MM, MM, MM)
+    comp.scale = (1, 1, 1)
+    comp.parent = desk
+    crt, crt_screen = desk_scene.build_crt("crt", left_img, desk)
+    crt.location = info.get("crt_at", (225, -250, 0))
+    flat, flat_screen = desk_scene.build_flat("flat", os.path.join(SCREENS, "vera-256-wide.png"), desk)
+    flat.location = info.get("flat_at", (-240, -250, 0))
+
+    def wbox(lo_, hi_):
+        pts = [to_world((x, y, z)) for x in (lo_[0], hi_[0]) for y in (lo_[1], hi_[1]) for z in (lo_[2], hi_[2])]
+        return (Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts))),
+                Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts))))
+
+    # the lights of a scene about 1 m wide, centred on the desk
+    for o in [o for o in scene.objects if o.type == "LIGHT"]:
+        bpy.data.objects.remove(o)
+    centre = to_world((0, -150, 120))
+    DL = float(env("DESK_LIGHT", "1.0")) * LIGHT
+    area_light("key", 110 * DL, 2.0, (-0.6, -1.0, 1.1), 2.6)
+    area_light("fill", 40 * DL, 2.5, (0.9, -0.5, 0.6), 2.8)
+    area_light("rim", 60 * DL, 1.6, (0.2, 1.0, 0.8), 2.6)
+    cam.dof.aperture_fstop = 16
+
+    SLIDE = (0.6, 3.2)                  # the computer comes from 160 mm away
+    CUT = 4.2                           # to the front view
+    ON_LEFT, ON_RIGHT = 5.2, 6.3        # the monitors switch on
+    sx_ = info["slot_cart_x"]           # the side view, centred on the slot
+    rear_box = wbox((sx_ - 150, -175, 0), (sx_ + 150, 60, 50))
+    front_box = wbox((-420, -260, 0), (380, 235, 500))
+
+    def turn_dir(d, deg):
+        return Matrix.Rotation(math.radians(deg), 3, "Z") @ Vector(d)
+
+    def pose_desk(t):
+        k = ease((t - SLIDE[0]) / (SLIDE[1] - SLIDE[0]))
+        comp.location = (0, 160 * (1 - k), 0)          # computer coordinates: towards its front
+        crt_screen.set(t - ON_LEFT)
+        if "led" in info:                              # the power LED, with the computer
+            info["led"].default_value = 6.0 if t >= ON_LEFT - 0.5 else 0.0
+        flat_screen.set(t - ON_RIGHT)
+        if t < CUT:
+            s = smooth(t / CUT)
+            # behind the computer, on the side of its right hand, slowly turning
+            d = turn @ turn_dir((-1.0, -0.2, 0.5), -10 * s)
+            aim(d, rear_box)
+        else:
+            s = smooth((t - CUT) / (SECONDS - CUT))
+            d = turn @ turn_dir((0.12, 1.0, 0.62), 5 * s)
+            global MARGIN
+            MARGIN = 1.0 - 0.07 * s
+            aim(d, front_box)
+
+    print("desk: frames %d-%d of %d (%d fps), %dx%d, %d samples, to %s" % (
+        first, last, TOTAL, FPS, w, h, scene.cycles.samples, FRAMES_DIR))
+    for f in range(first, last + 1):
+        pose_desk((f - 1) / FPS)
+        scene.render.filepath = os.path.join(FRAMES_DIR, "d%04d.png" % f)
+        bpy.ops.render.render(write_still=True)
+        print("frame", f, "written")
+    sys.exit(0)
+
 # ---------------------------------------------------------------- animation
 # The assembly as in the GIF (tools/enclosure_assembly.py): every part comes
 # from its exploded place, one after the other, while the camera turns
@@ -546,16 +667,6 @@ inner = lambda z0, z1: (Vector((lo.x, lo.y, z0 * MM)), Vector((hi.x, hi.y, z1 * 
 gbox = [inner(0, T + 10), world_box(standoffs), inner(T + STANDOFF, T + STANDOFF + 12), world_box([top])]
 if panel:
     gbox.append(world_box([panel]))
-
-
-def ease(x):
-    x = min(max(x, 0.0), 1.0)
-    return 1 - (1 - x) ** 3                 # fast in, slow at the end
-
-
-def smooth(x):
-    x = min(max(x, 0.0), 1.0)
-    return x * x * (3 - 2 * x)
 
 
 def pose(t):

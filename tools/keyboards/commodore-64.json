@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Commodore 64 (breadbin)",
+    "notes": "Keyboard Layout Editor format. Key positions and sizes as the VIC-20/C64 keyboard (the same layout); legends of the key tops only (the PETSCII graphics are on the key fronts). Rows 1-5 the main keyboard, the f keys in their own column on the right."
+  },
+  [{"x": 0.25}, "←", "!\n1", "\"\n2", "#\n3", "$\n4", "%\n5", "&\n6", "'\n7", "(\n8", ")\n9", "0", "+", "-", "£", "CLR\nHOME", "INST\nDEL", {"x": 1.25, "w": 1.5}, "f1\n\nf2"],
+  [{"x": 0.25, "w": 1.5}, "CTRL", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "@", "*", "↑", {"w": 1.5}, "RESTORE", {"x": 1.25, "w": 1.5}, "f3\n\nf4"],
+  ["RUN\nSTOP", "SHIFT\nLOCK", "A", "S", "D", "F", "G", "H", "J", "K", "L", "[\n:", "]\n;", "=", {"w": 2}, "RETURN", {"x": 1.5, "w": 1.5}, "f5\n\nf6"],
+  ["C=", {"w": 1.5}, "SHIFT", "Z", "X", "C", "V", "B", "N", "M", "<\n,", ">\n.", "?\n/", {"w": 1.5}, "SHIFT", "CRSR\n↕", "CRSR\n↔", {"x": 1.5, "w": 1.5}, "f7\n\nf8"],
+  [{"x": 2.75, "w": 9}, ""]
+]

@@ -4,6 +4,11 @@
 # (credits and end card). The teaser with music: the Teaser workflow on the
 # frames of this run. By hand only: Actions > Video > Run workflow. Results
 # in the "video" artifact.
+# The desk (RENDER_MODE=desk, tools/desk_scene.py) follows the assembly in
+# the teaser: the computer plugs in, the monitors switch on. For the Atari
+# 130XE it needs the 3D models of the private repository 3DRepo: the
+# private half of a read-only deploy key of 3DRepo in the secret
+# THREEDREPO_KEY. desk_seconds 0: no desk.
 name: Video
 
 on:
@@ -12,6 +17,9 @@ on:
       seconds:
         description: "animation length (s)"
         default: "12"
+      desk_seconds:
+        description: "length of the desk part (s), 0: none"
+        default: "10.5"
       fps:
         description: "frames per second"
         default: "24"
@@ -43,6 +51,7 @@ permissions:
 
 env:
   HDMI_REPO: gianlucarenzi/Vera-HDMI-Expansion
+  ASSETS_REPO: gianlucarenzi/3DRepo
   LIB_REPO: gianlucarenzi/RetroBitLab-Library
   KICAD5_APPIMAGE: KiCad-5.1.12-2.2.0-x86_64.AppImage
   KICAD5_URL: https://github.com/gianlucarenzi/kicad_appimage_builder/releases/download/v2.2.0/KiCad-5.1.12-2.2.0-x86_64.AppImage
@@ -104,26 +113,68 @@ jobs:
     outputs:
       chunks: ${{ steps.plan.outputs.chunks }}
       total: ${{ steps.plan.outputs.total }}
+      desk: ${{ steps.plan.outputs.desk }}
     steps:
       - id: plan
         env:
           SECONDS_: ${{ inputs.seconds }}
+          DESK_SECONDS: ${{ inputs.desk_seconds }}
           FPS: ${{ inputs.fps }}
           JOBS: ${{ inputs.jobs }}
         run: |
           python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          # chunks "f1-15" (assembly) and "d1-12" (desk); a desk frame costs
+          # about 1.5 assembly frames
           import json, os
-          total = round(float(os.environ["SECONDS_"]) * int(os.environ["FPS"]))
-          jobs = max(1, min(int(os.environ["JOBS"]), total))
-          step = -(-total // jobs)
-          chunks = ["%d-%d" % (a, min(a + step - 1, total)) for a in range(1, total + 1, step)]
+          fps = int(os.environ["FPS"])
+          total = round(float(os.environ["SECONDS_"]) * fps)
+          desk = round(float(os.environ["DESK_SECONDS"]) * fps)
+          jobs = max(2, int(os.environ["JOBS"]))
+          jd = round(jobs * 1.5 * desk / (total + 1.5 * desk)) if desk else 0
+          jd = min(max(jd, 1 if desk else 0), jobs - 1)
+          chunks = []
+          for kind, n, j in (("f", total, jobs - jd), ("d", desk, jd)):
+              if n:
+                  step = -(-n // max(1, min(j, n)))
+                  chunks += ["%s%d-%d" % (kind, a, min(a + step - 1, n)) for a in range(1, n + 1, step)]
           print("chunks=" + json.dumps(chunks))
           print("total=%d" % total)
+          print("desk=%d" % desk)
           EOF
           cat "$GITHUB_OUTPUT"
 
+  screens:
+    # the screen images and the key legends (tools/make_screens.py)
+    runs-on: ubuntu-latest
+    container: debian:latest
+    timeout-minutes: 20
+    steps:
+      - name: Packages (Pillow, fonts)
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates python3 python3-pil fonts-dejavu-core
+      - uses: actions/checkout@v4
+      - name: Key for 3DRepo (the 130XE desk)
+        env:
+          TOKEN: ${{ secrets.THREEDREPO_KEY }}
+          NAME: ${{ github.event.repository.name }}
+          DESK_SECONDS: ${{ inputs.desk_seconds }}
+        run: |
+          if [ -z "$TOKEN" ] && [ "$DESK_SECONDS" != "0" ] && echo "$NAME" | grep -q XE; then
+            echo "::error::the 130XE desk needs the secret THREEDREPO_KEY (a read-only deploy key of 3DRepo)"
+            exit 1
+          fi
+      - name: Screens and legends
+        run: python3 tools/make_screens.py screens
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screens
+          path: screens/*
+          retention-days: 3
+
   frames:
-    needs: [vrml, plan]
+    needs: [vrml, plan, screens]
     runs-on: ubuntu-latest
     container: debian:latest
     timeout-minutes: 300
@@ -149,13 +200,33 @@ jobs:
         if: steps.blender.outputs.cache-hit != 'true'
         run: curl -fsSL "$BLENDER_URL" | tar -xJ -C /opt
       - uses: actions/checkout@v4
+      - name: Key for 3DRepo
+        id: token
+        env:
+          TOKEN: ${{ secrets.THREEDREPO_KEY }}
+        run: if [ -n "$TOKEN" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: startsWith(matrix.range, 'd') && steps.token.outputs.ok == 'true'
+        with:
+          repository: ${{ env.ASSETS_REPO }}
+          ssh-key: ${{ secrets.THREEDREPO_KEY }}
+          path: 3DRepo
+          sparse-checkout: Atari/XE
       - uses: actions/download-artifact@v4
         with:
           name: vrml
           path: vrml
+      - uses: actions/download-artifact@v4
+        if: startsWith(matrix.range, 'd')
+        with:
+          name: screens
+          path: screens
       - name: Frames ${{ matrix.range }}
         env:
-          RENDER_MODE: anim
+          CHUNK: ${{ matrix.range }}
+          DESK_SECONDS: ${{ inputs.desk_seconds }}
+          DESK_ASSETS: ${{ github.workspace }}/3DRepo/Atari/XE
+          DESK_SCREENS: ${{ github.workspace }}/screens
           RENDER_WRL: ${{ github.workspace }}/vrml/VERA-MODULE-RBL.wrl
           RENDER_HDMI_WRL: ${{ github.workspace }}/vrml/VERA-HDMI-Expansion.wrl
           RENDER_VARIANT: ${{ inputs.variant }}
@@ -164,11 +235,16 @@ jobs:
           RENDER_SAMPLES: ${{ inputs.samples }}
           RENDER_RES: ${{ inputs.resolution }}
           RENDER_FPS: ${{ inputs.fps }}
-          RENDER_SECONDS: ${{ inputs.seconds }}
-          RENDER_FRAMES: ${{ matrix.range }}
+          RENDER_SECONDS_ANIM: ${{ inputs.seconds }}
           RENDER_FRAMES_DIR: ${{ github.workspace }}/frames
         run: |
           export PATH="/opt/$BLENDER:$PATH"
+          export RENDER_FRAMES="${CHUNK:1}"
+          if [ "${CHUNK:0:1}" = d ]; then
+            export RENDER_MODE=desk RENDER_SECONDS="$DESK_SECONDS"
+          else
+            export RENDER_MODE=anim RENDER_SECONDS="$RENDER_SECONDS_ANIM"
+          fi
           blender -b --python-exit-code 1 -P tools/render_enclosure.py | grep -vE "^Fra:"
       - uses: actions/upload-artifact@v4
         with:
@@ -200,6 +276,7 @@ jobs:
           NAME: ${{ github.event.repository.name }}
         run: |
           test "$(ls frames/f*.png | wc -l)" -eq "${{ needs.plan.outputs.total }}"
+          test "$(ls frames/d*.png 2>/dev/null | wc -l)" -eq "${{ needs.plan.outputs.desk }}"
           tools/make_video.sh frames "video/$NAME"
       - uses: actions/upload-artifact@v4
         with:

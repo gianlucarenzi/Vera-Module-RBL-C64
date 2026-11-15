@@ -2,7 +2,9 @@
 # The assembly frames of tools/render_enclosure.py (RENDER_MODE=anim) as:
 #   OUT-assembly.gif   the animation, 720 px wide
 #   OUT-assembly.mp4   the animation, H.264
-#   OUT-teaser.mp4     the animation fading to black in its last second, the
+#   OUT-teaser.mp4     the animation (followed by the desk frames d*.png of
+#                      RENDER_MODE=desk when FRAMES_DIR has them) fading to
+#                      black in its last second, the
 #                      end credits (CREDITS, tools/make_credits.py)
 #                      scrolling up, one screen every CREDITS_SCREEN s, then
 #                      the end card (TITLE, big and bold, in the centre,
@@ -34,9 +36,12 @@ FONT=${FONT:-/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf}
 N=$(ls "${FRAMES}"/f*.png | wc -l)
 [ "${N}" -gt 0 ] || { echo "no frames in ${FRAMES}"; exit 1; }
 SIZE=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${FRAMES}/f0001.png")
-D=$(awk "BEGIN{printf \"%.3f\", ${N}/${FPS}}")              # animation length (s)
-FADE_AT=$(awk "BEGIN{printf \"%.3f\", ${D}-1}")
-echo "${N} frames, ${SIZE}, ${D} s at ${FPS} fps"
+ND=$(ls "${FRAMES}"/d*.png 2>/dev/null | wc -l)
+D1=$(awk "BEGIN{printf \"%.3f\", ${N}/${FPS}}")             # assembly length (s)
+D2=$(awk "BEGIN{printf \"%.3f\", ${ND}/${FPS}}")            # desk length (s)
+D=$(awk "BEGIN{printf \"%.3f\", ${D1}+${D2}}")               # animation length (s)
+FADE_AT=$(awk "BEGIN{printf \"%.3f\", (${ND} > 0 ? ${D2} : ${D1})-1}")
+echo "${N} + ${ND} frames, ${SIZE}, ${D} s at ${FPS} fps"
 mkdir -p "$(dirname "${OUT}")"
 
 ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
@@ -78,16 +83,27 @@ esc() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e "s/'/\\\\'/g" -e 's/:/\\:/g' 
 ALPHA="if(lt(t,0.6),t/0.6,if(lt(t,${CARD}-${CARD_FADE}),1,(${CARD}-t)/${CARD_FADE}))"
 TXT="drawtext=fontfile=${FONT}:text='$(esc "${TITLE}")':fontcolor=white:fontsize=h/6.5:x=(w-text_w)/2:y=(h-text_h)/2:alpha='${ALPHA}'"
 SUB="drawtext=fontfile=${FONT}:text='$(esc "${SUBTITLE}")':fontcolor=white:fontsize=h/20:x=(w-text_w)/2:y=h-h/9-text_h:alpha='${ALPHA}'"
-VIDEO="[0:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a];\
-[2:v][1:v]overlay=x=0:y='${SCROLL}',format=yuv420p,setsar=1[r];\
-[3:v]${TXT},${SUB},format=yuv420p,setsar=1[c];\
-[a][r][c]concat=n=3:v=1:a=0[v]"
 INPUTS=(-framerate "${FPS}" -i "${FRAMES}/f%04d.png"
 	-loop 1 -framerate "${FPS}" -t "${C}" -i "${TMP}/credits.png"
 	-f lavfi -i "color=c=black:s=${SIZE}:r=${FPS}:d=${C}"
 	-f lavfi -i "color=c=black:s=${SIZE}:r=${FPS}:d=${CARD}")
+if [ "${ND}" -gt 0 ]; then
+	# the assembly cuts to the desk, which fades out
+	INPUTS+=(-framerate "${FPS}" -i "${FRAMES}/d%04d.png")
+	VIDEO="[0:v]format=yuv420p,setsar=1[a0];\
+[4:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a1];\
+[a0][a1]concat=n=2:v=1:a=0[a];"
+	MUSIC_IN=5
+else
+	VIDEO="[0:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a];"
+	MUSIC_IN=4
+fi
+VIDEO="${VIDEO}\
+[2:v][1:v]overlay=x=0:y='${SCROLL}',format=yuv420p,setsar=1[r];\
+[3:v]${TXT},${SUB},format=yuv420p,setsar=1[c];\
+[a][r][c]concat=n=3:v=1:a=0[v]"
 if [ -n "${MUSIC}" ]; then
-	AUDIO="[4:a]atrim=${MUSIC_START}:$(awk "BEGIN{print ${MUSIC_START}+${TOTAL}}"),asetpts=PTS-STARTPTS,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,afade=t=in:st=0:d=1.5,afade=t=out:st=${FADE_END}:d=${CARD_FADE},apad[m]"
+	AUDIO="[${MUSIC_IN}:a]atrim=${MUSIC_START}:$(awk "BEGIN{print ${MUSIC_START}+${TOTAL}}"),asetpts=PTS-STARTPTS,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,afade=t=in:st=0:d=1.5,afade=t=out:st=${FADE_END}:d=${CARD_FADE},apad[m]"
 	ffmpeg -v error -y "${INPUTS[@]}" -i "${MUSIC}" \
 		-filter_complex "${VIDEO};${AUDIO}" -map "[v]" -map "[m]" -t "${TOTAL}" \
 		-c:v libx264 -preset slow -crf 18 -c:a aac -b:a 192k -movflags +faststart "${OUT}-teaser.mp4"
