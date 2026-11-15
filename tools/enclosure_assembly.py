@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Assembly of the enclosure made by tools/make_enclosure.py, step by step:
-lower shell, board, standoffs, VERA-HDMI-Expansion, upper shell closing.
+lower shell, board, standoffs, VERA-HDMI-Expansion, upper shell closing
+and, in the back panel variant, the panel snapping into the port side.
 
 As a FreeCAD macro (Macro > Macros..., or run it from the Python console):
 open enclosure/<name>.FCStd first, then run this file: it animates the
@@ -30,6 +31,7 @@ doc = App.ActiveDocument
 obj = {o.Label: o for o in doc.Objects}
 bottom, top, board = obj["Bottom"], obj["Top"], obj["Board"]
 hdmi = obj.get("HDMI")
+panel = obj.get("Panel")
 
 # standoffs (M3 F/F 14 mm, hex 5.5 mm drawn as a cylinder) on the holes
 if "Standoffs" not in obj:
@@ -83,8 +85,8 @@ if not frames and os.environ.get("ENC_FULL") != "1":
         hdmi = light(hdmi)
 
 colours = {"Bottom": (0.25, 0.25, 0.28), "Top": (0.20, 0.35, 0.65), "Board": (0.10, 0.45, 0.25),
-           "HDMI": (0.10, 0.40, 0.55), "Standoffs": (0.85, 0.85, 0.80)}
-for o in (bottom, top, board, hdmi, standoffs):
+           "HDMI": (0.10, 0.40, 0.55), "Standoffs": (0.85, 0.85, 0.80), "Panel": (0.80, 0.45, 0.15)}
+for o in (bottom, top, board, hdmi, standoffs, panel):
     if o is not None:
         o.ViewObject.ShapeColor = colours[o.Label.replace("_light", "")]
         o.ViewObject.Visibility = True
@@ -92,25 +94,30 @@ for o in (bottom, top, board, hdmi, standoffs):
 top.ViewObject.Transparency = 35
 
 view = Gui.ActiveDocument.ActiveView
-STEPS = [(board, 70.0), (standoffs, 50.0), (hdmi, 90.0), (top, 120.0)]
+# (part, start offset): from above, the panel from the port side (+Y)
+STEPS = [(board, V(0, 0, 70)), (standoffs, V(0, 0, 50)), (hdmi, V(0, 0, 90)), (top, V(0, 0, 120)),
+         (panel, V(0, 60, 0))]
 
 
 # a shape moved with translated() keeps that move in its Placement (the
 # STEP of each board is moved onto the board outline): add to it, never
 # replace it
-home = {o.Name: o.Placement.copy() for o in (bottom, top, board, hdmi, standoffs) if o is not None}
+home = {o.Name: o.Placement.copy() for o in (bottom, top, board, hdmi, standoffs, panel) if o is not None}
 
 
-def place(o, dz):
+def place(o, d):
     if o is not None:
         h = home[o.Name]
-        o.Placement = App.Placement(h.Base + V(0, 0, dz), h.Rotation)
+        o.Placement = App.Placement(h.Base + d, h.Rotation)
 
 
 # exploded start, camera fitted on it once
-for o, dz in STEPS:
-    place(o, dz)
+for o, d in STEPS:
+    place(o, d)
 view.viewIsometric()
+if panel is not None:
+    # from the port side, to see the panel going in
+    view.setViewDirection((-0.55, -0.65, -0.52))
 Gui.updateGui()
 view.fitAll()
 n = [0]
@@ -128,11 +135,11 @@ def shot():
 
 for _ in range(8):
     shot()
-for o, dz in STEPS:
+for o, d in STEPS:
     if o is None:
         continue
     for k in range(1, 21):
-        place(o, dz * (1 - k / 20.0) ** 2)      # slows down at the end
+        place(o, d * (1 - k / 20.0) ** 2)       # slows down at the end
         shot()
     for _ in range(4):
         shot()

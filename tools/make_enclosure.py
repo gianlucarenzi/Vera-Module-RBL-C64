@@ -134,7 +134,6 @@ if reach:
     wx1 = max([b.XMax for b in reach] + [p["x1"] for p in pp]) + 1.0
     wz0 = max(min(b.ZMin for b in reach) - 1.0, z_floor + WALL)
     wz1 = min(max(b.ZMax for b in reach) + 1.0, z_roof - WALL)
-    openings.append(box(wx0, wx1, y_edge + GAP - 0.1, y_edge + 20, wz0, wz1))
     print("port window: x %.1f..%.1f (KiCad), z %.1f..%.1f mm" % (wx0, wx1, wz0, wz1))
 # Card edge fingers: a slot where the board crosses the wall at ENC_CUT
 fingers = pl.cut(clip)
@@ -144,6 +143,12 @@ for f in fingers.Faces:
 for o in openings:
     lower = lower.cut(o)
     upper = upper.cut(o)
+# the port window is cut at the end: it differs in the two variants
+z_in_floor = z_floor + WALL         # floor and roof, inner faces
+z_in_roof = z_roof - WALL
+y_in = y_edge + GAP                 # port wall, inner and outer face
+y_out = y_in + WALL
+win_open = box(wx0, wx1, y_in - 0.1, y_edge + 20, wz0, wz1) if reach else None
 
 # ---------------------------------------------------------------- bosses
 z_boss_top = z_roof - WALL
@@ -206,6 +211,120 @@ for x, y in supports:
 print("supports near the fingers (KiCad x, y): %s" % ", ".join("(%.0f, %.0f)" % (x, -y) for x, y in supports)
       if supports else "supports near the fingers: no free spot found")
 
+# ---------------------------------------------------------------- back panel (second variant)
+# The same shells with the port window down to the floor, closed by a
+# separate panel: a plug in the window with a hole for each port, an outer
+# flange that stops it on the wall, and snap hooks. Each hook is an arm on
+# the floor (or under the roof) going into the case, with a barb that drops
+# into a slot through the floor (roof): it is pushed in from outside with
+# the case closed, and comes out pressing the barbs up through the slots.
+PANEL_TOL = 0.2     # plug to window, each side
+PORT_TOL = 0.5      # around each port
+FLANGE, FLANGE_T = 1.5, 1.2     # flange overlap on the wall, thickness
+NO_MODEL_H = 6.0    # height over the board of a port without a 3D model
+SNAP_W, SNAP_L, SNAP_T = 6.0, 10.0, 1.0     # arm width, length, thickness
+SNAP_CATCH = 0.7    # barb depth into the slot
+SNAP_RAMP = 2.0     # barb length (lead-in ramp)
+SNAP_N = 2          # hooks on the floor, as many under the roof
+MIN_RIB = 1.2       # thinnest strip of the plug beside a hole
+
+
+def is_board(b):
+    return b.ZLength < T + 0.2 and b.XLength > 20 and b.YLength > 20
+
+
+win_panel = panel = None
+hooks = []
+if reach:
+    win_panel = box(wx0, wx1, y_in - 0.1, y_edge + 20, z_in_floor, wz1)
+    px0, px1, pz0, pz1 = wx0 + PANEL_TOL, wx1 - PANEL_TOL, z_in_floor + PANEL_TOL, wz1 - PANEL_TOL
+    panel = box(px0, px1, y_in, y_out, pz0, pz1)
+    ob = outer.BoundBox
+    panel = panel.fuse(box(max(wx0 - FLANGE, ob.XMin + 0.3), min(wx1 + FLANGE, ob.XMax - 0.3),
+                           y_out, y_out + FLANGE_T, z_floor, min(wz1 + FLANGE, z_roof)))
+    # port holes: what of each part must pass through the panel (all of it
+    # in front of the inner face; the front 1.5 mm of a recessed part)
+    rects = []
+    for s in parts:
+        b = s.BoundBox
+        if is_board(b) or b.YMax < y_edge - 2.0 or b.XLength > 60:
+            continue
+        yc = min(y_in, b.YMax - 1.5)
+        try:
+            p = s.common(box(b.XMin - 1, b.XMax + 1, yc, b.YMax + 1, b.ZMin - 1, b.ZMax + 1)).BoundBox
+        except Exception:
+            p = b
+        if not p.isValid() or p.XLength < 1.0 or p.ZLength < 1.0 or p.ZMax < T + 0.3:
+            continue            # small parts at the edge (passives, pins)
+        rects.append((p.XMin, p.XMax, p.ZMin, p.ZMax))
+    for ref, pp in sorted(data.get("port_parts", {}).items()):
+        if not any(r[0] < pp["x1"] and r[1] > pp["x0"] and r[3] > T for r in rects):
+            rects.append((pp["x0"], pp["x1"], T, T + NO_MODEL_H))
+            print("port %s without a 3D model: hole %.0f mm high" % (ref, NO_MODEL_H))
+    rects = [(x0 - PORT_TOL, x1 + PORT_TOL, z0 - PORT_TOL, z1 + PORT_TOL) for x0, x1, z0, z1 in rects]
+    # no strip under MIN_RIB between a hole and the edge of the plug (it would
+    # not print): the hole goes to the window edge, the flange stays whole
+    rects = [(x0 if x0 - px0 >= MIN_RIB else wx0 - 0.1, x1 if px1 - x1 >= MIN_RIB else wx1 + 0.1,
+              z0 if z0 - pz0 >= MIN_RIB else z_in_floor - 0.1, z1 if pz1 - z1 >= MIN_RIB else wz1 + 0.1)
+             for x0, x1, z0, z1 in rects]
+    for x0, x1, z0, z1 in rects:
+        panel = panel.cut(box(x0, x1, y_in - 1, y_out + FLANGE_T + 1, z0, z1))
+
+    # snap hooks where the arm, bent by the barb, touches nothing
+    obst = [s.BoundBox for s in parts]
+    for h in data["holes"]:
+        c = kc(h)
+        obst.append(App.BoundBox(c.x - BOSS_D / 2, c.y - BOSS_D / 2, z_floor, c.x + BOSS_D / 2, c.y + BOSS_D / 2, z_roof))
+    for x, y in supports:
+        obst.append(App.BoundBox(x - SUP_COL_D / 2, y - SUP_COL_D / 2, z_floor, x + SUP_COL_D / 2, y + SUP_COL_D / 2, z_roof))
+    flex = SNAP_CATCH + PANEL_TOL       # the arm lifts by the barb height
+    zone = {"floor": (z_in_floor, pz0 + SNAP_T + flex + 0.5),
+            "roof": (pz1 - SNAP_T - flex - 0.5, z_in_roof)}
+    root = {"floor": (pz0, pz0 + SNAP_T + 1.5), "roof": (pz1 - SNAP_T - 1.5, pz1)}
+
+    def hook_free(x, where):
+        xa, xb = x - SNAP_W / 2 - 0.5, x + SNAP_W / 2 + 0.5
+        za, zb = zone[where]
+        for b in obst:
+            if b.XMin < xb and b.XMax > xa and b.YMin < y_in and b.YMax > y_in - SNAP_L - 0.5 \
+                    and b.ZMin < zb and b.ZMax > za:
+                return False
+        ra, rb = root[where]
+        return not any(r[0] < xb + 0.5 and r[1] > xa - 0.5 and r[2] < rb and r[3] > ra for r in rects)
+
+    def hook(x, where):
+        """arm + barb (on the panel) and slot (in the shell) of one hook"""
+        ya, yc = y_in - SNAP_L, y_in - SNAP_L + SNAP_RAMP
+        if where == "floor":
+            arm = box(x - SNAP_W / 2, x + SNAP_W / 2, ya, y_in + 0.01, pz0, pz0 + SNAP_T)
+            zt, zb = pz0 + 0.01, z_in_floor - SNAP_CATCH
+            slot = box(x - SNAP_W / 2 - 0.3, x + SNAP_W / 2 + 0.3, ya - 0.3, yc + 0.2, z_floor - 1, z_in_floor + 0.01)
+        else:
+            arm = box(x - SNAP_W / 2, x + SNAP_W / 2, ya, y_in + 0.01, pz1 - SNAP_T, pz1)
+            zt, zb = pz1 - 0.01, z_in_roof + SNAP_CATCH
+            slot = box(x - SNAP_W / 2 - 0.3, x + SNAP_W / 2 + 0.3, ya - 0.3, yc + 0.2, z_in_roof - 0.01, z_roof + 1)
+        # lead-in ramp towards the inside, square catch face towards the port side
+        prof = [V(x - SNAP_W / 2, ya, zt), V(x - SNAP_W / 2, yc, zt), V(x - SNAP_W / 2, yc, zb)]
+        barb = Part.Face(Part.makePolygon(prof + [prof[0]])).extrude(V(SNAP_W, 0, 0))
+        return arm.fuse(barb), slot
+
+    for where in ("floor", "roof"):
+        cand = [px0 + SNAP_W / 2 + 1 + 0.5 * k for k in range(int((px1 - px0 - SNAP_W - 2) / 0.5) + 1)]
+        cand = [x for x in cand if hook_free(x, where)]
+        chosen = []
+        for k in range(SNAP_N):
+            tx = px0 + (px1 - px0) * (0.12 + 0.76 * k / max(SNAP_N - 1, 1))
+            for x in sorted(cand, key=lambda c: abs(c - tx)):
+                if all(abs(x - c) > SNAP_W + 10 for c in chosen):
+                    chosen.append(x)
+                    break
+        for x in chosen:
+            hooks.append((where, x) + hook(x, where))
+        print("back panel hooks, %s (KiCad x): %s" % (where, ", ".join("%.1f" % x for x in chosen) or "no free spot found"))
+    for where, x, h, slot in hooks:
+        panel = panel.fuse(h)
+    print("back panel: %d port holes, %d hooks" % (len(rects), len(hooks)))
+
 # ---------------------------------------------------------------- vents (45 degrees)
 def vent(ref):
     p = data["parts"][ref]
@@ -231,23 +350,37 @@ for ref in ("SW1", "SW3"):
         upper = upper.cut(Part.makeCylinder(PIN_HOLE / 2, WALL + 2, V(c.x, c.y, z_roof - WALL - 1)))
 
 # ---------------------------------------------------------------- output
-lower = lower.removeSplitter()
-upper = upper.removeSplitter()
-for label, shape in (("bottom", lower), ("top", upper)):
-    shape.exportStep(os.path.join(out, "%s-%s.step" % (name, label)))
-    shape.exportStl(os.path.join(out, "%s-%s.stl" % (name, label)))
-doc = App.newDocument(name)
-for label, shape in (("Bottom", lower), ("Top", upper), ("Board", board)):
-    doc.addObject("Part::Feature", label).Shape = shape
-if hdmi_top:
-    doc.addObject("Part::Feature", "HDMI").Shape = hdmi
-doc.saveAs(os.path.join(out, name + ".FCStd"))
+# two variants: the open port window (name) and the back panel (name-backpanel)
+variants = [(name, win_open, [], None)]
+if panel is not None:
+    variants.append((name + "-backpanel", win_panel, hooks, panel.removeSplitter()))
+for vname, window, vhooks, vpanel in variants:
+    lo, up = lower, upper
+    if window is not None:
+        lo, up = lo.cut(window), up.cut(window)
+    for where, x, h, slot in vhooks:
+        if where == "floor":
+            lo = lo.cut(slot)
+        else:
+            up = up.cut(slot)
+    lo, up = lo.removeSplitter(), up.removeSplitter()
+    pieces = [("bottom", lo), ("top", up)] + ([("panel", vpanel)] if vpanel else [])
+    for label, shape in pieces:
+        shape.exportStep(os.path.join(out, "%s-%s.step" % (vname, label)))
+        shape.exportStl(os.path.join(out, "%s-%s.stl" % (vname, label)))
+    doc = App.newDocument(vname.replace("-", "_"))
+    for label, shape in [("Bottom", lo), ("Top", up), ("Board", board)] + ([("Panel", vpanel)] if vpanel else []):
+        doc.addObject("Part::Feature", label).Shape = shape
+    if hdmi_top:
+        doc.addObject("Part::Feature", "HDMI").Shape = hdmi
+    doc.saveAs(os.path.join(out, vname + ".FCStd"))
+    print("variant %s: %s" % (vname, ", ".join(p[0] for p in pieces)))
 
 ob = outer.BoundBox
 screw_low = WALL + (0 - z_floor - WALL) + T + 4
 screw_up = WALL + (z_boss_top - (hdmi_top or T + STANDOFF)) + (hdmi_top and (hdmi_top - T - STANDOFF) or 0) + 4
 print("%s: %.1f x %.1f x %.1f mm (floor %.1f, roof %.1f), %d openings" % (
-    name, ob.XLength, ob.YLength, z_roof - z_floor, z_floor, z_roof, len(openings)))
+    name, ob.XLength, ob.YLength, z_roof - z_floor, z_floor, z_roof, len(openings) + (1 if reach else 0)))
 print("screws: 4 x M3 from below about %.0f mm, 4 x M3 from above about %.0f mm, 4 standoffs M3 F/F %.0f mm" % (
     screw_low, screw_up, STANDOFF))
 print("written to", out)

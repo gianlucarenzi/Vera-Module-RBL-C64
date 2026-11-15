@@ -1,11 +1,14 @@
 #!/bin/bash
 # Enclosure of the VERA module: two 3D-printable shells, made with FreeCAD
 # from the KiCad 5 PCB and its STEP, with room for the VERA-HDMI-Expansion.
+# Two variants: an open window on the port side (NAME), or the same shells
+# closed there by a snap-in back panel with a hole for each port
+# (NAME-backpanel).
 # See enclosure/README.md.
 #
 # Usage: tools/make_enclosure.sh CUT_Y [--no-anim]
 #   CUT_Y   KiCad y (mm) where the case ends and the card edge fingers come
-#           out: 151 for this board
+#           out: 189 for this board
 #
 # Needs: KiCad 5 (system, otherwise the KiCad 5 AppImage as "kicad5"),
 # FreeCAD 0.19 or later (freecadcmd, freecad), xvfb-run and ffmpeg (or
@@ -45,20 +48,25 @@ if ! command -v xvfb-run >/dev/null || { ! command -v ffmpeg >/dev/null && ! com
 	echo "xvfb-run, or ffmpeg / ImageMagick, missing: no animation (apt install xvfb ffmpeg)"
 	exit 0
 fi
-echo "[3/4] Assembly frames (FreeCAD GUI on a virtual display, about 15 minutes)"
+echo "[3/4] Assembly frames (FreeCAD GUI on a virtual display, about 15 minutes each)"
 FRAMES=$(mktemp -d)
 trap 'rm -rf "${FRAMES}"' EXIT
-ENC_DOC=${OUT}/${NAME}.FCStd ENC_FRAMES=${FRAMES} \
-	xvfb-run -a -s "-screen 0 1280x1024x24" freecad tools/enclosure_assembly.py >/dev/null 2>&1 || true
-[ -n "$(ls ${FRAMES})" ] || { echo "no frames rendered"; exit 1; }
-echo "[4/4] GIF"
-GIF=${OUT}/${NAME}-assembly.gif
-if command -v ffmpeg >/dev/null; then
-	# one palette for the whole animation: much faster than ImageMagick
-	ffmpeg -v error -y -framerate 16 -i ${FRAMES}/f%04d.png \
-		-vf "scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer" \
-		-loop 0 ${GIF}
-else
-	convert -delay 6 -loop 0 -resize 720x540 ${FRAMES}/*.png ${GIF}
-fi
+for VNAME in ${NAME} ${NAME}-backpanel; do
+	[ -f ${OUT}/${VNAME}.FCStd ] || continue
+	rm -f ${FRAMES}/*.png
+	ENC_DOC=${OUT}/${VNAME}.FCStd ENC_FRAMES=${FRAMES} \
+		xvfb-run -a -s "-screen 0 1280x1024x24" freecad tools/enclosure_assembly.py >/dev/null 2>&1 || true
+	[ -n "$(ls ${FRAMES})" ] || { echo "${VNAME}: no frames rendered"; exit 1; }
+	echo "[4/4] GIF of ${VNAME}"
+	GIF=${OUT}/${VNAME}-assembly.gif
+	if command -v ffmpeg >/dev/null; then
+		# one palette for the whole animation: much faster than ImageMagick
+		ffmpeg -v error -y -framerate 16 -i ${FRAMES}/f%04d.png \
+			-vf "scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer" \
+			-loop 0 ${GIF}
+	else
+		convert -delay 6 -loop 0 -resize 720x540 ${FRAMES}/*.png ${GIF}
+	fi
+done
 echo "done: ${OUT}/${NAME}-{bottom,top}.{step,stl}, ${NAME}.FCStd, ${NAME}-assembly.gif"
+echo "      ${OUT}/${NAME}-backpanel-{bottom,top,panel}.{step,stl}, ${NAME}-backpanel.FCStd, ${NAME}-backpanel-assembly.gif"

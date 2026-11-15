@@ -1,0 +1,122 @@
+# Printable enclosure, built on GitHub instead of a local PC: the two shells,
+# the back panel variant and the assembly GIFs (tools/make_enclosure.sh, see
+# enclosure/README.md), in a debian:latest container with FreeCAD from apt and
+# KiCad 5 from the KiCad 5 AppImage.
+#
+# Runs by hand (Actions > Enclosure > Run workflow) and on a push to main that
+# changes the PCB, its STEP or the enclosure scripts. The results go to two
+# artifacts (open port window / back panel) and are committed to enclosure/.
+name: Enclosure
+
+on:
+  workflow_dispatch:
+    inputs:
+      animation:
+        description: "Render the assembly GIFs (about 15 minutes each)"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - VERA-MODULE-RBL.kicad_pcb
+      - images/VERA-MODULE-RBL.step
+      - run_pcbnew.sh
+      - tools/make_enclosure.sh
+      - tools/make_enclosure.py
+      - tools/enclosure_data.py
+      - tools/enclosure_assembly.py
+      - .github/workflows/enclosure.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: enclosure-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ENC_CUT: "151"      # KiCad y where the case ends (card edge fingers)
+  HDMI_REPO: gianlucarenzi/Vera-HDMI-Expansion
+  KICAD5_APPIMAGE: KiCad-5.1.12-2.2.0-x86_64.AppImage
+  KICAD5_URL: https://github.com/gianlucarenzi/kicad_appimage_builder/releases/download/v2.2.0/KiCad-5.1.12-2.2.0-x86_64.AppImage
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  enclosure:
+    runs-on: ubuntu-latest
+    container: debian:latest
+    timeout-minutes: 150
+    steps:
+      - name: Packages (FreeCAD, Xvfb, ffmpeg)
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates curl zstd python3 freecad xvfb xauth ffmpeg
+
+      - uses: actions/checkout@v4
+
+      - name: VERA-HDMI-Expansion (PCB and STEP of the add-on board)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HDMI_REPO }}
+          path: Vera-HDMI-Expansion
+
+      - name: KiCad 5 AppImage (cached)
+        id: kicad5
+        uses: actions/cache@v4
+        with:
+          path: /opt/kicad5/${{ env.KICAD5_APPIMAGE }}
+          key: ${{ env.KICAD5_APPIMAGE }}
+
+      - name: Download KiCad 5 AppImage
+        if: steps.kicad5.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /opt/kicad5
+          curl -fsSL -o "/opt/kicad5/$KICAD5_APPIMAGE" "$KICAD5_URL"
+
+      - name: KiCad 5 as "kicad5" (extracted: no FUSE in a container)
+        run: |
+          cd /opt/kicad5
+          chmod +x "$KICAD5_APPIMAGE"
+          "./$KICAD5_APPIMAGE" --appimage-extract >/dev/null
+          printf '#!/bin/sh\nexec /opt/kicad5/squashfs-root/AppRun "$@"\n' > /usr/local/bin/kicad5
+          chmod +x /usr/local/bin/kicad5
+
+      - name: Build the enclosure
+        env:
+          HDMI_DIR: ${{ github.workspace }}/Vera-HDMI-Expansion
+          NO_ANIM: ${{ (github.event_name == 'workflow_dispatch' && !inputs.animation) && '--no-anim' || '' }}
+        run: tools/make_enclosure.sh "$ENC_CUT" $NO_ANIM
+
+      - name: Artifact, open port window
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-enclosure-open
+          if-no-files-found: error
+          path: |
+            enclosure/*-enclosure-bottom.st?
+            enclosure/*-enclosure-top.st?
+            enclosure/*-enclosure.FCStd
+            enclosure/*-enclosure-assembly.gif
+
+      - name: Artifact, back panel
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-enclosure-backpanel
+          if-no-files-found: error
+          path: enclosure/*-enclosure-backpanel*
+
+      - name: Commit the results to enclosure/
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add enclosure
+          if git diff --cached --quiet; then echo "enclosure/ unchanged"; exit 0; fi
+          git commit -m "Enclosure: rebuilt by the workflow from ${GITHUB_SHA::7}"
+          git pull --rebase
+          git push
