@@ -1,0 +1,35 @@
+# End credits of the teaser (tools/make_video.sh), scrolled bottom to top.
+#   "= text"  title, "# text" heading, "- text" small line, empty line: space
+#   @MUSIC@   the MUSIC_CREDIT lines (| separated); the Music section goes
+#             away without music
+#   @LOGOS@ a.png b.png   the logos side by side on a white plate (paths
+#             relative to this file); the scrolling stops on it
+# Lines starting with "#!" and this header (up to the first empty line) are
+# comments.
+
+= VERA MODULE RBL-C64
+- Commander X16 graphics and sound for the Commodore 64
+
+# Design
+RetroBit Lab
+
+# Hardware, firmware and enclosure
+GNU General Public License v3.0
+github.com/gianlucarenzi/Vera-Module-RBL-C64
+
+# VERA-HDMI-Expansion
+GNU General Public License v3.0
+github.com/gianlucarenzi/Vera-HDMI-Expansion
+
+# VERA FPGA (Video Enhanced Retro Adapter)
+© 2022 Frank van den Hoef, MIT License
+github.com/X16Community/vera-module
+
+# Music
+@MUSIC@
+
+# Made with open source tools
+KiCad · FreeCAD · Blender · FFmpeg
+
+# PCB fabrication and assembly · Components
+@LOGOS@ logos/jlcpcb.png logos/lcsc.png

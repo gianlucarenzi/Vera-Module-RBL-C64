@@ -1,0 +1,79 @@
+# The teaser again from the frames of a Video run, with other music or end
+# card texts, without rendering again (tools/make_video.sh): about a minute.
+# By hand only: Actions > Teaser > Run workflow, with the id of a Video run
+# (the number in its URL; its frames are kept 3 days).
+name: Teaser
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "id of the Video run with the frames"
+        required: true
+      music:
+        description: "music URL (empty: silent)"
+        default: ""
+      music_start:
+        description: "start of the music in the track (s)"
+        default: "0"
+      music_credit:
+        description: "music credit lines for the end credits, | separated"
+        default: ""
+      fps:
+        description: "frames per second of that run"
+        default: "24"
+      title:
+        description: "end card, big and bold"
+        default: COMING SOON
+      subtitle:
+        description: "end card, at the bottom"
+        default: Available Q1 2027
+
+permissions:
+  contents: read
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  teaser:
+    runs-on: ubuntu-latest
+    container: debian:latest
+    timeout-minutes: 30
+    steps:
+      - name: Packages (ffmpeg, fonts)
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates curl ffmpeg fonts-dejavu-core python3 python3-pil
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: frames-*
+          path: frames
+          merge-multiple: true
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: GIF, MP4 and teaser
+        env:
+          MUSIC_URL: ${{ inputs.music }}
+          MUSIC_START: ${{ inputs.music_start }}
+          MUSIC_CREDIT: ${{ inputs.music_credit }}
+          FPS: ${{ inputs.fps }}
+          TITLE: ${{ inputs.title }}
+          SUBTITLE: ${{ inputs.subtitle }}
+          NAME: ${{ github.event.repository.name }}
+        run: |
+          MUSIC=
+          if [ -n "$MUSIC_URL" ]; then
+            curl -fsSL -o music.mp3 "$MUSIC_URL"
+            MUSIC=music.mp3
+          fi
+          tools/make_video.sh frames "video/$NAME" $MUSIC
+      - uses: actions/upload-artifact@v4
+        with:
+          name: video
+          path: video/*
+          if-no-files-found: error
