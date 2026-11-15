@@ -54,15 +54,18 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git ca-certificates curl zstd python3 freecad xvfb xauth ffmpeg
+            git git-lfs ca-certificates curl zstd python3 freecad xvfb xauth ffmpeg
 
       - uses: actions/checkout@v4
+        with:
+          lfs: true       # images/*.step
 
       - name: VERA-HDMI-Expansion (PCB and STEP of the add-on board)
         uses: actions/checkout@v4
         with:
           repository: ${{ env.HDMI_REPO }}
           path: Vera-HDMI-Expansion
+          lfs: true
 
       - name: KiCad 5 AppImage (cached)
         id: kicad5

@@ -15,7 +15,7 @@
 # ImageMagick) for the animation. The STEP is images/VERA-MODULE-RBL.step (output_job.sh);
 # the HDMI board is looked for in ../Vera-HDMI-Expansion and ~/Progetti/*/
 # (or HDMI_DIR=...), optional.
-set -e
+set -e -o pipefail
 cd "$(dirname "$0")/.."
 CUT=${1:?usage: tools/make_enclosure.sh CUT_Y [--no-anim]}
 PCB=VERA-MODULE-RBL
@@ -39,9 +39,16 @@ echo "[1/4] Board data from the PCB (pcbnew of KiCad 5)"
 ./run_pcbnew.sh tools/enclosure_data.py ${PCB}.kicad_pcb ${OUT}/board.json ${HDMI_PCB}
 
 echo "[2/4] Shells (FreeCAD, a few minutes: most of it reads the STEP)"
+# a failure inside FreeCAD does not change its exit code: remove the old
+# results first and check that the new ones are there
+head -c 200 images/${PCB}.step | grep -q "^version https://git-lfs" && { echo "images/${PCB}.step is a Git LFS pointer: git lfs pull"; exit 1; }
+rm -f ${OUT}/${NAME}*.step ${OUT}/${NAME}*.stl ${OUT}/${NAME}*.FCStd
 ENC_DATA=${OUT}/board.json ENC_STEP=images/${PCB}.step ENC_HDMI=${HDMI_STEP} ENC_CUT=${CUT} \
 	ENC_NAME=${NAME} ENC_OUT=${OUT} freecadcmd tools/make_enclosure.py 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | \
-	grep -vE "^\s*$|\*\*\*|Step File|Transfer|WorkSession|Statistics"
+	grep -vE "^\s*$|\*\*\*|Step File|Transfer|WorkSession|Statistics" || true
+for f in ${NAME}-bottom.stl ${NAME}-top.stl ${NAME}.FCStd; do
+	[ -s ${OUT}/$f ] || { echo "FreeCAD did not write ${OUT}/$f"; exit 1; }
+done
 
 [ "$2" = "--no-anim" ] && exit 0
 if ! command -v xvfb-run >/dev/null || { ! command -v ffmpeg >/dev/null && ! command -v convert >/dev/null; }; then
@@ -53,7 +60,7 @@ FRAMES=$(mktemp -d)
 trap 'rm -rf "${FRAMES}"' EXIT
 for VNAME in ${NAME} ${NAME}-backpanel; do
 	[ -f ${OUT}/${VNAME}.FCStd ] || continue
-	rm -f ${FRAMES}/*.png
+	rm -f ${FRAMES}/*.png ${OUT}/${VNAME}-assembly.gif
 	ENC_DOC=${OUT}/${VNAME}.FCStd ENC_FRAMES=${FRAMES} \
 		xvfb-run -a -s "-screen 0 1280x1024x24" freecad tools/enclosure_assembly.py >/dev/null 2>&1 || true
 	[ -n "$(ls ${FRAMES})" ] || { echo "${VNAME}: no frames rendered"; exit 1; }
