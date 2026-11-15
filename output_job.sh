@@ -330,10 +330,15 @@ else
 fi
 
 echo "Creating VRML 3D object..."
-# From the STEP with FreeCAD (GUI on a virtual display, the VRML export and
-# the colours need it): same models and colours as the STEP, placed like the
-# KiCad VRML. Without FreeCAD or Xvfb, the kicad-cli export as before
-if command -v freecad >/dev/null 2>&1 && command -v xvfb-run >/dev/null 2>&1 && [ -f images/${PCBNAME}.step ]; then
+# The kicad-cli export first: besides the 3D models of the parts it draws the
+# board layers (solder mask, silkscreen, copper), the best looking VRML for
+# renders. Without kicad-cli, from the STEP with FreeCAD (GUI on a virtual
+# display): same models and colours as the STEP, but a plain board.
+if [ -n "${KICADCLI}" ]; then
+	rm -f images/${PCBNAME}.wrl
+	KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export vrml -o images/${PCBNAME}.wrl --force --no-dnp ${PCBNAME}.kicad_pcb
+	[ -s images/${PCBNAME}.wrl ] || { echo "Error on creating the VRML file."; exit 1; }
+elif command -v freecad >/dev/null 2>&1 && command -v xvfb-run >/dev/null 2>&1 && [ -f images/${PCBNAME}.step ]; then
 	WRLLOG=$(mktemp)
 	STEP2WRL_IN="$(pwd)/images/${PCBNAME}.step" STEP2WRL_OUT="$(pwd)/images/${PCBNAME}.wrl" STEP2WRL_LOG="${WRLLOG}" \
 		xvfb-run -a -s "-screen 0 1280x1024x24" freecad "${LOCAL_UTILS_DIR}/step2wrl.py" >/dev/null 2>&1
@@ -342,7 +347,8 @@ if command -v freecad >/dev/null 2>&1 && command -v xvfb-run >/dev/null 2>&1 && 
 	rm -f "${WRLLOG}"
 	[ ${WRLRC} -eq 0 ] || { echo "Error on creating the VRML file."; exit 1; }
 else
-	KISYS3DMOD=${KICAD5_3DMODELS} ${KICADCLI} pcb export vrml -o images/${PCBNAME}.wrl --force --no-dnp ${PCBNAME}.kicad_pcb
+	# as before (e.g. Debian 11 without FreeCAD): the build goes on without it
+	echo "Warning: no kicad-cli, nor FreeCAD and Xvfb: no VRML file."
 fi
 
 # Remove the existing
