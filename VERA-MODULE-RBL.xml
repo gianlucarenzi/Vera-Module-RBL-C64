@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/home/debian/Progetti/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.sch</source>
-    <date>Sat 14 Nov 2026 07:04:56 PM CET</date>
+    <date>Sun 15 Nov 2026 12:05:55 PM CET</date>
     <tool>kicadcli 1.2 (KiCad 5 legacy schematic, pcbnew 5)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -206,35 +206,35 @@
     <comp ref="R5">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68C0234F</tstamp>
     </comp>
     <comp ref="R1">
       <value>2K7</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C313926.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17530.pdf</datasheet>
       <fields>
-        <field name="LCSC">C313926</field>
+        <field name="LCSC">C17530</field>
       </fields>
-      <libsource lib="CRES0805" part="2K7" description="500mW Thick Film Resistor 150V ±1% ±100ppm/℃ 4.7kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="2K7" description="2.7kΩ ±1% 125mW ±100ppm/℃ Thick Film Resistor 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68C6E8A8</tstamp>
     </comp>
     <comp ref="Q1">
       <value>MOSFET-BSS138-SOT-23</value>
       <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C82045.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C7420339.pdf</datasheet>
       <fields>
-        <field name="LCSC">C82045</field>
+        <field name="LCSC">C7420339</field>
         <field name="Man_PN">BSS138LT1G</field>
         <field name="Manufacturer">onsemi</field>
       </fields>
-      <libsource lib="RetroBitLab" part="MOSFET-BSS138-SOT-23" description="50V 200mA 225mW 5.6Ω@2.75V 500mV 1 N-Channel SOT-23 MOSFETs ROHS"/>
+      <libsource lib="RetroBitLab" part="MOSFET-BSS138-SOT-23" description="50V 340mA 350mW 1.2Ω@4.5V 1.2V 1 N-Channel SOT-23 MOSFETs ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68C824A3</tstamp>
     </comp>
@@ -263,66 +263,66 @@
     <comp ref="C4">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D311CA</tstamp>
     </comp>
     <comp ref="C5">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D3E37D</tstamp>
     </comp>
     <comp ref="C6">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D40634</tstamp>
     </comp>
     <comp ref="C7">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D42075</tstamp>
     </comp>
     <comp ref="C8">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D42A6F</tstamp>
     </comp>
     <comp ref="C59">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68C429EA</tstamp>
     </comp>
@@ -340,22 +340,22 @@
     <comp ref="C60">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68CF4072</tstamp>
     </comp>
     <comp ref="C3">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>688A5F25</tstamp>
     </comp>
@@ -374,22 +374,22 @@
     <comp ref="LD2">
       <value>GREEN</value>
       <footprint>LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C84260.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C2297.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84260</field>
+        <field name="LCSC">C2297</field>
       </fields>
-      <libsource lib="CLED0805" part="GREEN" description="20mA 400mcd 525nm~537.5nm -30℃~+85℃ Green 130° 72mW 2.5V~3.6V 0805 LED Indication - Discrete ROHS"/>
+      <libsource lib="CLED0805" part="GREEN" description="5mA 175~430mcd 513nm~528nm -40℃~+85℃ Green 120° 100mW 2.6V~3.1V 0805 LED Indication - Discrete ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68CF8BC4</tstamp>
     </comp>
     <comp ref="R62">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68D8A3F9</tstamp>
     </comp>
@@ -407,11 +407,11 @@
     <comp ref="R63">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VeraModule/" tstamps="/"/>
       <tstamp>68CBB0EB</tstamp>
     </comp>
@@ -478,22 +478,22 @@
     <comp ref="R32">
       <value>330R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C313892.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17630.pdf</datasheet>
       <fields>
-        <field name="LCSC">C313892</field>
+        <field name="LCSC">C17630</field>
       </fields>
-      <libsource lib="CRES0805" part="330R" description="500mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="330R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68E612BE</tstamp>
     </comp>
     <comp ref="C25">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68E76D77</tstamp>
     </comp>
@@ -511,66 +511,66 @@
     <comp ref="C23">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8602E</tstamp>
     </comp>
     <comp ref="C18">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8B094</tstamp>
     </comp>
     <comp ref="C16">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8B8ED</tstamp>
     </comp>
     <comp ref="C14">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8CA80</tstamp>
     </comp>
     <comp ref="C20">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8D9DF</tstamp>
     </comp>
     <comp ref="C22">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68B8E06E</tstamp>
     </comp>
@@ -654,22 +654,22 @@
     <comp ref="R61">
       <value>330R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C313892.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17630.pdf</datasheet>
       <fields>
-        <field name="LCSC">C313892</field>
+        <field name="LCSC">C17630</field>
       </fields>
-      <libsource lib="CRES0805" part="330R" description="500mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="330R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68BB4EA4</tstamp>
     </comp>
     <comp ref="L1">
-      <value>FB0805100R100MHZ4A</value>
+      <value>FB0805100R100MHZ800mA</value>
       <footprint>Inductor_SMD:L_0805_2012Metric_Pad1.15x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C15957.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C1015.pdf</datasheet>
       <fields>
-        <field name="LCSC">C15957</field>
+        <field name="LCSC">C1015</field>
       </fields>
-      <libsource lib="RetroBitLab" part="FB0805100R100MHZ4A" description="20mΩ ±25% 100Ω@100MHz 0805 Ferrite Beads ROHS"/>
+      <libsource lib="RetroBitLab" part="FB0805100R100MHZ800mA" description="150mΩ ±25% 100Ω@100MHz 800mA 0805 Ferrite Beads ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>68D0440D</tstamp>
     </comp>
@@ -701,11 +701,11 @@
     <comp ref="C61">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6A65F0F9</tstamp>
     </comp>
@@ -734,11 +734,11 @@
     <comp ref="C63">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6B059EE8</tstamp>
     </comp>
@@ -789,44 +789,44 @@
     <comp ref="R70">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6AE162F9</tstamp>
     </comp>
     <comp ref="R36">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6AE379B7</tstamp>
     </comp>
     <comp ref="R53">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6AE83B1C</tstamp>
     </comp>
     <comp ref="R65">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6AE83FB1</tstamp>
     </comp>
@@ -846,11 +846,11 @@
     <comp ref="C67">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6AF22405</tstamp>
     </comp>
@@ -870,22 +870,22 @@
     <comp ref="C68">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6B096E62</tstamp>
     </comp>
     <comp ref="R71">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/BusDecoder/" tstamps="/"/>
       <tstamp>6B2A0002</tstamp>
     </comp>
@@ -1028,154 +1028,154 @@
     <comp ref="C2">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6A98BE54</tstamp>
     </comp>
     <comp ref="C1">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6A9A7ABF</tstamp>
     </comp>
     <comp ref="R7">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6A9F23AE</tstamp>
     </comp>
     <comp ref="C10">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AA15386</tstamp>
     </comp>
     <comp ref="C9">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AA1538F</tstamp>
     </comp>
     <comp ref="R34">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AA8CBBB</tstamp>
     </comp>
     <comp ref="C12">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AACAC3F</tstamp>
     </comp>
     <comp ref="C11">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AACAE15</tstamp>
     </comp>
     <comp ref="R64">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AB30A06</tstamp>
     </comp>
     <comp ref="R66">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6ABE3439</tstamp>
     </comp>
     <comp ref="C55">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AB789B4</tstamp>
     </comp>
     <comp ref="C56">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AB787EE</tstamp>
     </comp>
     <comp ref="C58">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AC79427</tstamp>
     </comp>
     <comp ref="C62">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AC79433</tstamp>
     </comp>
@@ -1195,22 +1195,22 @@
     <comp ref="R69">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AD8EA3F</tstamp>
     </comp>
     <comp ref="C57">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AFB18EF</tstamp>
     </comp>
@@ -1239,11 +1239,11 @@
     <comp ref="C66">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6B090F0B</tstamp>
     </comp>
@@ -1263,110 +1263,110 @@
     <comp ref="C69">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6B2A0007</tstamp>
     </comp>
     <comp ref="R77">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6B2A0009</tstamp>
     </comp>
     <comp ref="R76">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6B2A000A</tstamp>
     </comp>
     <comp ref="R73">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AF11164</tstamp>
     </comp>
     <comp ref="R75">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6B2A000B</tstamp>
     </comp>
     <comp ref="R72">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AEECE38</tstamp>
     </comp>
     <comp ref="R74">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6AF33B96</tstamp>
     </comp>
     <comp ref="R78">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6C640002</tstamp>
     </comp>
     <comp ref="R79">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6C640003</tstamp>
     </comp>
     <comp ref="R80">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6C640008</tstamp>
     </comp>
@@ -1386,11 +1386,11 @@
     <comp ref="C70">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/CartridgeInterface/" tstamps="/"/>
       <tstamp>6C640006</tstamp>
     </comp>
@@ -1420,22 +1420,22 @@
     <comp ref="C27">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>688E9AA2</tstamp>
     </comp>
     <comp ref="C26">
       <value>4.7uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2409291532_CCTC-TCC0805X5R475M500FT_C7393930.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C1779.pdf</datasheet>
       <fields>
-        <field name="LCSC">C7393930</field>
+        <field name="LCSC">C1779</field>
       </fields>
-      <libsource lib="CCAP0805" part="4.7uF" description="50V 4.7uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="4.7uF" description="25V 4.7uF X5R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>688D6422</tstamp>
     </comp>
@@ -1457,11 +1457,11 @@
     <comp ref="C29">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B799A8</tstamp>
     </comp>
@@ -1490,55 +1490,55 @@
     <comp ref="C33">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8A336</tstamp>
     </comp>
     <comp ref="C34">
       <value>4.7uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2409291532_CCTC-TCC0805X5R475M500FT_C7393930.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C1779.pdf</datasheet>
       <fields>
-        <field name="LCSC">C7393930</field>
+        <field name="LCSC">C1779</field>
       </fields>
-      <libsource lib="CCAP0805" part="4.7uF" description="50V 4.7uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="4.7uF" description="25V 4.7uF X5R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8C3A2</tstamp>
     </comp>
     <comp ref="C35">
       <value>4.7uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2409291532_CCTC-TCC0805X5R475M500FT_C7393930.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C1779.pdf</datasheet>
       <fields>
-        <field name="LCSC">C7393930</field>
+        <field name="LCSC">C1779</field>
       </fields>
-      <libsource lib="CCAP0805" part="4.7uF" description="50V 4.7uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="4.7uF" description="25V 4.7uF X5R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8D7F7</tstamp>
     </comp>
     <comp ref="C32">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8E0BD</tstamp>
     </comp>
     <comp ref="C30">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8E954</tstamp>
     </comp>
@@ -1637,22 +1637,22 @@
     <comp ref="C52">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68DF60FB</tstamp>
     </comp>
     <comp ref="C28">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68E21651</tstamp>
     </comp>
@@ -1739,11 +1739,11 @@
     <comp ref="C31">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>68B8F331</tstamp>
     </comp>
@@ -1761,11 +1761,11 @@
     <comp ref="R35">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/Vera FPGA flash/" tstamps="/"/>
       <tstamp>6ADC11D2</tstamp>
     </comp>
@@ -1780,44 +1780,44 @@
     <comp ref="C49">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>6892AC25</tstamp>
     </comp>
     <comp ref="C44">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>6892FF44</tstamp>
     </comp>
     <comp ref="C46">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68936E59</tstamp>
     </comp>
     <comp ref="C47">
       <value>10uF-35V</value>
       <footprint>Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T_Pad1.50x2.35mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2410121815_VISHAY-T55B106M035C0200_C5346021.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C5346021.pdf</datasheet>
       <fields>
-        <field name="LCSC">C8017</field>
+        <field name="LCSC">C5346021</field>
       </fields>
-      <libsource lib="TCAP3528" part="10uF-35V" description="10uF 35V 1.6Ω@100kHz ±20% CASE-C-6032-28(mm) Tantalum Capacitors ROHS"/>
+      <libsource lib="TCAP3528" part="10uF-35V" description="10uF 35V 200mΩ@100kHz ±20% CASE-B-3528-21(mm) Polymer Tantalum Capacitors ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>688A9050</tstamp>
     </comp>
@@ -1844,44 +1844,44 @@
     <comp ref="C37">
       <value>22uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C86817.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C45783.pdf</datasheet>
       <fields>
-        <field name="LCSC">C86817</field>
+        <field name="LCSC">C45783</field>
       </fields>
-      <libsource lib="CCAP0805" part="22uF" description="16V 22uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="22uF" description="25V 22uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B8F2C7</tstamp>
     </comp>
     <comp ref="C38">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B94739</tstamp>
     </comp>
     <comp ref="C40">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B98416</tstamp>
     </comp>
     <comp ref="C42">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B998E3</tstamp>
     </comp>
@@ -1910,11 +1910,11 @@
     <comp ref="R54">
       <value>220R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07270RL_C137558.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17557.pdf</datasheet>
       <fields>
-        <field name="LCSC">C5120092</field>
+        <field name="LCSC">C17557</field>
       </fields>
-      <libsource lib="CRES0805" part="220R" description="250mW Thick Film Resistor 150V ±1% ±100ppm/℃ 220Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="220R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 220Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68BDE5E1</tstamp>
     </comp>
@@ -1954,22 +1954,22 @@
     <comp ref="C50">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B963FE</tstamp>
     </comp>
     <comp ref="C43">
       <value>1uF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C2798196.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28323.pdf</datasheet>
       <fields>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
-      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="1uF" description="50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68937CC3</tstamp>
     </comp>
@@ -1986,22 +1986,22 @@
     <comp ref="R47">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68C78A35</tstamp>
     </comp>
     <comp ref="R48">
       <value>10K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17414.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
-      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="10K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68C7DB71</tstamp>
     </comp>
@@ -2129,33 +2129,33 @@
     <comp ref="R57">
       <value>510R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17734.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114563</field>
+        <field name="LCSC">C17734</field>
       </fields>
-      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68E0B0F3</tstamp>
     </comp>
     <comp ref="R58">
       <value>330R</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C105881.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C23138.pdf</datasheet>
       <fields>
-        <field name="LCSC">C105881</field>
+        <field name="LCSC">C23138</field>
       </fields>
-      <libsource lib="CRES0603" part="330R" description="100mW Thick Film Resistor 75V ±100ppm/℃ ±1% 330Ω 0603 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0603" part="330R" description="100mW Thick Film Resistor 75V ±1% ±100ppm/℃ 330Ω 0603 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68E0F749</tstamp>
     </comp>
     <comp ref="R56">
       <value>CREZ08051%</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17477.pdf</datasheet>
       <fields>
-        <field name="LCSC">C328378</field>
+        <field name="LCSC">C17477</field>
       </fields>
-      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="CREZ08051%" description="125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68B89F7F</tstamp>
     </comp>
@@ -2194,11 +2194,11 @@
     <comp ref="LD4">
       <value>GREEN</value>
       <footprint>LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C84260.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C2297.pdf</datasheet>
       <fields>
-        <field name="LCSC">C84260</field>
+        <field name="LCSC">C2297</field>
       </fields>
-      <libsource lib="CLED0805" part="GREEN" description="20mA 400mcd 525nm~537.5nm -30℃~+85℃ Green 130° 72mW 2.5V~3.6V 0805 LED Indication - Discrete ROHS"/>
+      <libsource lib="CLED0805" part="GREEN" description="5mA 175~430mcd 513nm~528nm -40℃~+85℃ Green 120° 100mW 2.6V~3.1V 0805 LED Indication - Discrete ROHS"/>
       <sheetpath names="/PowerSupply/" tstamps="/"/>
       <tstamp>68CF5676</tstamp>
     </comp>
@@ -2238,33 +2238,33 @@
     <comp ref="R23">
       <value>510R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17734.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114563</field>
+        <field name="LCSC">C17734</field>
       </fields>
-      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D8CB</tstamp>
     </comp>
     <comp ref="R27">
       <value>510R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17734.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114563</field>
+        <field name="LCSC">C17734</field>
       </fields>
-      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D8D2</tstamp>
     </comp>
     <comp ref="R25">
       <value>510R</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17734.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114563</field>
+        <field name="LCSC">C17734</field>
       </fields>
-      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="510R" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 510Ω 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D8D9</tstamp>
     </comp>
@@ -2403,33 +2403,33 @@
     <comp ref="R15">
       <value>2K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-072KL_C114572.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17604.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114572</field>
+        <field name="LCSC">C17604</field>
       </fields>
-      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D935</tstamp>
     </comp>
     <comp ref="R13">
       <value>2K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-072KL_C114572.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17604.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114572</field>
+        <field name="LCSC">C17604</field>
       </fields>
-      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D93C</tstamp>
     </comp>
     <comp ref="R11">
       <value>2K</value>
       <footprint>Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</footprint>
-      <datasheet>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-072KL_C114572.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C17604.pdf</datasheet>
       <fields>
-        <field name="LCSC">C114572</field>
+        <field name="LCSC">C17604</field>
       </fields>
-      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
+      <libsource lib="CRES0805" part="2K" description="125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 2kΩ 0805 Chip Resistor - Surface Mount ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D943</tstamp>
     </comp>
@@ -2469,22 +2469,22 @@
     <comp ref="C53">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D967</tstamp>
     </comp>
     <comp ref="C54">
       <value>100nF</value>
       <footprint>Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</footprint>
-      <datasheet>https://www.lcsc.com/datasheet/C840116.pdf</datasheet>
+      <datasheet>https://www.lcsc.com/datasheet/C28233.pdf</datasheet>
       <fields>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
-      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
+      <libsource lib="CCAP0805" part="100nF" description="100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"/>
       <sheetpath names="/VGA Analog/" tstamps="/"/>
       <tstamp>68F9D96E</tstamp>
     </comp>
@@ -2513,13 +2513,13 @@
   </components>
   <libparts>
     <libpart lib="CCAP0805" part="100nF">
-      <description>100V 100nF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C840116.pdf</docs>
+      <description>100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C28233.pdf</docs>
       <fields>
         <field name="Reference">C</field>
         <field name="Value">100nF</field>
         <field name="Footprint">Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</field>
-        <field name="LCSC">C840116</field>
+        <field name="LCSC">C28233</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2541,13 +2541,13 @@
       </pins>
     </libpart>
     <libpart lib="CCAP0805" part="1uF">
-      <description>50V 1uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C2798196.pdf</docs>
+      <description>50V 1uF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C28323.pdf</docs>
       <fields>
         <field name="Reference">C</field>
         <field name="Value">1uF</field>
         <field name="Footprint">Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</field>
-        <field name="LCSC">C2798196</field>
+        <field name="LCSC">C28323</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2570,13 +2570,13 @@
       </pins>
     </libpart>
     <libpart lib="CCAP0805" part="22uF">
-      <description>16V 22uF X7R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C86817.pdf</docs>
+      <description>25V 22uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C45783.pdf</docs>
       <fields>
         <field name="Reference">C</field>
         <field name="Value">22uF</field>
         <field name="Footprint">Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</field>
-        <field name="LCSC">C86817</field>
+        <field name="LCSC">C45783</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2598,13 +2598,13 @@
       </pins>
     </libpart>
     <libpart lib="CCAP0805" part="4.7uF">
-      <description>50V 4.7uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
-      <docs>https://lcsc.com/datasheet/lcsc_datasheet_2409291532_CCTC-TCC0805X5R475M500FT_C7393930.pdf</docs>
+      <description>25V 4.7uF X5R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C1779.pdf</docs>
       <fields>
         <field name="Reference">C</field>
         <field name="Value">4.7uF</field>
         <field name="Footprint">Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder</field>
-        <field name="LCSC">C7393930</field>
+        <field name="LCSC">C1779</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2612,13 +2612,13 @@
       </pins>
     </libpart>
     <libpart lib="CLED0805" part="GREEN">
-      <description>20mA 400mcd 525nm~537.5nm -30℃~+85℃ Green 130° 72mW 2.5V~3.6V 0805 LED Indication - Discrete ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C84260.pdf</docs>
+      <description>5mA 175~430mcd 513nm~528nm -40℃~+85℃ Green 120° 100mW 2.6V~3.1V 0805 LED Indication - Discrete ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C2297.pdf</docs>
       <fields>
         <field name="Reference">LD</field>
         <field name="Value">GREEN</field>
         <field name="Footprint">LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder</field>
-        <field name="LCSC">C84260</field>
+        <field name="LCSC">C2297</field>
       </fields>
       <pins>
         <pin num="1" name="K" type="passive"/>
@@ -2640,13 +2640,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0603" part="330R">
-      <description>100mW Thick Film Resistor 75V ±100ppm/℃ ±1% 330Ω 0603 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C105881.pdf</docs>
+      <description>100mW Thick Film Resistor 75V ±1% ±100ppm/℃ 330Ω 0603 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C23138.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">330R</field>
         <field name="Footprint">Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</field>
-        <field name="LCSC">C105881</field>
+        <field name="LCSC">C23138</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2657,14 +2657,14 @@
       <aliases>
         <alias>CREZ08051%</alias>
       </aliases>
-      <description>125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 0Ω 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</docs>
+      <description>125mW Thick Film Resistor 150V ±1% 0Ω (jumper &lt;50mΩ, 2A) 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17477.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">0R</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="Datasheet">https://www.lcsc.com/datasheet/C328378.pdf?spm=wm.sxq.inf.ggs&amp;lcsc_vid=QAIPVVVVRlJXV1FQQABeBQAAQQNaVFMAR1IIXwYHFlgxVlNfRFFfVlJfTlRXVDsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D</field>
-        <field name="LCSC">C328378</field>
+        <field name="Datasheet">https://www.lcsc.com/datasheet/C17477.pdf</field>
+        <field name="LCSC">C17477</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2672,13 +2672,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="10K">
-      <description>125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 10kΩ 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-0710KL_C84376.pdf</docs>
+      <description>125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 10kΩ 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17414.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">10K</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C84376</field>
+        <field name="LCSC">C17414</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2728,13 +2728,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="220R">
-      <description>250mW Thick Film Resistor 150V ±1% ±100ppm/℃ 220Ω 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07270RL_C137558.pdf</docs>
+      <description>125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 220Ω 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17557.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">220R</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C5120092</field>
+        <field name="LCSC">C17557</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2756,13 +2756,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="2K">
-      <description>125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 2kΩ 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-072KL_C114572.pdf</docs>
+      <description>125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 2kΩ 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17604.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">2K</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C114572</field>
+        <field name="LCSC">C17604</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2784,13 +2784,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="2K7">
-      <description>500mW Thick Film Resistor 150V ±1% ±100ppm/℃ 4.7kΩ 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C313926.pdf</docs>
+      <description>2.7kΩ ±1% 125mW ±100ppm/℃ Thick Film Resistor 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17530.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">2K7</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C313926</field>
+        <field name="LCSC">C17530</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2798,13 +2798,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="330R">
-      <description>500mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C313892.pdf</docs>
+      <description>125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 330Ω 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17630.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">330R</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C313892</field>
+        <field name="LCSC">C17630</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -2869,13 +2869,13 @@
       </pins>
     </libpart>
     <libpart lib="CRES0805" part="510R">
-      <description>125mW Thick Film Resistor 150V ±100ppm/℃ ±1% 510Ω 0805 Chip Resistor - Surface Mount ROHS</description>
-      <docs>https://lcsc.com/datasheet/lcsc_datasheet_2506161110_YAGEO-RC0805FR-07510RL_C114563.pdf</docs>
+      <description>125mW Thick Film Resistor 150V ±1% ±100ppm/℃ 510Ω 0805 Chip Resistor - Surface Mount ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C17734.pdf</docs>
       <fields>
         <field name="Reference">R</field>
         <field name="Value">510R</field>
         <field name="Footprint">Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder</field>
-        <field name="LCSC">C114563</field>
+        <field name="LCSC">C17734</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
@@ -3542,14 +3542,14 @@
         <pin num="57" name="GND" type="power_in"/>
       </pins>
     </libpart>
-    <libpart lib="RetroBitLab" part="FB0805100R100MHZ4A">
-      <description>20mΩ ±25% 100Ω@100MHz 0805 Ferrite Beads ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C15957.pdf</docs>
+    <libpart lib="RetroBitLab" part="FB0805100R100MHZ800mA">
+      <description>150mΩ ±25% 100Ω@100MHz 800mA 0805 Ferrite Beads ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C1015.pdf</docs>
       <fields>
         <field name="Reference">L</field>
-        <field name="Value">FB0805100R100MHZ4A</field>
+        <field name="Value">FB0805100R100MHZ800mA</field>
         <field name="Footprint">Inductor_SMD:L_0805_2012Metric_Pad1.15x1.40mm_HandSolder</field>
-        <field name="LCSC">C15957</field>
+        <field name="LCSC">C1015</field>
       </fields>
       <pins>
         <pin num="1" name="1" type="input"/>
@@ -3779,8 +3779,8 @@
         <alias>TSM2302CX</alias>
         <alias>AO3400A</alias>
       </aliases>
-      <description>50V 200mA 225mW 5.6Ω@2.75V 500mV 1 N-Channel SOT-23 MOSFETs ROHS</description>
-      <docs>https://www.lcsc.com/datasheet/C82045.pdf</docs>
+      <description>50V 340mA 350mW 1.2Ω@4.5V 1.2V 1 N-Channel SOT-23 MOSFETs ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C7420339.pdf</docs>
       <footprints>
         <fp>SOT?23*</fp>
       </footprints>
@@ -3788,7 +3788,7 @@
         <field name="Reference">Q</field>
         <field name="Value">MOSFET-BSS138-SOT-23</field>
         <field name="Footprint">Package_TO_SOT_SMD:SOT-23</field>
-        <field name="LCSC">C82045</field>
+        <field name="LCSC">C7420339</field>
         <field name="Manufacturer">onsemi</field>
         <field name="Man_PN">BSS138LT1G</field>
       </fields>
@@ -4034,12 +4034,13 @@
       </pins>
     </libpart>
     <libpart lib="TCAP3528" part="10uF-35V">
-      <description>10uF 35V 1.6Ω@100kHz ±20% CASE-C-6032-28(mm) Tantalum Capacitors ROHS</description>
+      <description>10uF 35V 200mΩ@100kHz ±20% CASE-B-3528-21(mm) Polymer Tantalum Capacitors ROHS</description>
+      <docs>https://www.lcsc.com/datasheet/C5346021.pdf</docs>
       <fields>
         <field name="Reference">C</field>
         <field name="Value">10uF-35V</field>
-        <field name="Footprint">Capacitor_Tantalum_SMD:CP_EIA-6032-28_Kemet-C_Pad2.25x2.35mm_HandSolder</field>
-        <field name="LCSC">C89330</field>
+        <field name="Footprint">Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T_Pad1.50x2.35mm_HandSolder</field>
+        <field name="LCSC">C5346021</field>
       </fields>
       <pins>
         <pin num="1" name="~" type="passive"/>
