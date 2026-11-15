@@ -77,7 +77,7 @@ jobs:
           mkdir -p /opt/kicad5
           curl -fsSL -o "/opt/kicad5/$KICAD5_APPIMAGE" "$KICAD5_URL"
 
-      - name: KiCad 5 as "kicad5" (extracted: no FUSE in a container)
+      - name: 'KiCad 5 as "kicad5", extracted (no FUSE in a container)'
         run: |
           cd /opt/kicad5
           chmod +x "$KICAD5_APPIMAGE"
