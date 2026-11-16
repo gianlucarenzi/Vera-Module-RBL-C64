@@ -144,6 +144,9 @@ XE = {
     # (A130XE-assembly.FCStd): the top file moved by this, the bottom file
     # turned 90 degrees; the keyboard and the function keys move with the top
     "top_offset": (0.0, -3.0, 12.0),
+    # the module's fingers this far (mm) past the rear edge: its case goes
+    # into the cartridge + ECI recess of the rear (10 mm more than the C64)
+    "insert": 28.0,
 }
 
 

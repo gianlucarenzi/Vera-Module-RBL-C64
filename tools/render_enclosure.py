@@ -571,7 +571,7 @@ if env("RENDER_MODE", "still") == "desk":
     # fingers INSERT mm inside), its table on the enclosure's; the module
     # hangs on its fingers: it is lifted LIFT mm from the table (the axis
     # of the port's connector from the table)
-    INSERT = 18.0
+    INSERT = float(info.get("insert", 18.0))
     LIFT = float(env("DESK_LIFT", "9.5"))
     turn = Matrix.Rotation(math.pi, 4, "Z")
     shift = Vector((finger.x + info["slot_cart_x"], finger.y + INSERT, lo.z / MM))
