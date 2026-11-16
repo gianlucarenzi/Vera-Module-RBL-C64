@@ -400,8 +400,16 @@ def build_flat(name, image, parent):
 # ---------------------------------------------------------------- Commodore 64
 C64 = {
     "case": "A0957F",            # the brown-beige breadbin
-    "key": "2A211C",             # very dark brown, almost black keycaps, white legends
-    "fn": "5E5C5A",              # dark grey function keys, white legends
+    # the keyboard: tools/keyboards/c64-breadbin-SA.blend (SA profile, from
+    # SA-profile-keys-3D-models, c64-breadbin-SA.scad): two meshes, "Caps"
+    # and "Legends" (the legends as raised geometry), metres, X to the right
+    # of who types, Y from the rear edge of row 0 (0) to the front (-), Z up
+    # from the base of the caps; key (0, 0) of the layout at x 0
+    "kb_blend": "c64-breadbin-SA.blend",
+    "key": "413C2C",             # dark brown keycaps (the colours of the .scad)
+    "legend": "EAE6CA",          # cream legends
+    "fn": "5E5C5A",              # dark grey function keys
+    "fn_x": 320.0,               # in the .blend, x beyond this (mm): the f keys
     # the covers: models/c64-case.zip (four STL, top and bottom, left and
     # right, already in place among them); front at -y, the typist's left at
     # -x: turned 180 degrees and moved to the rear edge at y 0, floor at z 0
@@ -414,12 +422,6 @@ C64 = {
     # (kb_z0: the keys raised by 6 mm by hand in FreeCAD, C64-assembly.FCStd;
     # the function keys by 8, fn_dz more than the others)
     "fn_dz": 2.0,
-    # the keycaps of the C64: SA profile, tall and sculpted, one profile for
-    # each row (SA R1 numbers, R2, R3 home, R4, the spacebar R3): the height
-    # (mm, from the base) and the angle of the top (degrees, + facing who
-    # types); the spherical dish of the top, its depth (mm)
-    "row_profile": [(14.9, 13.0), (13.2, 7.0), (12.2, 0.0), (12.9, -7.0), (12.2, 0.0)],
-    "dish": 1.0,
     # the expansion port opening at the rear, right of who types: centre x, z
     "slot_cart_x": -122.5, "slot_z": 14.0,
     # the power LED hole in the top, right of who types
@@ -430,8 +432,8 @@ C64 = {
 
 def build_c64(screens, keyboards):
     """the Commodore 64 (breadbin): the covers of models/c64-case.zip, the
-    keys of the layout (commodore-64.json via make_screens.py) with the
-    keycap of the A130KB_MX keyboard, a dark inside, the power LED"""
+    SA keyboard of c64-breadbin-SA.blend (caps and legends as geometry),
+    a dark inside, the power LED"""
     import tempfile
     import zipfile
     root = bpy.data.objects.new("c64", None)
@@ -461,39 +463,35 @@ def build_c64(screens, keyboards):
     fx0, fx1, fy0, fy1 = min(xs) - 5, max(xs) + 5, min(ys) - 5, max(ys) + 5
     mesh("c64_keybed", [to_case(fx0, fy0, -1), to_case(fx1, fy0, -1), to_case(fx1, fy1, -1), to_case(fx0, fy1, -1)],
          [[0, 1, 2, 3]], dark, None, root, smooth=0)
-    cv_, cf = read_stl(os.path.join(keyboards, "keycap-1u.stl"))
-    cap = [(x, -z, y) for x, y, z in cv_]
-
-    def keys(layout, image, colour, name, dz=0.0):
-        cols_ = max(k[0] + k[2] for k in layout)
-        rows_ = max(k[1] + k[3] for k in layout)
-        ox = min(k[0] for k in layout)
-        verts, faces, uvs = [], [], []
-        for kx, ky, kw, kh, _ in layout:
-            cx = c["kb_x0"] - (kx + kw / 2) * U
-            cy = pivot_y + (ky + kh / 2) * U
-            sx, sy = (kw * U - 0.85) / 18.2, (kh * U - 0.85) / 18.2
-            hgt, ang = c["row_profile"][min(int(ky), len(c["row_profile"]) - 1)]
-            hgt /= 7.9                                   # the 1u keycap is 7.9 mm high
-            slant = math.tan(math.radians(ang))
-            base = len(verts)
-            for x, y, z in cap:
-                px, py = cx + x * sx, cy + y * sy
-                ux = (c["kb_x0"] - px) / U - ox
-                uy = (py - pivot_y) / U
-                uvs.append((ux / (cols_ - ox), 1 - uy / rows_))
-                # the row's profile: taller, the top slanted (+y is the front);
-                # the base stays where it is
-                zs = z * hgt - (z / 7.9) * slant * y * sy
-                if z > 6.5:                              # the top: SA's spherical dish
-                    zs -= c["dish"] * max(0.0, 1.0 - (x * x + y * y) / 81.0) * (z - 6.5) / 1.4
-                p = tilt @ Vector((px, py - pivot_y, zs)) + Vector((0, pivot_y, pivot_z + dz))
-                verts.append(tuple(p))
-            faces += [[base + i for i in f_] for f_ in cf]
-        mesh(name, verts, faces, legend_material(name, colour, os.path.join(screens, image)), uvs, root)
-
-    keys(lay, "c64-keys.png", c["key"], "c64_keys")
-    keys(fnl, "c64-fn.png", c["fn"], "c64_fn", c["fn_dz"])
+    # the keys: the caps and the legends of the .blend (only those two
+    # objects; its camera, lights, floor and tray stay out), to mm, the f
+    # keys raised by fn_dz, then turned half round (+X on the left of who
+    # types, +Y to the front), key (0, 0) on kb_x0 / kb_y0, on the slope
+    with bpy.data.libraries.load(os.path.join(keyboards, c["kb_blend"]), link=False) as (src, dst):
+        dst.objects = ["Caps", "Legends"]
+    place = (Matrix.Translation((0, pivot_y, pivot_z)) @ tilt
+             @ Matrix.Translation((c["kb_x0"], 0, 0)) @ Matrix.Rotation(math.pi, 4, "Z"))
+    mats = {"Caps": plastic("c64_keys", c["key"], 0.38), "Legends": plastic("c64_legends", c["legend"], 0.38)}
+    fn_mat = plastic("c64_fn", c["fn"], 0.38)
+    for ob in dst.objects:
+        me = ob.data
+        me.transform(ob.matrix_world)                    # (identity in the .blend)
+        me.transform(Matrix.Scale(1000.0, 4))            # m -> mm
+        fn = [v.co.x > c["fn_x"] for v in me.vertices]
+        for v, f in zip(me.vertices, fn):
+            if f:
+                v.co.z += c["fn_dz"]
+        me.transform(place)
+        me.materials.clear()
+        me.materials.append(mats[ob.name])
+        if ob.name == "Caps":                            # the f keys: grey caps
+            me.materials.append(fn_mat)
+            for p in me.polygons:
+                p.material_index = 1 if fn[p.vertices[0]] else 0
+        ob.name = "c64_" + ob.name.lower()
+        ob.matrix_world = Matrix.Identity(4)
+        bpy.context.scene.collection.objects.link(ob)
+        ob.parent = root
 
     # the power LED in its hole, front right of the top
     led = bpy.data.materials.new("c64_led")

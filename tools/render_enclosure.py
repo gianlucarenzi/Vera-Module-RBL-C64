@@ -568,10 +568,17 @@ if env("RENDER_MODE", "still") == "desk":
 
     # computer coordinates (mm, rear at y 0, front +Y) to the world: turned
     # half round (its rear faces the fingers), its slot on the fingers (the
-    # fingers INSERT mm inside), its table on the enclosure's
-    INSERT = 8.0
+    # fingers INSERT mm inside), its table on the enclosure's; the module
+    # hangs on its fingers: it is lifted LIFT mm from the table (the axis
+    # of the port's connector from the table)
+    INSERT = 18.0
+    LIFT = float(env("DESK_LIFT", "9.5"))
     turn = Matrix.Rotation(math.pi, 4, "Z")
     shift = Vector((finger.x + info["slot_cart_x"], finger.y + INSERT, lo.z / MM))
+    # the module (enclosure, boards, standoffs), lifted, moves too, towards
+    # the computer
+    vera = shells + board_obs + standoffs + hdmi_obs
+    vera_home = {o.name: o.location.copy() for o in vera}
     def to_world(p):
         return (turn @ Vector(p) + shift) * MM
 
@@ -602,7 +609,8 @@ if env("RENDER_MODE", "still") == "desk":
     area_light("rim", 60 * DL, 1.6, (0.2, 1.0, 0.8), 2.6)
     cam.dof.aperture_fstop = 16
 
-    SLIDE = (0.6, 3.2)                  # the computer comes from 160 mm away
+    SLIDE = (0.6, 3.2)                  # 160 mm apart, closing from both sides
+    COMP_RUN, VERA_RUN = 90.0, 70.0     # mm each one moves
     CUT = 4.2                           # to the front view
     ON_LEFT, ON_RIGHT = 5.2, 6.3        # the monitors switch on
     sx_ = info["slot_cart_x"]           # the side view, centred on the slot
@@ -614,7 +622,9 @@ if env("RENDER_MODE", "still") == "desk":
 
     def pose_desk(t):
         k = ease((t - SLIDE[0]) / (SLIDE[1] - SLIDE[0]))
-        comp.location = (0, 160 * (1 - k), 0)          # computer coordinates: towards its front
+        comp.location = (0, COMP_RUN * (1 - k), 0)     # computer coordinates: towards its front
+        for o in vera:                                 # world +Y: away from the computer
+            o.location = vera_home[o.name] + Vector((0, VERA_RUN * (1 - k), LIFT)) * MM
         crt_screen.set(t - ON_LEFT)
         if "led" in info:                              # the power LED, with the computer
             info["led"].default_value = 6.0 if t >= ON_LEFT - 0.5 else 0.0
