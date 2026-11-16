@@ -2,6 +2,11 @@
 # card texts, without rendering again (tools/make_video.sh): about a minute.
 # By hand only: Actions > Teaser > Run workflow, with the id of a Video run
 # (the number in its URL; its frames are kept 3 days).
+# publish: also docs/teaser.mp4 (GitHub Pages, committed here) and the
+# master of the teaser in the release "teaser-master" (the animation without
+# credits and teaser.env, the music and the card texts): from then on a change
+# to credits.lst or tools/credits.txt re-makes only the credits
+# (.github/workflows/credits.yml), without the frames.
 name: Teaser
 
 on:
@@ -28,10 +33,15 @@ on:
       subtitle:
         description: "end card, at the bottom"
         default: Available Q1 2027
+      publish:
+        description: "publish: docs/teaser.mp4 and the master for credits.yml"
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
   actions: read
+  pages: write
 
 defaults:
   run:
@@ -47,7 +57,7 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git ca-certificates curl ffmpeg fonts-dejavu-core python3 python3-pil
+            git ca-certificates curl ffmpeg fonts-dejavu-core python3 python3-pil gh
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
@@ -72,8 +82,19 @@ jobs:
             MUSIC=music.mp3
           fi
           tools/make_video.sh frames "video/$NAME" $MUSIC
+          # the parameters of this teaser, for credits.yml
+          for v in MUSIC_URL MUSIC_START MUSIC_CREDIT TITLE SUBTITLE; do
+            printf '%s=%q\n' "$v" "${!v}"
+          done > video/teaser.env
       - uses: actions/upload-artifact@v4
         with:
           name: video
           path: video/*
           if-no-files-found: error
+      - name: Publish (release teaser-master, docs/teaser.mp4)
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ github.event.repository.name }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: tools/publish_teaser.sh "video/$NAME-teaser.mp4" "video/$NAME-animation.mp4" video/teaser.env "Teaser from Video run $RUN_ID"

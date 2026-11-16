@@ -1,0 +1,5 @@
+# Supporters of the project, shown in the end credits of the teaser
+# (tools/credits.txt, @SUPPORTERS@): one name per line, as it should appear.
+# Lines starting with "#" are comments; duplicates are shown once.
+# Committing a change to this file re-makes only the end credits and the
+# teaser (.github/workflows/credits.yml), from the published animation.

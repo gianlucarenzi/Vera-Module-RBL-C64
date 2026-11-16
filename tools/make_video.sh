@@ -2,6 +2,8 @@
 # The assembly frames of tools/render_enclosure.py (RENDER_MODE=anim) as:
 #   OUT-assembly.gif   the animation, 720 px wide
 #   OUT-assembly.mp4   the animation, H.264
+#   OUT-animation.mp4  the master of the teaser: the assembly and the desk,
+#                      fading out, no sound, high quality (CRF 10)
 #   OUT-teaser.mp4     the animation (followed by the desk frames d*.png of
 #                      RENDER_MODE=desk when FRAMES_DIR has them) fading to
 #                      black in its last second, the
@@ -15,13 +17,16 @@
 #                      credits and fades out with the end card
 #
 # Usage: tools/make_video.sh FRAMES_DIR OUT [MUSIC]
+#        tools/make_video.sh ANIMATION.mp4 OUT [MUSIC]
+#   the second form re-makes only OUT-teaser.mp4 (the end credits and the
+#   card) from an OUT-animation.mp4 made before: about a minute
 # Environment: FPS (24), TITLE ("COMING SOON"), SUBTITLE ("Available Q1 2027"),
 #              CARD (5 s), CARD_FADE (3 s), FONT (DejaVu Sans Bold),
 #              MUSIC_START (0 s), MUSIC_CREDIT (credit lines, | separated),
 #              CREDITS (tools/credits.txt), CREDITS_SCREEN (5 s),
 #              CREDITS_HOLD (3 s, stop on the logos)
 set -e -o pipefail
-FRAMES=${1:?usage: $0 FRAMES_DIR OUT [MUSIC]}
+FRAMES=${1:?usage: $0 FRAMES_DIR|ANIMATION.mp4 OUT [MUSIC]}
 OUT=${2:?usage: $0 FRAMES_DIR OUT [MUSIC]}
 MUSIC=$3
 FPS=${FPS:-24}
@@ -33,22 +38,42 @@ CARD_FADE=${CARD_FADE:-3}
 FONT=${FONT:-/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf}
 [ -f "${FONT}" ] || { echo "font ${FONT} missing (apt install fonts-dejavu-core)"; exit 1; }
 
-N=$(ls "${FRAMES}"/f*.png | wc -l)
-[ "${N}" -gt 0 ] || { echo "no frames in ${FRAMES}"; exit 1; }
-SIZE=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${FRAMES}/f0001.png")
-ND=$(ls "${FRAMES}"/d*.png 2>/dev/null | wc -l)
-D1=$(awk "BEGIN{printf \"%.3f\", ${N}/${FPS}}")             # assembly length (s)
-D2=$(awk "BEGIN{printf \"%.3f\", ${ND}/${FPS}}")            # desk length (s)
-D=$(awk "BEGIN{printf \"%.3f\", ${D1}+${D2}}")               # animation length (s)
-FADE_AT=$(awk "BEGIN{printf \"%.3f\", (${ND} > 0 ? ${D2} : ${D1})-1}")
-echo "${N} + ${ND} frames, ${SIZE}, ${D} s at ${FPS} fps"
 mkdir -p "$(dirname "${OUT}")"
+if [ -f "${FRAMES}" ]; then
+	# the animation made before (OUT-animation.mp4 of a frames run)
+	ANIM=${FRAMES}
+	FPS=$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 "${ANIM}" | awk -F/ '{print ($2 ? $1/$2 : $1)}')
+else
+	N=$(ls "${FRAMES}"/f*.png | wc -l)
+	[ "${N}" -gt 0 ] || { echo "no frames in ${FRAMES}"; exit 1; }
+	ND=$(ls "${FRAMES}"/d*.png 2>/dev/null | wc -l)
+	D1=$(awk "BEGIN{printf \"%.3f\", ${N}/${FPS}}")             # assembly length (s)
+	D2=$(awk "BEGIN{printf \"%.3f\", ${ND}/${FPS}}")            # desk length (s)
+	FADE_AT=$(awk "BEGIN{printf \"%.3f\", (${ND} > 0 ? ${D2} : ${D1})-1}")
+	echo "${N} + ${ND} frames at ${FPS} fps"
 
-ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
-	-c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart "${OUT}-assembly.mp4"
-ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
-	-vf "fps=12,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=bayer:bayer_scale=3" \
-	-loop 0 "${OUT}-assembly.gif"
+	ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
+		-c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart "${OUT}-assembly.mp4"
+	ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
+		-vf "fps=12,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=bayer:bayer_scale=3" \
+		-loop 0 "${OUT}-assembly.gif"
+
+	# the master of the teaser: the assembly cuts to the desk, which fades
+	# out (without desk frames the assembly fades out)
+	if [ "${ND}" -gt 0 ]; then
+		ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" -framerate "${FPS}" -i "${FRAMES}/d%04d.png" \
+			-filter_complex "[0:v]format=yuv420p,setsar=1[a0];[1:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a1];[a0][a1]concat=n=2:v=1:a=0[a]" \
+			-map "[a]" -c:v libx264 -preset slow -crf 10 -pix_fmt yuv420p -movflags +faststart "${OUT}-animation.mp4"
+	else
+		ffmpeg -v error -y -framerate "${FPS}" -i "${FRAMES}/f%04d.png" \
+			-vf "fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1" \
+			-c:v libx264 -preset slow -crf 10 -pix_fmt yuv420p -movflags +faststart "${OUT}-animation.mp4"
+	fi
+	ANIM=${OUT}-animation.mp4
+fi
+SIZE=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${ANIM}")
+D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${ANIM}")   # animation length (s)
+echo "animation ${ANIM}: ${SIZE}, ${D} s at ${FPS} fps"
 
 # the end credits: one tall image scrolling up over black, from just below
 # the frame to just above it
@@ -83,22 +108,12 @@ esc() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e "s/'/\\\\'/g" -e 's/:/\\:/g' 
 ALPHA="if(lt(t,0.6),t/0.6,if(lt(t,${CARD}-${CARD_FADE}),1,(${CARD}-t)/${CARD_FADE}))"
 TXT="drawtext=fontfile=${FONT}:text='$(esc "${TITLE}")':fontcolor=white:fontsize=h/6.5:x=(w-text_w)/2:y=(h-text_h)/2:alpha='${ALPHA}'"
 SUB="drawtext=fontfile=${FONT}:text='$(esc "${SUBTITLE}")':fontcolor=white:fontsize=h/20:x=(w-text_w)/2:y=h-h/9-text_h:alpha='${ALPHA}'"
-INPUTS=(-framerate "${FPS}" -i "${FRAMES}/f%04d.png"
+INPUTS=(-i "${ANIM}"
 	-loop 1 -framerate "${FPS}" -t "${C}" -i "${TMP}/credits.png"
 	-f lavfi -i "color=c=black:s=${SIZE}:r=${FPS}:d=${C}"
 	-f lavfi -i "color=c=black:s=${SIZE}:r=${FPS}:d=${CARD}")
-if [ "${ND}" -gt 0 ]; then
-	# the assembly cuts to the desk, which fades out
-	INPUTS+=(-framerate "${FPS}" -i "${FRAMES}/d%04d.png")
-	VIDEO="[0:v]format=yuv420p,setsar=1[a0];\
-[4:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a1];\
-[a0][a1]concat=n=2:v=1:a=0[a];"
-	MUSIC_IN=5
-else
-	VIDEO="[0:v]fade=t=out:st=${FADE_AT}:d=1,format=yuv420p,setsar=1[a];"
-	MUSIC_IN=4
-fi
-VIDEO="${VIDEO}\
+MUSIC_IN=4
+VIDEO="[0:v]format=yuv420p,setsar=1[a];\
 [2:v][1:v]overlay=x=0:y='${SCROLL}',format=yuv420p,setsar=1[r];\
 [3:v]${TXT},${SUB},format=yuv420p,setsar=1[c];\
 [a][r][c]concat=n=3:v=1:a=0[v]"

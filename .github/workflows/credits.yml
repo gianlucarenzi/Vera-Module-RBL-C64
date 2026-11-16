@@ -1,0 +1,87 @@
+# The end credits again, without rendering anything: on a push that changes
+# credits.lst (the supporters) or tools/credits.txt, the teaser is made again
+# from its master (the animation without credits, with the music and the card
+# texts of teaser.env) in the release "teaser-master", and published as
+# docs/teaser.mp4. A few minutes instead of hours.
+#
+# The master comes from the Teaser workflow run with "publish"; without it
+# this workflow stops with an error saying so.
+name: Credits
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - credits.lst
+      - tools/credits.txt
+      - tools/make_credits.py
+      - tools/logos/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: credits
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  credits:
+    runs-on: ubuntu-latest
+    container: debian:latest
+    timeout-minutes: 30
+    steps:
+      - name: Packages (ffmpeg, fonts, gh)
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates curl ffmpeg fonts-dejavu-core python3 python3-pil gh
+      - uses: actions/checkout@v4
+      - name: Master of the teaser (release teaser-master)
+        id: master
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          mkdir -p master
+          if ! gh release download teaser-master -D master -p animation.mp4 -p teaser.env; then
+            msg="no master in the release teaser-master: run the Teaser workflow once with publish"
+            if [ "$EVENT" = workflow_dispatch ]; then echo "::error::$msg"; exit 1; fi
+            echo "::warning::$msg (nothing done)"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ls -l master
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+      - name: Teaser with the new credits
+        if: steps.master.outputs.ok == 'true'
+        env:
+          NAME: ${{ github.event.repository.name }}
+        run: |
+          source master/teaser.env
+          export MUSIC_START MUSIC_CREDIT TITLE SUBTITLE
+          MUSIC=
+          if [ -n "$MUSIC_URL" ]; then
+            curl -fsSL -o music.mp3 "$MUSIC_URL"
+            MUSIC=music.mp3
+          fi
+          tools/make_video.sh master/animation.mp4 "video/$NAME" $MUSIC
+      - uses: actions/upload-artifact@v4
+        if: steps.master.outputs.ok == 'true'
+        with:
+          name: teaser
+          path: video/*-teaser.mp4
+          if-no-files-found: error
+      - name: Publish docs/teaser.mp4
+        if: steps.master.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ github.event.repository.name }}
+        run: |
+          tools/publish_teaser.sh "video/$NAME-teaser.mp4" "Teaser: end credits updated (${GITHUB_SHA::7})"

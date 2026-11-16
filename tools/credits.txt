@@ -2,6 +2,8 @@
 #   "= text"  title, "# text" heading, "- text" small line, empty line: space
 #   @MUSIC@   the MUSIC_CREDIT lines (| separated); the Music section goes
 #             away without music
+#   @SUPPORTERS@  the names of credits.lst (top of the repository), a few
+#             per line; the section goes away when it has none
 #   @LOGOS@ a.png b.png   the logos side by side on a white plate (paths
 #             relative to this file); the scrolling stops on it
 # Lines starting with "#!" and this header (up to the first empty line) are
@@ -27,6 +29,9 @@ github.com/X16Community/vera-module
 
 # Music
 @MUSIC@
+
+# Thank you to our supporters
+@SUPPORTERS@
 
 # Made with open source tools
 KiCad · FreeCAD · Blender · FFmpeg

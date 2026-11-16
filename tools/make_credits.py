@@ -5,7 +5,10 @@
 
 CREDITS.txt: "= title", "# heading", "- small line", plain lines, empty
 lines for space; "@MUSIC@" becomes the lines of $MUSIC_CREDIT ("|"
-separated), and its section goes away when that is empty. The header up to
+separated), and its section goes away when that is empty; "@SUPPORTERS@"
+becomes the names of $SUPPORTERS (default credits.lst at the top of the
+repository: one name per line, "#" comments), a few per line, and its
+section goes away when there are none. The header up to
 the first empty line and lines starting with "#!" are comments. "@LOGOS@ a.png b.png" puts the
 logos side by side on a white plate; the centre of the plate (px from the
 top of the image) goes to OUT.png.stop, where the scrolling stops. Sizes
@@ -27,6 +30,40 @@ GREY, WHITE = (170, 170, 170), (255, 255, 255)
 
 text = open(src, encoding="utf-8").read().split("\n\n", 1)[1]      # drop the header
 music = [m.strip() for m in os.environ.get("MUSIC_CREDIT", "").split("|") if m.strip()]
+
+
+def read_supporters():
+    path = os.environ.get("SUPPORTERS") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "credits.lst")
+    if not os.path.isfile(path):
+        return []
+    names = []
+    for ln in open(path, encoding="utf-8"):
+        ln = ln.split("#", 1)[0].strip()
+        if ln and ln not in names:
+            names.append(ln)
+    return names
+
+
+def pack(names, font, width):
+    """the names a few per line, " · " between them, each line within width"""
+    probe_ = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    out_, cur = [], ""
+    for n in names:
+        nxt = cur + "  ·  " + n if cur else n
+        if cur and probe_.textlength(nxt, font=font) > width:
+            out_.append(cur)
+            nxt = n
+        cur = nxt
+    if cur:
+        out_.append(cur)
+    return out_
+
+
+def drop_section(lines):
+    while lines and lines[-1] != "":                               # drop the heading too
+        lines.pop()
+
+
 lines = []
 for raw in text.splitlines():
     if raw.startswith("#!"):
@@ -35,8 +72,14 @@ for raw in text.splitlines():
         if music:
             lines += music
         else:
-            while lines and lines[-1] != "":                       # drop the heading too
-                lines.pop()
+            drop_section(lines)
+        continue
+    if raw.strip() == "@SUPPORTERS@":
+        names = read_supporters()
+        if names:
+            lines += pack(names, TEXT, W * 0.8)
+        else:
+            drop_section(lines)
         continue
     lines.append(raw.rstrip())
 
