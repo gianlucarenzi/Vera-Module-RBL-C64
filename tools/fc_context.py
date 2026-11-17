@@ -16,6 +16,83 @@ def write_stl(path, tris):
             n = (b - a).cross(c - a)
             n = n.normalized() if n.length else n
             f.write(struct.pack("<12fH", *n, *a, *b, *c, 0))
+
+def legend_tris(o, me, m, step=2):
+    """the legends of a texture (alpha) mapped by UV on a mesh, as geometry:
+    the texture's opaque pixels (every `step`-th, in horizontal runs) as
+    quads on the up-facing triangles of the mesh (computer coordinates,
+    0.15 mm above); returns (triangles, legend colour) or (None, None)"""
+    mat = o.material_slots[0].material if o.material_slots else None
+    tex = [n for n in mat.node_tree.nodes if n.type == "TEX_IMAGE"] if mat and mat.node_tree else []
+    if not tex or not me.uv_layers:
+        return None, None
+    img = tex[0].image
+    W, H = img.size
+    px = img.pixels[:]
+    uvl = me.uv_layers.active.data
+    # up-facing triangles, indexed on a UV grid
+    G = 400
+    grid = {}
+    tri = []
+    for t in me.loop_triangles:
+        P = [m @ me.vertices[i].co for i in t.vertices]
+        n = (P[1] - P[0]).cross(P[2] - P[0])
+        if n.length == 0 or abs(n.normalized().z) < 0.6:    # either winding
+            continue
+        UV = [uvl[li].uv.copy() for li in t.loops]
+        k = len(tri)
+        tri.append((P, UV, Vector((0, 0, 1))))
+        u0, u1 = min(q.x for q in UV), max(q.x for q in UV)
+        v0, v1 = min(q.y for q in UV), max(q.y for q in UV)
+        for gx in range(int(u0 * G), int(u1 * G) + 1):
+            for gy in range(int(v0 * G), int(v1 * G) + 1):
+                grid.setdefault((gx, gy), []).append(k)
+
+    def at(u, v):
+        best = None
+        for k in grid.get((int(u * G), int(v * G)), ()):
+            P, UV, n = tri[k]
+            a, b, c = UV
+            d = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
+            if abs(d) < 1e-14:
+                continue
+            l1 = ((b.y - c.y) * (u - c.x) + (c.x - b.x) * (v - c.y)) / d
+            l2 = ((c.y - a.y) * (u - c.x) + (a.x - c.x) * (v - c.y)) / d
+            l3 = 1 - l1 - l2
+            if min(l1, l2, l3) < -1e-4:
+                continue
+            q = P[0] * l1 + P[1] * l2 + P[2] * l3 + n * 0.15
+            if best is None or q.z > best.z:
+                best = q
+        return best
+
+    out, col, cn = [], [0.0, 0.0, 0.0], 0
+    for y in range(0, H, step):
+        row = y * W * 4
+        x = 0
+        while x < W:
+            if px[row + x * 4 + 3] < 0.5:
+                x += step
+                continue
+            x0 = x
+            while x < W and px[row + x * 4 + 3] >= 0.5:
+                if cn < 20000:
+                    for i in range(3):
+                        col[i] += px[row + x * 4 + i]
+                    cn += 1
+                x += step
+            # image row 0 is the bottom (v 0) in Blender
+            u0, u1 = x0 / W, x / W
+            v0, v1 = y / H, (y + step) / H
+            c = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)]
+            if all(c):
+                out += [(c[0], c[1], c[2]), (c[0], c[2], c[3])]
+    if not out:
+        return None, None
+    rgb = [round((v / cn) ** (1 / 2.2), 3) for v in col]
+    return out, rgb
+
+
 def probe(*a, **k):
     g = PROBE.g
     bpy.context.view_layer.update()
@@ -35,6 +112,12 @@ def probe(*a, **k):
         m = inv @ o.matrix_world
         me.calc_loop_triangles()
         tris = [tuple(m @ me.vertices[i].co for i in t.vertices) for t in me.loop_triangles]
+        # textured legends (the XE keys) as geometry, for FreeCAD
+        lt, lrgb = legend_tris(o, me, m)
+        if lt:
+            lname = o.name.replace(" ", "_").replace(".", "_") + "_legends"
+            write_stl(os.path.join(OUT, lname + ".stl"), lt)
+            parts[lname] = {"material": "legends", "tris": len(lt), "rgb": lrgb, "bbox": [[0, 0, 0], [0, 0, 0]]}
         ev.to_mesh_clear()
         mat = o.material_slots[0].material.name if o.material_slots and o.material_slots[0].material else ""
         name = o.name.replace(" ", "_").replace(".", "_")

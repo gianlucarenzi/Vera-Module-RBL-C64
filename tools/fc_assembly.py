@@ -9,6 +9,9 @@
 #                              the render's desk scene, computer coordinates:
 #                              rear edge at y 0, front +Y, table z 0) with
 #                              the module plugged in as in the teaser
+# In the second document the computer is four App::Parts that can be moved
+# by hand (their Placement): <COMPUTER>_bottom_cover, _top_cover, _keyboard,
+# _motherboard; and the module, its own App::Part.
 # Environment: REPO, NAME (VERA-RBL-C64), COMPUTER (C64), CTX (folder of
 # tools/fc_context.py: placement.json and the STL meshes); optional:
 #   MB        folder of tools/wrl2stl.py (the computer's motherboard)
@@ -94,24 +97,39 @@ App.closeDocument(doc.Name)
 
 # 2. plugged into the computer
 doc = App.newDocument(NAME.replace("-", "_") + "_in_" + COMPUTER)
-comp = doc.addObject("App::DocumentObjectGroup", COMPUTER)
+# one App::Part for each piece that can be moved by hand (Placement of the
+# Part; the meshes inside keep their own): bottom cover, top cover,
+# keyboard (keys, function keys), motherboard
+def group_of(name):
+    n = name.lower()
+    if "bottom" in n:
+        return "bottom_cover"
+    if "top" in n:
+        return "top_cover"
+    return "keyboard"
+
+
+holders = {}
+for g in ("bottom_cover", "top_cover", "keyboard"):
+    holders[g] = doc.addObject("App::Part", "%s_%s" % (COMPUTER, g))
 for name, p in sorted(place["parts"].items()):
     if p["tris"] < 20:                      # the dark planes under the keys
         continue
     m = doc.addObject("Mesh::Feature", name)
     m.Mesh = Mesh.Mesh(os.path.join(CTX, name + ".stl"))
-    comp.addObject(m)
+    holders[group_of(name)].addObject(m)
     if GUI and m.ViewObject and "rgb" in p:
         m.ViewObject.ShapeColor = tuple(p["rgb"])
 if env.get("MB"):
     # the motherboard (VRML converted by wrl2stl.py), one mesh per colour,
-    # on the bosses of the case: VRML x, y, z -> computer -x+a, -y+b, z+c
+    # on the bosses of the case: VRML x, y, z -> computer -x+a, -y+b, z+c,
+    # the Placement of its Part
     mbp = json.loads(env["MB_PLACE"])
-    mb = doc.addObject("App::DocumentObjectGroup", COMPUTER + "_motherboard")
+    mb = doc.addObject("App::Part", COMPUTER + "_motherboard")
+    mb.Placement = App.Placement(V(*mbp), App.Rotation(V(0, 0, 1), 180))
     for k, q in enumerate(json.load(open(os.path.join(env["MB"], "parts.json")))):
         m = doc.addObject("Mesh::Feature", "MB_%02d" % k)
         m.Mesh = Mesh.Mesh(os.path.join(env["MB"], q["file"]))
-        m.Placement = App.Placement(V(*mbp), App.Rotation(V(0, 0, 1), 180))
         mb.addObject(m)
         if GUI and m.ViewObject:
             m.ViewObject.ShapeColor = tuple(q["rgb"])

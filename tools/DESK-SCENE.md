@@ -16,7 +16,7 @@ the end card follow as before.
 | `tools/render_enclosure.py` | `RENDER_MODE=desk`: the desk shots, frames `d%04d.png` (timing, cameras, lights) |
 | `tools/desk_scene.py` | Blender module: `build_xe`, `build_c64`, the CRT and the flat monitor |
 | `tools/make_screens.py OUT` | the screens (Atari/C64 BASIC, VERA palette) and the key legend textures |
-| `tools/keyboards/` | KLE layouts (XE from A130KB_MX, GPL; C64 own), `keycap-1u.stl` (A130KB_MX, DSA) |
+| `tools/keyboards/` | KLE layouts (XE from A130KB_MX, GPL; C64 own), `keycap-1u.stl` (A130KB_MX, DSA), `c64-breadbin-SA.blend` (C64 keys and legends, SA; its 9u spacebar is also the XE's) |
 | `tools/fonts/C64Keyboard-Regular.otf` | C64 legends, "C64 Keyboard" by Levente Szabadkai, CC0 |
 | `tools/models/c64-case.zip` | C64 repo only: the C64 case, 4 STL (no licence given; the owner takes the risk) |
 | `tools/make_video.sh` | assembly frames + desk frames, fade at the end of the desk, then credits |

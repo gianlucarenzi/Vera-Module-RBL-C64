@@ -8,7 +8,8 @@ the top cover (Top_Case_Model_A, the rhomboid function keys) and the bottom
 cover, whole ("-big"), the rhomboid function keycap; the keyboard is built
 here from the layout of tools/make_screens.py (xe-keys.json, KLE units) with
 the keycap of the A130KB_MX keyboard (tools/keyboards/keycap-1u.stl) and its
-legends (xe-keys.png, xe-fn.png).
+legends (xe-keys.png, xe-fn.png); the 9u spacebar is the C64's (the SA
+spacebar of tools/keyboards/c64-breadbin-SA.blend).
 
 Computer coordinates, mm: X across (+X on the left of who types), Y from
 the rear (0) to the front, Z up from the table (0).
@@ -122,6 +123,53 @@ def import_stl(path, mat, parent, rot_z=0.0):
     return ob
 
 
+def sa_spacebar(keyboards):
+    """the 9u spacebar of the SA C64 keyboard (c64-breadbin-SA.blend, the
+    widest loose part of its keycaps): (verts, faces) in mm, centred, its
+    base at z 0, turned as the XE keycap (+X on the left of who types, +Y
+    to the front)"""
+    with bpy.data.libraries.load(os.path.join(keyboards, "c64-breadbin-SA.blend"), link=False) as (src, dst):
+        dst.objects = ["Caps"]
+    ob = dst.objects[0]
+    me = ob.data
+    me.transform(ob.matrix_world)
+    me.transform(Matrix.Scale(1000.0, 4))
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.verts.ensure_lookup_table()
+    seen, best = set(), None
+    for v in bm.verts:
+        if v.index in seen:
+            continue
+        stack, part = [v], []
+        seen.add(v.index)
+        while stack:
+            a = stack.pop()
+            part.append(a)
+            for e in a.link_edges:
+                b = e.other_vert(a)
+                if b.index not in seen:
+                    seen.add(b.index)
+                    stack.append(b)
+        w = max(p.co.x for p in part) - min(p.co.x for p in part)
+        if best is None or w > best[0]:
+            best = (w, part)
+    part = best[1]
+    ids = {p.index for p in part}
+    xs, ys = [p.co.x for p in part], [p.co.y for p in part]
+    xm, ym, z0 = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2, min(p.co.z for p in part)
+    index = {}
+    verts = []
+    for p in part:
+        index[p.index] = len(verts)
+        verts.append((-(p.co.x - xm), -(p.co.y - ym), p.co.z - z0))
+    faces = [[index[v.index] for v in f.verts] for f in bm.faces if all(v.index in ids for v in f.verts)]
+    bm.free()
+    bpy.data.objects.remove(ob)
+    bpy.data.meshes.remove(me)
+    return verts, faces
+
+
 # ---------------------------------------------------------------- Atari 130XE
 XE = {
     "case": "9DA09A",            # RAL 7038 agate grey covers, 13% darker
@@ -174,15 +222,20 @@ def build_xe(assets, screens, keyboards):
     verts, faces, uvs = [], [], []
     tilt = Matrix.Rotation(math.atan(XE["kb_slope"]), 4, "X")
     pivot = Vector((0, XE["kb_y0"], XE["kb_z0"] - 7.9 + XE["kb_rise"]))
+    sbar = sa_spacebar(keyboards)
     for kx, ky, kw, kh, _ in lay:
         cx = XE["kb_x0"] - (kx + kw / 2) * U
-        if kw >= 6:
-            cx = XE["space_x"]
         cy = XE["kb_y0"] + (ky + kh / 2) * U
+        shape, fshape = cap, cf
         sx = (kw * U - 0.85) / 18.2
         sy = (kh * U - 0.85) / 18.2
+        if kw >= 6:
+            # the spacebar: the C64's SA 9u, as it is
+            cx = XE["space_x"]
+            shape, fshape = sbar
+            sx = sy = 1.0
         base = len(verts)
-        for x, y, z in cap:
+        for x, y, z in shape:
             px, py = cx + x * sx, cy + y * sy
             # the legends: layout units of the flat keyboard
             ux = (XE["kb_x0"] - px) / U if kw < 6 else kx + kw / 2 + (cx - px) / U
@@ -191,7 +244,7 @@ def build_xe(assets, screens, keyboards):
             p = Vector((px, py, z)) - Vector((0, XE["kb_y0"], 0))
             p = tilt @ p + pivot
             verts.append(tuple(p))
-        faces += [[base + i for i in f] for f in cf]
+        faces += [[base + i for i in f] for f in fshape]
     mesh("xe_keys", verts, faces, legend_material("xe_key", XE["key"], os.path.join(screens, "xe-keys.png")),
          uvs, top)
 
@@ -223,9 +276,10 @@ def build_xe(assets, screens, keyboards):
         cx = XE["fn_x0"] + i * XE["fn_pitch"]
         v, uv = [], []
         for x, y, z in fv:
-            # the cell of key i (1.5 units of 7.5) across the rhombus at its
-            # height; +X is on the left of who types, so u grows to -X
-            across = -(x - xm - slant * (y - ym)) / flat + 0.5
+            # the cell of key i (1.5 units of 7.5) on the rhombus, centred on
+            # its centre and not sheared with it (upright legends, as on the
+            # real keys); +X is on the left of who types, so u grows to -X
+            across = -(x - xm) / flat + 0.5
             uv.append(((i + across) * 1.5 / 7.5, 1 - (y - min(ys)) / depth))
             p = tilt @ Vector((cx + x, y, z - ztop)) + Vector((0, XE["fn_y"], XE["fn_z"]))
             v.append(tuple(p))
