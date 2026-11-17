@@ -25,6 +25,8 @@ Ogni build produce **due varianti**:
 | `VERA-RBL-C64-enclosure-backpanel-light.FCStd` | lo stesso, con le schede semplificate |
 | `VERA-RBL-C64-enclosure-backpanel-assembly.gif` | assemblaggio, con il pannello che entra |
 | `board.json` | dati presi dal PCB (contorno, fori, componenti) |
+| `VERA-RBL-C64-module.FCStd` | il modulo come un'unica App::Part: scheda, HDMI, distanziali, gusci e pannello (variante `-backpanel`); origine sulla punta del pettine |
+| `VERA-RBL-C64-in-C64.FCStd` | il modulo inserito nel C64: case e tastiera della scena del teaser, scheda madre sulle torrette del case, pettine nella porta di espansione. Serve a controllare gli ingombri |
 
 ## Generarlo
 
@@ -73,6 +75,32 @@ Macro… → seleziona il file, oppure dalla console Python). Anima il documento
 **Documenti `-light`:** gusci e pannello sono quelli veri; le schede sono
 semplificate (contorno del PCB e un parallelepipedo per ogni componente). Pesano
 circa 0,5 MB contro 2,6 MB e si aprono e ruotano subito anche con 4 GB di RAM.
+
+## Ingombri nel C64 (FreeCAD)
+
+```bash
+tools/fc_assembly.sh
+```
+
+Rifà `VERA-RBL-C64-module.FCStd` e `VERA-RBL-C64-in-C64.FCStd` dal guscio
+attuale (`VERA-RBL-C64-enclosure-backpanel.FCStd`): dopo aver cambiato
+l'involucro, prima `tools/make_enclosure.sh` (o il workflow Enclosure), poi questo.
+Ci vuole circa mezzo minuto.
+
+- **C64**: case e tastiera della scena del teaser (`tools/fc_context.py` li
+  esporta da Blender senza renderizzare). Coordinate del computer: retro a
+  y 0, fronte verso +Y, tavolo a z 0.
+- **Scheda madre**: `images/C64-Motherboard-Replice.wrl`, convertito in un mesh
+  per colore da `tools/wrl2stl.py`. I suoi sette fori da 4 mm stanno sugli assi
+  delle torrette del case (scarto sotto 1 mm) e la faccia inferiore sulla loro
+  sommità (z 9). Si usa solo qui, non nei render.
+- **Modulo**: il pettine centrato nel connettore della porta di espansione
+  (ad angolo retto, feritoia verso il retro), il piano medio della scheda su
+  quello della feritoia, la punta a 0,5 mm dal fondo. Nel teaser la posa è
+  un'altra (`tools/desk_scene.py`).
+
+Servono Blender 4.2 (`BLENDER=...`, predefinito `blender-4.2`), FreeCAD,
+`xvfb-run`, python3 con numpy e Pillow, i file LFS (`git lfs pull`).
 
 ## Cosa serve
 
