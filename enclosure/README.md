@@ -47,12 +47,12 @@ viene committato in `enclosure/` dal workflow stesso.
 
 ```bash
 ./output_job.sh <versione>          # se manca images/VERA-MODULE-RBL.step
-tools/make_enclosure.sh 151         # taglio a y = 151 mm
-tools/make_enclosure.sh 151 --no-anim   # solo i gusci, senza animazione
+tools/make_enclosure.sh 157         # taglio a y = 157 mm
+tools/make_enclosure.sh 157 --no-anim   # solo i gusci, senza animazione
 ```
 
-L'argomento è la **y KiCad (mm) dove finisce l'involucro** e inizia il pettine da
-inserire nel computer: **151** per questa scheda (pettine della porta di espansione da y 152).
+L'argomento è la **y KiCad (mm) dove finisce l'involucro**; oltre esce la scheda con il
+pettine da inserire nel computer: **157** per questa scheda, che copre tutti i componenti (l'ultimo, R69, arriva a y 155,6) e lascia fuori la scheda nuda e il pettine della porta di espansione (da y 177 a 193), così l'involucro resta fuori dal C64.
 
 I passi, che si possono anche lanciare a mano:
 

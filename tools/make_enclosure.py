@@ -8,8 +8,8 @@ Environment:
   ENC_DATA    JSON from tools/enclosure_data.py
   ENC_STEP    STEP of this board (images/VERA-MODULE-RBL.step)
   ENC_HDMI    STEP of the VERA-HDMI-Expansion (optional)
-  ENC_CUT     KiCad y (mm) where the case ends and the edge connector comes
-              out (the root of the card edge fingers)
+  ENC_CUT     KiCad y (mm) where the case ends: past the last parts; the
+              board comes out there, with the card edge fingers
   ENC_NAME    output name, ENC_OUT output folder
 
 Only the Part module is used (boxes, extrusions, 2D offsets, booleans,

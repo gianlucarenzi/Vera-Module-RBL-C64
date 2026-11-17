@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ENC_CUT: "151"      # KiCad y where the case ends (card edge fingers)
+  ENC_CUT: "157"      # KiCad y where the case ends: past the last parts (R69 to 155.6), the fingers (177-193) out
   HDMI_REPO: gianlucarenzi/Vera-HDMI-Expansion
   KICAD5_APPIMAGE: KiCad-5.1.12-2.2.0-x86_64.AppImage
   KICAD5_URL: https://github.com/gianlucarenzi/kicad_appimage_builder/releases/download/v2.2.0/KiCad-5.1.12-2.2.0-x86_64.AppImage

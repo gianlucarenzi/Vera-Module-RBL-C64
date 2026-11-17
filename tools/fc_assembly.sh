@@ -30,7 +30,7 @@ case "$(basename "$(pwd)")" in
 	# the rear): fingers centred on it, the board's mid plane on the slot's
 	# (5.5 mm above the motherboard's bottom face), the tip 0.5 mm from the
 	# bottom of the slot
-	MODULE_T='[87.55, -142.6, 14.5]'
+	MODULE_T='[87.55, -167.6, 14.5]'
 	;;
 *XE*)
 	NAME=VERA-RBL-XE COMPUTER=Atari130XE MACHINE=xe

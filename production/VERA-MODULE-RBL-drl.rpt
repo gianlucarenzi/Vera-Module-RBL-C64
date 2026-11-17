@@ -1,5 +1,5 @@
-Drill report for /home/debian/Progetti/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.kicad_pcb
-Created on Sun Nov 15 12:06:04 2026
+Drill report for /home/gianluca/Progetti-CVS/C64/Vera-Module-RBL-C64/VERA-MODULE-RBL.kicad_pcb
+Created on Tue Nov 17 14:02:18 2026
 
 Copper Layer Stackup:
     =============================================================
@@ -12,24 +12,24 @@ Copper Layer Stackup:
 Drill file 'VERA-MODULE-RBL-PTH.drl' contains
     plated through holes:
     =============================================================
-    T1  0.200mm  0.0079"  (25 holes)
-    T2  0.400mm  0.0157"  (613 holes)
-    T3  0.650mm  0.0256"  (4 holes)  (with 4 slots)
-    T4  1.000mm  0.0394"  (2 holes)
-    T5  1.100mm  0.0433"  (15 holes)
-    T6  3.250mm  0.1280"  (2 holes)
+    T1  0.20mm  0.008"  (25 holes)
+    T2  0.40mm  0.016"  (633 holes)
+    T3  0.65mm  0.026"  (4 holes)  (with 4 slots)
+    T4  1.00mm  0.039"  (2 holes)
+    T5  1.10mm  0.043"  (15 holes)
+    T6  3.25mm  0.128"  (2 holes)
 
-    Total plated holes count 661
+    Total plated holes count 681
 
 
 Drill file 'VERA-MODULE-RBL-NPTH.drl' contains
     unplated through holes:
     =============================================================
-    T1  0.600mm  0.0236"  (1 hole)
-    T2  0.630mm  0.0248"  (2 holes)
-    T3  1.500mm  0.0591"  (2 holes)
-    T4  1.700mm  0.0669"  (1 hole)
-    T5  1.800mm  0.0709"  (1 hole)
-    T6  3.200mm  0.1260"  (4 holes)
+    T1  0.60mm  0.024"  (1 hole)
+    T2  0.63mm  0.025"  (2 holes)
+    T3  1.50mm  0.059"  (2 holes)
+    T4  1.70mm  0.067"  (1 hole)
+    T5  1.80mm  0.071"  (1 hole)
+    T6  3.20mm  0.126"  (4 holes)
 
     Total unplated holes count 11

@@ -8,7 +8,7 @@
 #
 # Usage: tools/make_enclosure.sh CUT_Y [--no-anim]
 #   CUT_Y   KiCad y (mm) where the case ends and the card edge fingers come
-#           out: 189 for this board
+#           out: 157 for the C64 board (past its last parts), 189 for the XE one
 #
 # Needs: KiCad 5 (system, otherwise the KiCad 5 AppImage as "kicad5"),
 # FreeCAD 0.19 or later (freecadcmd, freecad), xvfb-run and ffmpeg (or
